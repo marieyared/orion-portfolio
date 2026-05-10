@@ -215,18 +215,51 @@ EQUITY_GEO = {
     "US4592001014": {"name":"IBM Corp.",          "geo":{"US":60,"EU":20,"Other":20},                  "sectors":{"Technology":100}},
 }
 
-FLAGS = {"US":"🇺🇸","JP":"🇯🇵","GB":"🇬🇧","FR":"🇫🇷","CA":"🇨🇦","CH":"🇨🇭","DE":"🇩🇪",
-         "AU":"🇦🇺","NL":"🇳🇱","CN":"🇨🇳","TW":"🇹🇼","IN":"🇮🇳","KR":"🇰🇷","BR":"🇧🇷",
-         "SA":"🇸🇦","EU":"🇪🇺","Other":"🌍"}
+FLAGS = {
+    "US":"🇺🇸","JP":"🇯🇵","GB":"🇬🇧","FR":"🇫🇷","CA":"🇨🇦","CH":"🇨🇭","DE":"🇩🇪",
+    "AU":"🇦🇺","NL":"🇳🇱","CN":"🇨🇳","TW":"🇹🇼","IN":"🇮🇳","KR":"🇰🇷","BR":"🇧🇷",
+    "SA":"🇸🇦","EU":"🇪🇺","SE":"🇸🇪","NO":"🇳🇴","DK":"🇩🇰","FI":"🇫🇮","ES":"🇪🇸",
+    "IT":"🇮🇹","PT":"🇵🇹","BE":"🇧🇪","AT":"🇦🇹","IE":"🇮🇪","LU":"🇱🇺","SG":"🇸🇬",
+    "HK":"🇭🇰","ZA":"🇿🇦","MX":"🇲🇽","RU":"🇷🇺","PL":"🇵🇱","CZ":"🇨🇿","HU":"🇭🇺",
+    "TR":"🇹🇷","IL":"🇮🇱","AE":"🇦🇪","QA":"🇶🇦","TH":"🇹🇭","ID":"🇮🇩","MY":"🇲🇾",
+    "PH":"🇵🇭","VN":"🇻🇳","CL":"🇨🇱","CO":"🇨🇴","AR":"🇦🇷","NZ":"🇳🇿","GR":"🇬🇷",
+    "Other":"🌍",
+}
 
-COUNTRY_NAMES = {"US":"United States","JP":"Japan","GB":"United Kingdom","FR":"France",
-                 "CA":"Canada","CH":"Switzerland","DE":"Germany","AU":"Australia",
-                 "NL":"Netherlands","CN":"China","TW":"Taiwan","IN":"India",
-                 "KR":"South Korea","BR":"Brazil","SA":"Saudi Arabia","EU":"Europe (other)","Other":"Rest of world"}
+COUNTRY_NAMES = {
+    "US":"United States","JP":"Japan","GB":"United Kingdom","FR":"France",
+    "CA":"Canada","CH":"Switzerland","DE":"Germany","AU":"Australia",
+    "NL":"Netherlands","CN":"China","TW":"Taiwan","IN":"India",
+    "KR":"South Korea","BR":"Brazil","SA":"Saudi Arabia","EU":"Europe (other)",
+    "SE":"Sweden","NO":"Norway","DK":"Denmark","FI":"Finland","ES":"Spain",
+    "IT":"Italy","PT":"Portugal","BE":"Belgium","AT":"Austria","IE":"Ireland",
+    "LU":"Luxembourg","SG":"Singapore","HK":"Hong Kong","ZA":"South Africa",
+    "MX":"Mexico","RU":"Russia","PL":"Poland","CZ":"Czech Republic","HU":"Hungary",
+    "TR":"Turkey","IL":"Israel","AE":"UAE","QA":"Qatar","TH":"Thailand",
+    "ID":"Indonesia","MY":"Malaysia","PH":"Philippines","VN":"Vietnam",
+    "CL":"Chile","CO":"Colombia","AR":"Argentina","NZ":"New Zealand","GR":"Greece",
+    "Other":"Rest of world",
+}
 
-ISO3_MAP = {"US":"USA","JP":"JPN","GB":"GBR","FR":"FRA","CA":"CAN","CH":"CHE",
-            "DE":"DEU","AU":"AUS","NL":"NLD","CN":"CHN","TW":"TWN","IN":"IND",
-            "KR":"KOR","BR":"BRA","SA":"SAU","EU":None,"Other":None}
+ISO3_MAP = {
+    "US":"USA","JP":"JPN","GB":"GBR","FR":"FRA","CA":"CAN","CH":"CHE",
+    "DE":"DEU","AU":"AUS","NL":"NLD","CN":"CHN","TW":"TWN","IN":"IND",
+    "KR":"KOR","BR":"BRA","SA":"SAU","SE":"SWE","NO":"NOR","DK":"DNK",
+    "FI":"FIN","ES":"ESP","IT":"ITA","PT":"PRT","BE":"BEL","AT":"AUT",
+    "IE":"IRL","LU":"LUX","SG":"SGP","HK":"HKG","ZA":"ZAF","MX":"MEX",
+    "RU":"RUS","PL":"POL","CZ":"CZE","HU":"HUN","TR":"TUR","IL":"ISR",
+    "AE":"ARE","QA":"QAT","TH":"THA","ID":"IDN","MY":"MYS","PH":"PHL",
+    "VN":"VNM","CL":"CHL","CO":"COL","AR":"ARG","NZ":"NZL","GR":"GRC",
+    "EU":None,"Other":None,
+}
+
+# Derive country from the 2-letter ISIN prefix (ISO 3166-1 alpha-2).
+# Returns a geo dict like {"XX": 100} for use as a fallback.
+def country_from_isin(isin):
+    code = isin[:2].upper()
+    if code in COUNTRY_NAMES:
+        return code
+    return "Other"
 
 COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922"]
 
@@ -247,7 +280,8 @@ def aggregate_portfolio(holdings):
             for sector, pct in source["sectors"].items():
                 sector_agg[sector] = sector_agg.get(sector, 0) + pct * weight
         else:
-            geo_agg["Other"] = geo_agg.get("Other", 0) + 100 * weight
+            code = country_from_isin(isin)
+            geo_agg[code] = geo_agg.get(code, 0) + 100 * weight
             sector_agg["Other"] = sector_agg.get("Other", 0) + 100 * weight
     return geo_agg, sector_agg
 
@@ -463,20 +497,23 @@ def screen_map():
                     # pick the primary country (largest geo entry)
                     primary = max(info["geo"].items(), key=lambda x: x[1])
                     code, _ = primary
-                    flag    = FLAGS.get(code, "")
-                    cname   = COUNTRY_NAMES.get(code, code)
-                    child_lbl = f"{flag} {cname} (listed)||{isin}"
-                    labels.append(child_lbl)
-                    parents.append(name)
-                    values.append(cur)
-                    colors.append(color + "99")
-                    hovers.append(
-                        f"<b>{flag} {cname}</b><br>"
-                        f"Listed: {name}<br>"
-                        f"Direct equity — single listing<br>"
-                        f"Value: ${cur:,.0f}"
-                    )
-                    texts.append(f"{flag} {cname}<br>Listed")
+                else:
+                    # fall back to the 2-letter ISIN prefix (ISO 3166-1 alpha-2)
+                    code = country_from_isin(isin)
+                flag  = FLAGS.get(code, "")
+                cname = COUNTRY_NAMES.get(code, code)
+                child_lbl = f"{flag} {cname} (listed)||{isin}"
+                labels.append(child_lbl)
+                parents.append(name)
+                values.append(cur)
+                colors.append(color + "99")
+                hovers.append(
+                    f"<b>{flag} {cname}</b><br>"
+                    f"Listed: {name}<br>"
+                    f"Direct equity — single listing<br>"
+                    f"Value: ${cur:,.0f}"
+                )
+                texts.append(f"{flag} {cname}<br>Listed")
 
         # clean display labels (strip the ||ISIN dedup suffix)
         display_labels = [l.split("||")[0] for l in labels]
@@ -496,9 +533,6 @@ def screen_map():
                 pad=dict(t=28, l=4, r=4, b=4),
             ),
             textfont=dict(family="DM Sans", size=11, color="white"),
-            textposition="inside",
-            insidetextorientation="tangential",
-            uniformtext=dict(minsize=10, mode="hide"),
             pathbar=dict(
                 visible=True,
                 thickness=28,
@@ -513,6 +547,7 @@ def screen_map():
             height=520,
             margin=dict(l=0, r=0, t=0, b=0),
             paper_bgcolor="white",
+            uniformtext=dict(minsize=10, mode="hide"),
         )
         st.plotly_chart(fig_tree, use_container_width=True)
 
@@ -582,6 +617,9 @@ def screen_map():
             if info and "geo" in info:
                 for c in info["geo"]:
                     country_sources.setdefault(c, []).append(info.get("name", isin))
+            elif isin not in ETF_LOOKTHROUGH:
+                code = country_from_isin(isin)
+                country_sources.setdefault(code, []).append(isin)
         concentrated = {c: s for c, s in country_sources.items() if len(s) >= 2 and c != "Other"}
         if concentrated:
             msgs = []
