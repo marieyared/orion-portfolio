@@ -722,7 +722,7 @@ def screen_map():
                 return f"color: {color}; font-weight: 500"
             return ""
 
-        styled = perf_df.style.applymap(
+        styled = perf_df.style.map(
             color_pnl, subset=["Gain/Loss ($)", "Gain/Loss (%)"]
         ).format({
             "Invested ($)":   "${:,.0f}",
