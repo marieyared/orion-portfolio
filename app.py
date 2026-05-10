@@ -496,7 +496,9 @@ def screen_map():
                 pad=dict(t=28, l=4, r=4, b=4),
             ),
             textfont=dict(family="DM Sans", size=11, color="white"),
-            textposition="middle center",
+            textposition="inside",
+            insidetextorientation="tangential",
+            uniformtext=dict(minsize=10, mode="hide"),
             pathbar=dict(
                 visible=True,
                 thickness=28,
