@@ -5,9 +5,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import date, datetime
 import json
+import os
 
 st.set_page_config(
-    page_title="Orion — Portfolio Intelligence",
+    page_title="Orion: Portfolio Intelligence",
     page_icon="🔭",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -126,6 +127,10 @@ st.markdown("""
         border-radius: 10px;
         padding: 1rem;
     }
+    div[data-testid="stMetricLabel"] p {
+        white-space: normal !important;
+        word-break: break-word;
+    }
     .stDataFrame { border-radius: 10px; overflow: hidden; }
     footer { visibility: hidden; }
     #MainMenu { visibility: hidden; }
@@ -139,6 +144,26 @@ if "screen" not in st.session_state:
     st.session_state.screen = "entry"
 if "isin_cache" not in st.session_state:
     st.session_state.isin_cache = {}
+if "api_issues" not in st.session_state:
+    st.session_state.api_issues = {}
+
+
+def set_api_issue(service: str, message: str):
+    st.session_state.api_issues[service] = message
+
+
+def clear_api_issue(service: str):
+    st.session_state.api_issues.pop(service, None)
+
+
+def get_config_value(name: str) -> str:
+    try:
+        value = st.secrets[name]
+        if value:
+            return str(value).strip()
+    except Exception:
+        pass
+    return os.getenv(name, "").strip()
 
 # ── OpenFIGI lookup ────────────────────────────────────────────────
 def lookup_isin(isin):
@@ -155,65 +180,376 @@ def lookup_isin(isin):
             timeout=5
         )
         if resp.status_code == 200:
+            clear_api_issue("openfigi")
             data = resp.json()
             if data and data[0].get("data"):
                 item = data[0]["data"][0]
+                seen = set()
+                all_listings = []
+                for d in data[0]["data"]:
+                    t = d.get("ticker", "")
+                    if t and t not in seen:
+                        seen.add(t)
+                        all_listings.append((t, d.get("exchCode", "")))
                 result = {
                     "name": item.get("name", isin),
-                    "type": item.get("securityType", "—"),
-                    "exchange": item.get("exchCode", "—"),
-                    "currency": item.get("marketSector", "—"),
+                    "type": item.get("securityType", "N/A"),
+                    "exchange": item.get("exchCode", "N/A"),
+                    "currency": item.get("marketSector", "N/A"),
+                    "ticker": item.get("ticker", ""),
+                    "all_listings": all_listings,
                 }
                 st.session_state.isin_cache[isin] = result
                 return result
+        elif resp.status_code == 429:
+            set_api_issue("openfigi", "OpenFIGI rate limit reached. Please wait a minute and try again.")
+        else:
+            set_api_issue("openfigi", f"OpenFIGI lookup failed with status {resp.status_code}.")
+    except requests.RequestException as exc:
+        set_api_issue("openfigi", f"OpenFIGI request failed: {exc}")
+    return None
+
+# ── Financial Modeling Prep — live ETF geographic & sector data ───
+FMP_KEY = get_config_value("FMP_API_KEY")
+
+FMP_COUNTRY_MAP = {
+    "United States":"US","Japan":"JP","United Kingdom":"GB","France":"FR",
+    "Canada":"CA","Switzerland":"CH","Germany":"DE","Australia":"AU",
+    "Netherlands":"NL","China":"CN","Taiwan":"TW","India":"IN",
+    "South Korea":"KR","Korea":"KR","Brazil":"BR","Saudi Arabia":"SA",
+    "Sweden":"SE","Norway":"NO","Denmark":"DK","Finland":"FI","Spain":"ES",
+    "Italy":"IT","Portugal":"PT","Belgium":"BE","Austria":"AT","Ireland":"IE",
+    "Luxembourg":"LU","Singapore":"SG","Hong Kong":"HK","South Africa":"ZA",
+    "Mexico":"MX","Russia":"RU","Poland":"PL","Czech Republic":"CZ",
+    "Hungary":"HU","Turkey":"TR","Israel":"IL","United Arab Emirates":"AE",
+    "UAE":"AE","Qatar":"QA","Thailand":"TH","Indonesia":"ID","Malaysia":"MY",
+    "Philippines":"PH","Vietnam":"VN","Chile":"CL","Colombia":"CO",
+    "Argentina":"AR","New Zealand":"NZ","Greece":"GR",
+}
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_etf_data_fmp(ticker: str):
+    if not FMP_KEY or not ticker or ticker == "N/A":
+        if not FMP_KEY:
+            set_api_issue("fmp", "Missing FMP API key. Add FMP_API_KEY in Streamlit secrets or your environment.")
+        return None
+    try:
+        geo_r = requests.get(
+            f"https://financialmodelingprep.com/api/v3/etf-country-weightings/{ticker}",
+            params={"apikey": FMP_KEY}, timeout=8,
+        )
+        sec_r = requests.get(
+            f"https://financialmodelingprep.com/api/v3/etf-sector-weightings/{ticker}",
+            params={"apikey": FMP_KEY}, timeout=8,
+        )
+        geo, sectors = {}, {}
+        if geo_r.status_code == 200:
+            for item in geo_r.json():
+                name = item.get("country", "")
+                try:
+                    pct = float(item.get("weightPercentage", "0").replace("%", ""))
+                except ValueError:
+                    continue
+                code = FMP_COUNTRY_MAP.get(name, "Other")
+                geo[code] = geo.get(code, 0) + pct
+        elif geo_r.status_code in (401, 403):
+            set_api_issue("fmp", "Financial Modeling Prep rejected the API key. Check that FMP_API_KEY is valid.")
+        elif geo_r.status_code == 429:
+            set_api_issue("fmp", "Financial Modeling Prep rate limit reached. Please try again shortly.")
+        if sec_r.status_code == 200:
+            for item in sec_r.json():
+                name = item.get("sector", "Other")
+                try:
+                    pct = float(item.get("weightPercentage", "0").replace("%", ""))
+                except ValueError:
+                    continue
+                sectors[name] = sectors.get(name, 0) + pct
+        elif sec_r.status_code in (401, 403):
+            set_api_issue("fmp", "Financial Modeling Prep rejected the API key. Check that FMP_API_KEY is valid.")
+        elif sec_r.status_code == 429:
+            set_api_issue("fmp", "Financial Modeling Prep rate limit reached. Please try again shortly.")
+        if geo:
+            clear_api_issue("fmp")
+            return {"geo": geo, "sectors": sectors or {"Other": 100}}
+    except requests.RequestException as exc:
+        set_api_issue("fmp", f"Financial Modeling Prep request failed: {exc}")
+    return None
+
+# OpenFIGI exchCode → Yahoo Finance ticker suffix
+_FIGI_EXCH_TO_YAHOO = {
+    "LN": ".L", "NA": ".AS", "GR": ".DE", "FP": ".PA",
+    "IM": ".MI", "SM": ".MC", "SW": ".SW", "AU": ".AX",
+    "SS": ".ST", "HE": ".HE", "CO": ".CO", "BB": ".BR",
+}
+
+_YAHOO_SECTOR_MAP = {
+    "realestate": "Real Estate", "consumer_cyclical": "Consumer",
+    "basic_materials": "Materials", "consumer_defensive": "Consumer Defensive",
+    "technology": "Technology", "communication_services": "Communication",
+    "financial_services": "Financials", "utilities": "Utilities",
+    "industrials": "Industrials", "energy": "Energy", "healthcare": "Healthcare",
+}
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def _stock_country(ticker: str) -> str:
+    """ISO-2 country for a single stock ticker from Yahoo assetProfile."""
+    try:
+        r = requests.get(
+            f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{ticker}",
+            params={"modules": "assetProfile"},
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=5,
+        )
+        if r.status_code == 200:
+            res = r.json().get("quoteSummary", {}).get("result")
+            if res:
+                c = res[0].get("assetProfile", {}).get("country", "")
+                return FMP_COUNTRY_MAP.get(c, "Other")
+    except Exception:
+        pass
+    return "Other"
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_etf_data_yahoo(ticker: str, exch_code: str = ""):
+    """Yahoo Finance ETF look-through: sector weights + country weights + top holdings.
+    Works for both US ETFs (countryExposure filled) and European UCITS (derives country
+    from top holdings when countryExposure is empty)."""
+    if not ticker or ticker == "N/A":
+        return None
+    suffix = _FIGI_EXCH_TO_YAHOO.get(exch_code, "")
+    candidates = []
+    if suffix:
+        candidates.append(ticker + suffix)
+    candidates.append(ticker)
+    if not suffix:
+        candidates += [ticker + s for s in [".L", ".AS", ".DE", ".PA", ".MI"]]
+    for yt in candidates:
+        try:
+            resp = requests.get(
+                f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{yt}",
+                params={"modules": "topHoldings"},
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=8,
+            )
+            if resp.status_code != 200:
+                continue
+            result = resp.json().get("quoteSummary", {}).get("result")
+            if not result:
+                continue
+            top         = result[0].get("topHoldings", {})
+            holdings_raw = top.get("holdings", [])
+            country_exp  = top.get("countryExposure", [])
+            sector_exp   = top.get("sectorWeightings", [])
+
+            # Need at least sector or holdings data — don't require countryExposure
+            if not holdings_raw and not sector_exp:
+                continue
+
+            # Top individual stock holdings
+            top_holdings = [
+                {
+                    "symbol": h.get("symbol", ""),
+                    "name":   h.get("holdingName", h.get("symbol", "")),
+                    "weight": round(float(h.get("holdingPercent", 0)) * 100, 2),
+                }
+                for h in holdings_raw
+                if h.get("symbol") and float(h.get("holdingPercent", 0)) > 0
+            ]
+
+            # Sector weights
+            sectors = {}
+            for s_dict in sector_exp:
+                for key, val in s_dict.items():
+                    label = _YAHOO_SECTOR_MAP.get(key, key.replace("_", " ").title())
+                    sectors[label] = round(float(val) * 100, 2)
+
+            # Country weights — use countryExposure when available;
+            # fall back to per-stock country lookup from top holdings
+            geo = {}
+            if country_exp:
+                for c in country_exp:
+                    pct  = round(float(c.get("exposure", 0)) * 100, 2)
+                    code = FMP_COUNTRY_MAP.get(c.get("country", ""), "Other")
+                    geo[code] = geo.get(code, 0) + pct
+            elif top_holdings:
+                for h in top_holdings:
+                    code = _stock_country(h["symbol"])
+                    geo[code] = geo.get(code, 0) + h["weight"]
+
+            return {
+                "geo":          geo or {"Other": 100},
+                "sectors":      sectors or {"Other": 100},
+                "top_holdings": top_holdings,
+            }
+        except Exception:
+            continue
+    return None
+
+def _map_country(c: str):
+    if not c:
+        return None
+    if c in COUNTRY_NAMES:
+        return c
+    mapped = FMP_COUNTRY_MAP.get(c)
+    return mapped if mapped and mapped != "Other" else None
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_stock_info(ticker: str, exch_code: str = "") -> dict:
+    """Fetch sector and country of operations for a single stock via FMP then Yahoo."""
+    out = {"sector": "—", "country": None}
+    if not ticker or ticker == "N/A":
+        return out
+    if FMP_KEY:
+        try:
+            r = requests.get(
+                f"https://financialmodelingprep.com/api/v3/profile/{ticker}",
+                params={"apikey": FMP_KEY}, timeout=8,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                if data and isinstance(data, list):
+                    s = data[0].get("sector", "")
+                    if s:
+                        out["sector"] = s
+                    if not out["country"]:
+                        out["country"] = _map_country(data[0].get("country", ""))
+                    if out["sector"] != "—" and out["country"]:
+                        return out
+        except Exception:
+            pass
+    suffix = _FIGI_EXCH_TO_YAHOO.get(exch_code, "")
+    candidates = [ticker + suffix] if suffix else []
+    candidates.append(ticker)
+    for yt in candidates:
+        try:
+            r = requests.get(
+                f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{yt}",
+                params={"modules": "assetProfile"},
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=8,
+            )
+            if r.status_code == 200:
+                res = r.json().get("quoteSummary", {}).get("result")
+                if res:
+                    profile = res[0].get("assetProfile", {})
+                    s = profile.get("sector", "")
+                    c = profile.get("country", "")
+                    if s and out["sector"] == "—":
+                        out["sector"] = s
+                    if not out["country"]:
+                        out["country"] = _map_country(c)
+                    if out["sector"] != "—" and out["country"]:
+                        return out
+        except Exception:
+            continue
+    return out
+
+_WIKIDATA_SECTOR_MAP = {
+    "software": "Technology", "semiconductor": "Technology", "computer": "Technology",
+    "internet": "Technology", "electronics": "Technology", "artificial intelligence": "Technology",
+    "e-commerce": "Technology", "cloud": "Technology",
+    "bank": "Financials", "insurance": "Financials", "financial": "Financials",
+    "investment": "Financials", "asset management": "Financials",
+    "pharmaceutical": "Healthcare", "biotechnology": "Healthcare", "health": "Healthcare",
+    "medical": "Healthcare", "hospital": "Healthcare",
+    "retail": "Consumer", "apparel": "Consumer", "luxury": "Consumer",
+    "automobile": "Consumer", "automotive": "Consumer", "restaurant": "Consumer",
+    "food": "Consumer Defensive", "beverage": "Consumer Defensive",
+    "supermarket": "Consumer Defensive", "tobacco": "Consumer Defensive",
+    "oil": "Energy", "gas": "Energy", "energy": "Energy", "petroleum": "Energy",
+    "mining": "Materials", "chemical": "Materials", "steel": "Materials", "metal": "Materials",
+    "aerospace": "Industrials", "defence": "Industrials", "defense": "Industrials",
+    "logistics": "Industrials", "manufacturing": "Industrials", "industrial": "Industrials",
+    "railway": "Industrials", "airline": "Industrials",
+    "telecommunication": "Communication", "telecom": "Communication",
+    "media": "Communication", "entertainment": "Communication", "broadcasting": "Communication",
+    "real estate": "Real Estate", "reit": "Real Estate",
+    "utility": "Utilities", "electric": "Utilities", "water": "Utilities",
+}
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def fetch_sector_wikidata(isin: str) -> str | None:
+    """Query Wikidata SPARQL for industry/sector by ISIN — no API key needed."""
+    query = f"""
+    SELECT ?industryLabel WHERE {{
+      ?company wdt:P946 "{isin}" .
+      ?company wdt:P452 ?industry .
+      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" }}
+    }} LIMIT 5
+    """
+    try:
+        r = requests.get(
+            "https://query.wikidata.org/sparql",
+            params={"query": query, "format": "json"},
+            headers={"User-Agent": "OrionPortfolioApp/1.0"},
+            timeout=8,
+        )
+        if r.status_code == 200:
+            bindings = r.json().get("results", {}).get("bindings", [])
+            for b in bindings:
+                label = b.get("industryLabel", {}).get("value", "").lower()
+                for kw, sector in _WIKIDATA_SECTOR_MAP.items():
+                    if kw in label:
+                        return sector
     except Exception:
         pass
     return None
 
-# ── look-through data (top UCITS ETFs) ────────────────────────────
-ETF_LOOKTHROUGH = {
-    "IE00B4L5Y983": {
-        "name": "iShares MSCI World ETF",
-        "geo": {"US":67.2,"JP":6.1,"GB":4.8,"FR":3.8,"CA":3.6,"CH":3.1,"DE":2.9,"AU":2.4,"NL":1.8,"Other":4.3},
-        "sectors": {"Technology":22.1,"Financials":15.3,"Healthcare":12.8,"Industrials":10.2,"Consumer":9.4,"Energy":5.1,"Other":25.1},
-        "overlaps": ["AAPL","MSFT","NVDA","AMZN","GOOGL"]
-    },
-    "IE00BKM4GZ66": {
-        "name": "iShares EM IMI ETF",
-        "geo": {"CN":30.2,"TW":16.1,"IN":14.8,"KR":12.3,"BR":5.2,"SA":4.1,"Other":17.3},
-        "sectors": {"Technology":21.0,"Financials":22.0,"Consumer":14.0,"Materials":8.0,"Energy":7.0,"Other":28.0},
-        "overlaps": ["BABA","TSMC","RELIANCE"]
-    },
-    "IE00B5BMR087": {
-        "name": "iShares Core S&P 500 ETF",
-        "geo": {"US":100.0},
-        "sectors": {"Technology":29.0,"Financials":13.0,"Healthcare":12.0,"Consumer":10.0,"Industrials":8.5,"Other":27.5},
-        "overlaps": ["AAPL","MSFT","NVDA","AMZN","META"]
-    },
-    "IE00B3RBWM25": {
-        "name": "Vanguard FTSE All-World ETF",
-        "geo": {"US":62.0,"JP":6.0,"GB":4.0,"CN":3.5,"FR":3.0,"CA":2.8,"CH":2.5,"DE":2.2,"AU":2.0,"Other":12.0},
-        "sectors": {"Technology":23.0,"Financials":15.0,"Healthcare":11.0,"Industrials":10.0,"Consumer":9.0,"Energy":5.0,"Other":27.0},
-        "overlaps": ["AAPL","MSFT","NVDA","AMZN","GOOGL"]
-    },
-    "US78462F1030": {
-        "name": "SPDR S&P 500 ETF",
-        "geo": {"US":100.0},
-        "sectors": {"Technology":29.0,"Financials":13.0,"Healthcare":12.0,"Consumer":10.0,"Industrials":8.5,"Other":27.5},
-        "overlaps": ["AAPL","MSFT","NVDA","AMZN","META"]
-    },
-}
+_ETF_TYPES = {"ETP", "ETF", "Open-End Fund", "Exchange Traded Fund",
+              "UCITS", "Fund", "Mutual Fund"}
+_ETF_NAME_KEYWORDS = ("ETF", "UCITS", "INDEX FUND", "ISHARES", "VANGUARD",
+                      "SPDR", "INVESCO", "AMUNDI", "LYXOR", "XTRACKERS", "WISDOMTREE")
 
-EQUITY_GEO = {
-    "US0378331005": {"name":"Apple Inc.",       "geo":{"US":43,"CN":19,"EU":22,"JP":8,"Other":8},   "sectors":{"Technology":100}},
-    "US5949181045": {"name":"Microsoft Corp.",  "geo":{"US":55,"EU":20,"CN":10,"Other":15},          "sectors":{"Technology":100}},
-    "US88160R1014": {"name":"Tesla Inc.",        "geo":{"US":45,"CN":22,"EU":20,"Other":13},          "sectors":{"Consumer":100}},
-    "US67066G1040": {"name":"NVIDIA Corp.",      "geo":{"US":60,"TW":15,"CN":10,"Other":15},          "sectors":{"Technology":100}},
-    "US02079K3059": {"name":"Alphabet Inc.",     "geo":{"US":55,"EU":20,"Other":25},                  "sectors":{"Technology":100}},
-    "US30303M1027": {"name":"Meta Platforms",    "geo":{"US":50,"EU":20,"Other":30},                  "sectors":{"Technology":100}},
-    "SA14TG012N13": {"name":"Saudi Aramco",      "geo":{"SA":100},                                    "sectors":{"Energy":100}},
-    "US4592001014": {"name":"IBM Corp.",          "geo":{"US":60,"EU":20,"Other":20},                  "sectors":{"Technology":100}},
-}
+def holding_is_etf(isin: str) -> bool:
+    cached = st.session_state.isin_cache.get(isin, {})
+    if cached.get("type", "") in _ETF_TYPES:
+        return True
+    name = cached.get("name", "").upper()
+    return any(kw in name for kw in _ETF_NAME_KEYWORDS)
+
+def get_holding_info(isin: str):
+    """Return {name, geo, sectors} for an ISIN — always returns a dict, never None."""
+    cached_figi = st.session_state.isin_cache.get(isin, {})
+    name     = cached_figi.get("name", isin)
+    listings = cached_figi.get("all_listings") or (
+        [(cached_figi["ticker"], cached_figi.get("exchange", ""))] if cached_figi.get("ticker") else []
+    )
+    if holding_is_etf(isin):
+        fmp_data = None
+        for t, _ in listings:
+            d = fetch_etf_data_fmp(t)
+            if d:
+                fmp_data = d
+                break
+        yahoo_data = None
+        for t, e in listings:
+            d = fetch_etf_data_yahoo(t, e)
+            if d:
+                yahoo_data = d
+                break
+        if fmp_data or yahoo_data:
+            merged = {"name": name}
+            merged["geo"]          = (fmp_data or yahoo_data)["geo"]
+            merged["sectors"]      = (fmp_data or yahoo_data)["sectors"]
+            merged["top_holdings"] = (yahoo_data or {}).get("top_holdings", [])
+            return merged
+        # Fallback: ETF domicile from ISIN prefix, no look-through available
+        code = country_from_isin(isin)
+        return {"name": name, "geo": {code: 100}, "sectors": {"ETF / Fund": 100}}
+    else:
+        # Direct equity: country of operations from FMP/Yahoo, fall back to ISIN prefix
+        ticker = cached_figi.get("ticker", "")
+        exch   = cached_figi.get("exchange", "")
+        if ticker:
+            stock_data = fetch_stock_info(ticker, exch)
+            sector = stock_data["sector"]
+            code   = stock_data["country"] or country_from_isin(isin)
+        else:
+            code   = country_from_isin(isin)
+            sector = "—"
+        if sector == "—":
+            sector = fetch_sector_wikidata(isin) or "—"
+        return {"name": name, "geo": {code: 100}, "sectors": {sector: 100}}
 
 FLAGS = {
     "US":"🇺🇸","JP":"🇯🇵","GB":"🇬🇧","FR":"🇫🇷","CA":"🇨🇦","CH":"🇨🇭","DE":"🇩🇪",
@@ -264,7 +600,7 @@ def country_from_isin(isin):
 COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922"]
 
 # ── aggregate geo + sectors across all holdings ────────────────────
-def aggregate_portfolio(holdings):
+def aggregate_portfolio(holdings, info_map):
     total_value = sum(h["current"] for h in holdings)
     if total_value == 0:
         return {}, {}
@@ -272,17 +608,12 @@ def aggregate_portfolio(holdings):
     sector_agg = {}
     for h in holdings:
         weight = h["current"] / total_value
-        isin = h["isin"].upper()
-        source = ETF_LOOKTHROUGH.get(isin) or EQUITY_GEO.get(isin)
+        source = info_map.get(h["isin"].upper())
         if source:
             for country, pct in source["geo"].items():
                 geo_agg[country] = geo_agg.get(country, 0) + pct * weight
             for sector, pct in source["sectors"].items():
                 sector_agg[sector] = sector_agg.get(sector, 0) + pct * weight
-        else:
-            code = country_from_isin(isin)
-            geo_agg[code] = geo_agg.get(code, 0) + 100 * weight
-            sector_agg["Other"] = sector_agg.get("Other", 0) + 100 * weight
     return geo_agg, sector_agg
 
 # ══════════════════════════════════════════════════════════════════
@@ -293,6 +624,10 @@ def screen_entry():
     st.markdown('<div class="orion-headline">Enter your holdings</div>', unsafe_allow_html=True)
     st.markdown('<div class="orion-sub">Find your ISIN on any broker statement — UBS, Baraka, eToro. Enter the current value and your purchase details.</div>', unsafe_allow_html=True)
     st.markdown('<div class="hint-box">💡 Your ISIN is a 12-character code on every broker statement — e.g. <b>IE00B4L5Y983</b> for iShares MSCI World. We look it up automatically.</div>', unsafe_allow_html=True)
+    if "fmp" in st.session_state.api_issues:
+        st.warning(st.session_state.api_issues["fmp"])
+    if "openfigi" in st.session_state.api_issues:
+        st.warning(st.session_state.api_issues["openfigi"])
 
     if "entry_rows" not in st.session_state:
         st.session_state.entry_rows = [
@@ -324,11 +659,7 @@ def screen_entry():
                 if info:
                     st.markdown(f'<div class="instrument-found">✓ {info["name"]} · {info["type"]}</div>', unsafe_allow_html=True)
                 else:
-                    known = ETF_LOOKTHROUGH.get(isin) or EQUITY_GEO.get(isin)
-                    if known:
-                        st.markdown(f'<div class="instrument-found">✓ {known["name"]}</div>', unsafe_allow_html=True)
-                    else:
-                        st.markdown('<div class="instrument-error">ISIN not recognised</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="instrument-error">ISIN not recognised</div>', unsafe_allow_html=True)
         with c2:
             st.session_state.entry_rows[i]["current"] = st.number_input(
                 "Current", value=float(row["current"]), min_value=0.0, step=1000.0,
@@ -378,12 +709,15 @@ def screen_map():
         st.session_state.screen = "entry"
         st.rerun()
 
+    # Fetch all holding data once — reused across every tab
+    info_map = {h["isin"].upper(): get_holding_info(h["isin"].upper()) for h in holdings}
+
     total_current = sum(h["current"] for h in holdings)
     total_paid    = sum(h["paid"]    for h in holdings)
     total_pnl     = total_current - total_paid
     total_pct     = (total_pnl / total_paid * 100) if total_paid > 0 else 0
 
-    geo_agg, sector_agg = aggregate_portfolio(holdings)
+    geo_agg, sector_agg = aggregate_portfolio(holdings, info_map)
 
     # ── nav ────────────────────────────────────────────────────────
     st.markdown('<div class="orion-logo">ORION / PORTFOLIO INTELLIGENCE</div>', unsafe_allow_html=True)
@@ -391,6 +725,10 @@ def screen_map():
         st.session_state.screen = "entry"
         st.rerun()
     st.markdown("---")
+    if "fmp" in st.session_state.api_issues:
+        st.warning(st.session_state.api_issues["fmp"])
+    if "openfigi" in st.session_state.api_issues:
+        st.warning(st.session_state.api_issues["openfigi"])
 
     # ── summary cards ──────────────────────────────────────────────
     s1, s2, s3, s4 = st.columns(4)
@@ -412,19 +750,14 @@ def screen_map():
                 f'{pct_sign}{total_pct:.1f}% total return</div>', unsafe_allow_html=True)
 
     # ── overlap alert ──────────────────────────────────────────────
-    all_overlaps = []
-    for h in holdings:
-        etf = ETF_LOOKTHROUGH.get(h["isin"].upper())
-        if etf:
-            all_overlaps.extend(etf.get("overlaps", []))
-    if all_overlaps:
-        st.markdown(f'<div class="alert-box">⚠ Overlap detected — your ETFs contain stocks that may also appear as direct holdings. Look-through analysis is applied below.</div>',
+    if any(holding_is_etf(h["isin"].upper()) for h in holdings):
+        st.markdown('<div class="alert-box">⚠ Overlap possible — your ETFs may contain stocks that also appear as direct holdings. Look-through analysis is applied below.</div>',
                     unsafe_allow_html=True)
 
     st.markdown("---")
 
     # ── TAB LAYOUT ─────────────────────────────────────────────────
-    tab1, tab2, tab3 = st.tabs(["🗺 Portfolio map", "🌍 World exposure", "📊 Performance"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Portfolio map", "World exposure", "Performance", "Holdings"])
 
     # ── TAB 1: TREEMAP ─────────────────────────────────────────────
     with tab1:
@@ -447,9 +780,9 @@ def screen_map():
             pnl     = cur - paid
             pnl_p   = (pnl / paid * 100) if paid > 0 else 0
             port_p  = (cur / total_current * 100) if total_current > 0 else 0
-            is_etf  = isin in ETF_LOOKTHROUGH
-            info    = ETF_LOOKTHROUGH.get(isin) or EQUITY_GEO.get(isin)
-            name    = info["name"] if info else isin
+            is_etf  = holding_is_etf(isin)
+            info    = info_map.get(isin, {})
+            name    = info.get("name", isin)
             color   = COLORS[i % len(COLORS)]
             pnl_str = f"+${pnl:,.0f} (+{pnl_p:.1f}%)" if pnl >= 0 else f"-${abs(pnl):,.0f} ({pnl_p:.1f}%)"
             badge   = "Look-through" if is_etf else "Direct equity"
@@ -477,7 +810,6 @@ def screen_map():
                     cname     = COUNTRY_NAMES.get(country_code, country_code)
                     child_val = cur * (country_pct / total_geo)
                     true_pct  = child_val / total_current * 100
-                    # unique label per holding
                     child_lbl = f"{flag} {cname}||{isin}"
                     labels.append(child_lbl)
                     parents.append(name)
@@ -492,14 +824,8 @@ def screen_map():
                     )
                     texts.append(f"{flag} {cname}<br>{country_pct:.1f}%")
             else:
-                # Direct equity: ONE sub-rectangle = listed country, no further breakdown
-                if info and "geo" in info:
-                    # pick the primary country (largest geo entry)
-                    primary = max(info["geo"].items(), key=lambda x: x[1])
-                    code, _ = primary
-                else:
-                    # fall back to the 2-letter ISIN prefix (ISO 3166-1 alpha-2)
-                    code = country_from_isin(isin)
+                # Direct equity: ONE sub-rectangle = listed country
+                code, _ = max(info["geo"].items(), key=lambda x: x[1])
                 flag  = FLAGS.get(code, "")
                 cname = COUNTRY_NAMES.get(code, code)
                 child_lbl = f"{flag} {cname} (listed)||{isin}"
@@ -613,11 +939,11 @@ def screen_map():
         country_sources = {}
         for h in holdings:
             isin = h["isin"].upper()
-            info = ETF_LOOKTHROUGH.get(isin) or EQUITY_GEO.get(isin)
+            info = info_map.get(isin, {})
             if info and "geo" in info:
                 for c in info["geo"]:
                     country_sources.setdefault(c, []).append(info.get("name", isin))
-            elif isin not in ETF_LOOKTHROUGH:
+            elif not holding_is_etf(isin):
                 code = country_from_isin(isin)
                 country_sources.setdefault(code, []).append(isin)
         concentrated = {c: s for c, s in country_sources.items() if len(s) >= 2 and c != "Other"}
@@ -740,8 +1066,8 @@ def screen_map():
             pnl   = cur - paid
             pnl_p = (pnl / paid * 100) if paid > 0 else 0
             port_p = (cur / total_current * 100) if total_current > 0 else 0
-            info  = ETF_LOOKTHROUGH.get(isin) or EQUITY_GEO.get(isin)
-            name  = info["name"] if info else isin
+            info  = info_map.get(isin, {})
+            name  = info.get("name", isin)
             days  = (date.today() - h["date"]).days if h.get("date") else "—"
             perf_rows.append({
                 "Holding":        name,
@@ -774,9 +1100,22 @@ def screen_map():
         st.dataframe(styled, use_container_width=True, hide_index=True)
 
         st.markdown("### Allocation — current weights")
+
+        def _wrap_pie_label(text, max_chars=22):
+            words = text.split()
+            lines, current = [], ""
+            for word in words:
+                if current and len(current) + len(word) + 1 > max_chars:
+                    lines.append(current)
+                    current = word
+                else:
+                    current = (current + " " + word).strip()
+            if current:
+                lines.append(current)
+            return "<br>".join(lines)
+
         donut_df = pd.DataFrame([{
-            "name": (ETF_LOOKTHROUGH.get(h["isin"].upper()) or
-                     EQUITY_GEO.get(h["isin"].upper()) or {}).get("name", h["isin"]),
+            "name": _wrap_pie_label(info_map.get(h["isin"].upper(), {}).get("name", h["isin"].upper())),
             "value": h["current"]
         } for h in holdings])
 
@@ -785,14 +1124,105 @@ def screen_map():
             hole=0.6,
             color_discrete_sequence=COLORS,
         )
-        fig_donut.update_traces(textposition="outside", textinfo="percent+label")
+        fig_donut.update_traces(
+            textposition="outside",
+            textinfo="percent+label",
+            automargin=True,
+        )
         fig_donut.update_layout(
-            height=380,
+            height=420,
             showlegend=False,
-            margin=dict(l=20, r=20, t=20, b=20),
+            margin=dict(l=80, r=80, t=40, b=40),
             paper_bgcolor="white",
         )
         st.plotly_chart(fig_donut, use_container_width=True)
+
+    # ── TAB 4: HOLDINGS BREAKDOWN ─────────────────────────────────
+    with tab4:
+        st.markdown("### Holdings: name, country & sector")
+        st.caption("Country from ISIN prefix · Sector from Financial Modeling Prep or Yahoo Finance")
+
+        holdings_rows = []
+        for h in holdings:
+            isin   = h["isin"].upper()
+            cur    = h["current"]
+            port_p = (cur / total_current * 100) if total_current > 0 else 0
+
+            info  = info_map.get(isin, {})
+            name  = info.get("name", isin)
+
+            code  = max(info["geo"].items(), key=lambda x: x[1])[0]
+            flag  = FLAGS.get(code, "")
+            cname = COUNTRY_NAMES.get(code, code)
+
+            sector = "ETF / Fund" if holding_is_etf(isin) else max(info["sectors"].items(), key=lambda x: x[1])[0]
+
+            holdings_rows.append({
+                "Name":      name,
+                "ISIN":      isin,
+                "Country":   f"{flag} {cname}",
+                "Sector":    sector,
+                "Value ($)": round(cur),
+                "Weight":    round(port_p, 1),
+            })
+
+        st.dataframe(
+            pd.DataFrame(holdings_rows).style.format({
+                "Value ($)": "${:,.0f}",
+                "Weight":    "{:.1f}%",
+            }),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        # ── What's inside each ETF ─────────────────────────────────
+        etf_holdings = [(h, info_map[h["isin"].upper()])
+                        for h in holdings if holding_is_etf(h["isin"].upper())]
+        if etf_holdings:
+            st.markdown("### What's inside each ETF")
+            st.caption("Top holdings fetched live from Yahoo Finance")
+            for h, info in etf_holdings:
+                isin     = h["isin"].upper()
+                name     = info["name"]
+                top      = info.get("top_holdings", [])
+                sectors  = info.get("sectors", {})
+                cur      = h["current"]
+
+                with st.expander(f"{name}  ·  ${cur:,.0f}"):
+                    if top:
+                        col_h, col_s = st.columns([3, 2])
+                        with col_h:
+                            st.markdown("**Top stock holdings**")
+                            top_df = pd.DataFrame(top)
+                            top_df.columns = ["Symbol", "Name", "Weight (%)"]
+                            st.dataframe(
+                                top_df.style.format({"Weight (%)": "{:.2f}%"}),
+                                use_container_width=True,
+                                hide_index=True,
+                            )
+                        with col_s:
+                            st.markdown("**Sector breakdown**")
+                            if sectors and sectors != {"Other": 100}:
+                                sec_sorted = sorted(sectors.items(), key=lambda x: -x[1])
+                                max_s = sec_sorted[0][1] if sec_sorted else 1
+                                for sec, pct in sec_sorted:
+                                    bar = int(pct / max_s * 100)
+                                    c1, c2 = st.columns([3, 1])
+                                    with c1:
+                                        st.markdown(
+                                            f'<div style="font-size:12px;margin-bottom:2px">{sec}</div>'
+                                            f'<div style="background:#e8e6e0;border-radius:3px;height:6px;margin-bottom:6px">'
+                                            f'<div style="background:#378ADD;width:{bar}%;height:100%;border-radius:3px"></div></div>',
+                                            unsafe_allow_html=True)
+                                    with c2:
+                                        st.markdown(f'<div style="font-size:12px;padding-top:2px">{pct:.1f}%</div>',
+                                                    unsafe_allow_html=True)
+                            else:
+                                st.info("Sector data not available")
+                        st.caption(f"Source: Yahoo Finance · Top {len(top)} holdings shown")
+                    else:
+                        st.info("Holdings data not available from Yahoo Finance for this ETF. "
+                                "Add an FMP_API_KEY for more coverage.")
 
 # ══════════════════════════════════════════════════════════════════
 # ROUTER
