@@ -164,6 +164,14 @@ if "cash_rows" not in st.session_state:
     st.session_state.cash_rows = []
 if "bond_rows" not in st.session_state:
     st.session_state.bond_rows = []
+if "realestate_rows" not in st.session_state:
+    st.session_state.realestate_rows = []
+if "crypto_rows" not in st.session_state:
+    st.session_state.crypto_rows = []
+if "commodity_rows" not in st.session_state:
+    st.session_state.commodity_rows = []
+if "debt_rows" not in st.session_state:
+    st.session_state.debt_rows = []
 
 
 def set_api_issue(service: str, message: str):
@@ -974,6 +982,237 @@ def screen_entry():
         })
         st.rerun()
 
+    # ── Real estate section ─────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Real estate investments")
+    st.markdown(
+        '<div class="hint-box">🏠 Track property ownership by city and country. '
+        'Current value is the estimated market value of your property.</div>',
+        unsafe_allow_html=True,
+    )
+
+    realestate_to_delete = []
+    for i, rrow in enumerate(st.session_state.realestate_rows):
+        with st.container(border=True):
+            r1, r2 = st.columns([11, 0.5])
+            with r1:
+                st.session_state.realestate_rows[i]["address"] = st.text_input(
+                    "Property address", value=rrow.get("address", ""),
+                    key=f"re_addr_{i}", placeholder="e.g. 123 Main St, Apartment 4B",
+                )
+            with r2:
+                if st.button("✕", key=f"re_del_{i}", help="Remove property"):
+                    realestate_to_delete.append(i)
+
+            rc1, rc2, rc3 = st.columns(3)
+            with rc1:
+                st.session_state.realestate_rows[i]["city"] = st.text_input(
+                    "City", value=rrow.get("city", ""),
+                    key=f"re_city_{i}", placeholder="e.g. New York",
+                )
+            with rc2:
+                countries = sorted([COUNTRY_NAMES.get(c, c) for c in COUNTRY_NAMES.keys() if c != "Other"])
+                c_idx = countries.index(rrow.get("country", "United States")) if rrow.get("country") in countries else 0
+                st.session_state.realestate_rows[i]["country"] = st.selectbox(
+                    "Country", countries, index=c_idx,
+                    key=f"re_country_{i}", label_visibility="collapsed",
+                )
+            with rc3:
+                st.session_state.realestate_rows[i]["value"] = st.number_input(
+                    "Estimated value ($)", value=float(rrow.get("value", 300000.0)),
+                    min_value=1000.0, step=10000.0, format="%.0f",
+                    key=f"re_value_{i}",
+                )
+
+            rd1, rd2, rd3, rd4 = st.columns(4)
+            with rd1:
+                st.session_state.realestate_rows[i]["purchase_date"] = st.date_input(
+                    "Purchase date", value=rrow.get("purchase_date", date.today()),
+                    key=f"re_pdate_{i}", min_value=date(1980, 1, 1), max_value=date.today(),
+                )
+            with rd2:
+                st.session_state.realestate_rows[i]["purchase_price"] = st.number_input(
+                    "Purchase price ($)", value=float(rrow.get("purchase_price", 300000.0)),
+                    min_value=1000.0, step=10000.0, format="%.0f",
+                    key=f"re_pp_{i}",
+                )
+            with rd3:
+                st.session_state.realestate_rows[i]["mortgage"] = st.number_input(
+                    "Remaining mortgage ($)", value=float(rrow.get("mortgage", 0.0)),
+                    min_value=0.0, step=10000.0, format="%.0f",
+                    key=f"re_mort_{i}",
+                )
+            with rd4:
+                st.session_state.realestate_rows[i]["type"] = st.selectbox(
+                    "Type", ["Primary residence", "Investment property", "Vacation home"],
+                    index=["Primary residence", "Investment property", "Vacation home"].index(
+                        rrow.get("type", "Primary residence")
+                    ),
+                    key=f"re_type_{i}",
+                )
+
+    for i in sorted(realestate_to_delete, reverse=True):
+        st.session_state.realestate_rows.pop(i)
+    if realestate_to_delete:
+        st.rerun()
+
+    if st.button("＋  Add real estate"):
+        st.session_state.realestate_rows.append({
+            "address": "", "city": "", "country": "United States",
+            "value": 300000.0, "purchase_date": date.today(),
+            "purchase_price": 300000.0, "mortgage": 0.0, "type": "Primary residence",
+        })
+        st.rerun()
+
+    # ── Crypto section ─────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Cryptocurrency holdings")
+    st.markdown(
+        '<div class="hint-box">₿ Track your digital assets by type and exchange. '
+        'Use current market value (e.g., from CoinGecko or your exchange).</div>',
+        unsafe_allow_html=True,
+    )
+
+    crypto_to_delete = []
+    for i, crow in enumerate(st.session_state.crypto_rows):
+        cc1, cc2, cc3, cc4, cc5 = st.columns([1.2, 1, 1.5, 1.5, 0.4])
+        with cc1:
+            crypto_options = ["BTC", "ETH", "USDT", "USDC", "XRP", "SOL", "ADA", "DOT", "DOGE", "Other"]
+            c_idx = crypto_options.index(crow.get("type", "BTC")) if crow.get("type") in crypto_options else 9
+            st.session_state.crypto_rows[i]["type"] = st.selectbox(
+                "Crypto", crypto_options, index=c_idx,
+                key=f"crypto_type_{i}", label_visibility="collapsed",
+            )
+        with cc2:
+            st.session_state.crypto_rows[i]["quantity"] = st.number_input(
+                "Quantity", value=float(crow.get("quantity", 0.0)),
+                min_value=0.0, step=0.01, format="%.8f",
+                key=f"crypto_qty_{i}", label_visibility="collapsed",
+            )
+        with cc3:
+            exchanges = ["Self-custodied", "Coinbase", "Kraken", "Binance", "FTX", "Other"]
+            e_idx = exchanges.index(crow.get("exchange", "Coinbase")) if crow.get("exchange") in exchanges else 0
+            st.session_state.crypto_rows[i]["exchange"] = st.selectbox(
+                "Exchange/wallet", exchanges, index=e_idx,
+                key=f"crypto_exch_{i}", label_visibility="collapsed",
+            )
+        with cc4:
+            st.session_state.crypto_rows[i]["current_value"] = st.number_input(
+                "Current value ($)", value=float(crow.get("current_value", 0.0)),
+                min_value=0.0, step=100.0, format="%.0f",
+                key=f"crypto_val_{i}", label_visibility="collapsed",
+            )
+        with cc5:
+            if st.button("✕", key=f"crypto_del_{i}", help="Remove"):
+                crypto_to_delete.append(i)
+
+    for i in sorted(crypto_to_delete, reverse=True):
+        st.session_state.crypto_rows.pop(i)
+    if crypto_to_delete:
+        st.rerun()
+
+    if st.button("＋  Add crypto"):
+        st.session_state.crypto_rows.append({
+            "type": "BTC", "quantity": 0.0, "exchange": "Coinbase", "current_value": 0.0,
+        })
+        st.rerun()
+
+    # ── Commodities section ────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Commodities & precious metals")
+    st.markdown(
+        '<div class="hint-box">🪙 Track gold, silver, oil, and other commodities by quantity and current value.</div>',
+        unsafe_allow_html=True,
+    )
+
+    commodity_to_delete = []
+    for i, crow in enumerate(st.session_state.commodity_rows):
+        cc1, cc2, cc3, cc4 = st.columns([1.5, 1, 2, 0.4])
+        with cc1:
+            commodity_options = ["Gold (oz)", "Silver (oz)", "Platinum (oz)", "Palladium (oz)", "Oil (bbl)", "Natural Gas (MMBtu)", "Copper (lb)", "Other"]
+            c_idx = commodity_options.index(crow.get("type", "Gold (oz)")) if crow.get("type") in commodity_options else 7
+            st.session_state.commodity_rows[i]["type"] = st.selectbox(
+                "Commodity", commodity_options, index=c_idx,
+                key=f"comm_type_{i}", label_visibility="collapsed",
+            )
+        with cc2:
+            st.session_state.commodity_rows[i]["quantity"] = st.number_input(
+                "Quantity", value=float(crow.get("quantity", 0.0)),
+                min_value=0.0, step=1.0, format="%.2f",
+                key=f"comm_qty_{i}", label_visibility="collapsed",
+            )
+        with cc3:
+            st.session_state.commodity_rows[i]["current_value"] = st.number_input(
+                "Current value ($)", value=float(crow.get("current_value", 0.0)),
+                min_value=0.0, step=100.0, format="%.0f",
+                key=f"comm_val_{i}", label_visibility="collapsed",
+            )
+        with cc4:
+            if st.button("✕", key=f"comm_del_{i}", help="Remove"):
+                commodity_to_delete.append(i)
+
+    for i in sorted(commodity_to_delete, reverse=True):
+        st.session_state.commodity_rows.pop(i)
+    if commodity_to_delete:
+        st.rerun()
+
+    if st.button("＋  Add commodity"):
+        st.session_state.commodity_rows.append({
+            "type": "Gold (oz)", "quantity": 0.0, "current_value": 0.0,
+        })
+        st.rerun()
+
+    # ── Debt/Liabilities section ────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Debts & liabilities")
+    st.markdown(
+        '<div class="hint-box">💳 Track mortgages, loans, and credit card debt. Amount is what you still owe.</div>',
+        unsafe_allow_html=True,
+    )
+
+    debt_to_delete = []
+    for i, drow in enumerate(st.session_state.debt_rows):
+        d1, d2, d3, d4, d5 = st.columns([1.3, 1.3, 1.3, 1.3, 0.4])
+        with d1:
+            debt_types = ["Mortgage", "Personal loan", "Student loan", "Auto loan", "Credit card", "Other"]
+            d_idx = debt_types.index(drow.get("type", "Mortgage")) if drow.get("type") in debt_types else 5
+            st.session_state.debt_rows[i]["type"] = st.selectbox(
+                "Type", debt_types, index=d_idx,
+                key=f"debt_type_{i}", label_visibility="collapsed",
+            )
+        with d2:
+            st.session_state.debt_rows[i]["amount"] = st.number_input(
+                "Amount owed ($)", value=float(drow.get("amount", 0.0)),
+                min_value=0.0, step=1000.0, format="%.0f",
+                key=f"debt_amt_{i}", label_visibility="collapsed",
+            )
+        with d3:
+            st.session_state.debt_rows[i]["interest_rate"] = st.number_input(
+                "Interest rate (% / yr)", value=float(drow.get("interest_rate", 3.5)),
+                min_value=0.0, max_value=50.0, step=0.25, format="%.2f",
+                key=f"debt_rate_{i}", label_visibility="collapsed",
+            )
+        with d4:
+            st.session_state.debt_rows[i]["description"] = st.text_input(
+                "Description", value=drow.get("description", ""),
+                key=f"debt_desc_{i}", label_visibility="collapsed",
+                placeholder="e.g. Primary home mortgage",
+            )
+        with d5:
+            if st.button("✕", key=f"debt_del_{i}", help="Remove"):
+                debt_to_delete.append(i)
+
+    for i in sorted(debt_to_delete, reverse=True):
+        st.session_state.debt_rows.pop(i)
+    if debt_to_delete:
+        st.rerun()
+
+    if st.button("＋  Add debt"):
+        st.session_state.debt_rows.append({
+            "type": "Mortgage", "amount": 0.0, "interest_rate": 3.5, "description": "",
+        })
+        st.rerun()
+
     # ── Build button ──────────────────────────────────────────────
     st.markdown("&nbsp;", unsafe_allow_html=True)
     if st.button("🔭  Build my portfolio map →", use_container_width=True):
@@ -1013,6 +1252,55 @@ def screen_entry():
                     "current_price": brow.get("current_price", 100.0),
                 })
 
+        # Real estate holdings
+        for rrow in st.session_state.realestate_rows:
+            if rrow.get("address", "").strip() and rrow.get("value", 0) > 0:
+                valid.append({
+                    "type": "real_estate",
+                    "address": rrow.get("address", ""),
+                    "city": rrow.get("city", ""),
+                    "country": rrow.get("country", ""),
+                    "current": rrow.get("value", 0.0),
+                    "paid": rrow.get("purchase_price", 0.0),
+                    "mortgage": rrow.get("mortgage", 0.0),
+                    "date": rrow.get("purchase_date", date.today()),
+                    "asset_class": rrow.get("type", "Primary residence"),
+                })
+
+        # Crypto holdings
+        for crow in st.session_state.crypto_rows:
+            if crow.get("current_value", 0) > 0:
+                valid.append({
+                    "type": "crypto",
+                    "crypto_type": crow.get("type", ""),
+                    "quantity": crow.get("quantity", 0.0),
+                    "exchange": crow.get("exchange", ""),
+                    "current": crow.get("current_value", 0.0),
+                    "paid": crow.get("current_value", 0.0),
+                })
+
+        # Commodities
+        for crow in st.session_state.commodity_rows:
+            if crow.get("current_value", 0) > 0:
+                valid.append({
+                    "type": "commodity",
+                    "commodity_type": crow.get("type", ""),
+                    "quantity": crow.get("quantity", 0.0),
+                    "current": crow.get("current_value", 0.0),
+                    "paid": crow.get("current_value", 0.0),
+                })
+
+        # Debts/liabilities
+        for drow in st.session_state.debt_rows:
+            if drow.get("amount", 0) > 0:
+                valid.append({
+                    "type": "debt",
+                    "debt_type": drow.get("type", ""),
+                    "amount": drow.get("amount", 0.0),
+                    "interest_rate": drow.get("interest_rate", 0.0),
+                    "description": drow.get("description", ""),
+                })
+
         if not valid:
             st.error("Please enter at least one valid holding.")
         else:
@@ -1029,21 +1317,24 @@ def screen_map():
         st.session_state.screen = "entry"
         st.rerun()
 
-    # Build info_map once per unique set of holdings; cache in session state
-    # to avoid redundant API calls on every Streamlit rerender.
-    holdings_key = tuple(h["isin"].upper() for h in holdings)
+    # Separate ISIN-based holdings from alternative assets
+    isin_holdings = [h for h in holdings if "isin" in h]
+    alt_holdings = [h for h in holdings if "isin" not in h]
+
+    # Build info_map once per unique set of ISIN holdings
+    holdings_key = tuple(h["isin"].upper() for h in isin_holdings) if isin_holdings else ()
     if st.session_state.get("_info_map_key") != holdings_key:
         with st.spinner("Fetching portfolio data…"):
-            st.session_state._info_map     = build_info_map(holdings)
+            st.session_state._info_map     = build_info_map(isin_holdings) if isin_holdings else {}
             st.session_state._info_map_key = holdings_key
     info_map = st.session_state._info_map
 
-    total_current = sum(h["current"] for h in holdings)
-    total_paid    = sum(h["paid"]    for h in holdings)
+    total_current = sum(h.get("current", 0) for h in holdings)
+    total_paid    = sum(h.get("paid", 0) for h in holdings)
     total_pnl     = total_current - total_paid
     total_pct     = (total_pnl / total_paid * 100) if total_paid > 0 else 0
 
-    geo_agg, sector_agg = aggregate_portfolio(holdings, info_map)
+    geo_agg, sector_agg = aggregate_portfolio(isin_holdings, info_map) if isin_holdings else ({}, {})
 
     # ── nav ────────────────────────────────────────────────────────
     st.markdown('<div class="orion-logo">ORION / PORTFOLIO INTELLIGENCE</div>', unsafe_allow_html=True)
@@ -1074,24 +1365,35 @@ def screen_map():
                 f'{pct_sign}{total_pct:.1f}% total return</div>', unsafe_allow_html=True)
 
     # ── net worth breakdown by asset type ──────────────────────────
-    equity_val = sum(h["current"] for h in holdings if h.get("asset_type", "stock_etf") == "stock_etf")
-    bond_val   = sum(h["current"] for h in holdings if h.get("asset_type") == "bond")
-    cash_val   = sum(h["current"] for h in holdings if h.get("asset_type") == "cash")
+    equity_val = sum(h["current"] for h in isin_holdings if h.get("asset_type", "stock_etf") == "stock_etf")
+    bond_val   = sum(h["current"] for h in isin_holdings if h.get("asset_type") == "bond")
+    cash_val   = sum(h["current"] for h in isin_holdings if h.get("asset_type") == "cash")
+    realestate_val = sum(h.get("current", 0) for h in alt_holdings if h.get("type") == "real_estate")
+    crypto_val = sum(h.get("current", 0) for h in alt_holdings if h.get("type") == "crypto")
+    commodity_val = sum(h.get("current", 0) for h in alt_holdings if h.get("type") == "commodity")
+    debt_val   = sum(h.get("amount", 0) for h in alt_holdings if h.get("type") == "debt")
+
     equity_pct = equity_val / total_current * 100 if total_current else 0
     bond_pct   = bond_val   / total_current * 100 if total_current else 0
     cash_pct   = cash_val   / total_current * 100 if total_current else 0
+    realestate_pct = realestate_val / total_current * 100 if total_current else 0
+    crypto_pct = crypto_val / total_current * 100 if total_current else 0
+    commodity_pct = commodity_val / total_current * 100 if total_current else 0
 
     total_annual_income = sum(
         bond_annual_income(h["face_value"], h["quantity"], h["coupon"])
-        for h in holdings if h.get("asset_type") == "bond"
+        for h in isin_holdings if h.get("asset_type") == "bond"
     )
     total_accrued = sum(
         bond_accrued_interest(h["face_value"], h["quantity"], h["coupon"], h["maturity"])
-        for h in holdings if h.get("asset_type") == "bond"
+        for h in isin_holdings if h.get("asset_type") == "bond"
     )
-    n_equities = sum(1 for h in holdings if h.get("asset_type", "stock_etf") == "stock_etf")
-    n_bonds    = sum(1 for h in holdings if h.get("asset_type") == "bond")
-    n_cash_cur = len({h.get("currency") for h in holdings if h.get("asset_type") == "cash"})
+    n_equities = sum(1 for h in isin_holdings if h.get("asset_type", "stock_etf") == "stock_etf")
+    n_bonds    = sum(1 for h in isin_holdings if h.get("asset_type") == "bond")
+    n_cash_cur = len({h.get("currency") for h in isin_holdings if h.get("asset_type") == "cash"})
+    n_realestate = sum(1 for h in alt_holdings if h.get("type") == "real_estate")
+    n_crypto = sum(1 for h in alt_holdings if h.get("type") == "crypto")
+    n_commodity = sum(1 for h in alt_holdings if h.get("type") == "commodity")
 
     nw_rows = []
     if equity_val > 0:
@@ -1104,6 +1406,19 @@ def screen_map():
     if cash_val > 0:
         nw_rows.append(("Cash", cash_val, cash_pct, "#EF9F27",
                          f"{n_cash_cur} currency{'ies' if n_cash_cur != 1 else ''}"))
+    if realestate_val > 0:
+        nw_rows.append(("Real Estate", realestate_val, realestate_pct, "#7F77DD",
+                         f"{n_realestate} propert{'ies' if n_realestate != 1 else 'y'}"))
+    if crypto_val > 0:
+        nw_rows.append(("Crypto", crypto_val, crypto_pct, "#F59E0B",
+                         f"{n_crypto} holding{'s' if n_crypto != 1 else ''}"))
+    if commodity_val > 0:
+        nw_rows.append(("Commodities", commodity_val, commodity_pct, "#D85A30",
+                         f"{n_commodity} position{'s' if n_commodity != 1 else ''}"))
+    if debt_val > 0:
+        debt_pct = debt_val / total_current * 100 if total_current else 0
+        nw_rows.append(("Debt", -debt_val, -debt_pct, "#DC2626",
+                         f"{sum(1 for h in alt_holdings if h.get('type') == 'debt')} obligation{'s' if sum(1 for h in alt_holdings if h.get('type') == 'debt') != 1 else ''}"))
 
     if len(nw_rows) >= 1:
         st.markdown("#### Net worth by asset type")
@@ -1188,7 +1503,7 @@ def screen_map():
         st.markdown("---")
 
     # ── alerts + warnings ──────────────────────────────────────────
-    if any(holding_is_etf(h["isin"].upper()) for h in holdings):
+    if any(holding_is_etf(h["isin"].upper()) for h in isin_holdings if "isin" in h):
         st.markdown('<div class="alert-box">⚠ Overlap possible — your ETFs may contain stocks that also appear as direct holdings. Look-through analysis is applied below.</div>',
                     unsafe_allow_html=True)
     for w in compute_warnings(geo_agg, sector_agg):
@@ -1226,7 +1541,7 @@ def screen_map():
         hovers  = [""]
         texts   = [""]
 
-        for i, h in enumerate(holdings):
+        for i, h in enumerate(isin_holdings):
             isin    = h["isin"].upper()
             cur     = h["current"]
             paid    = h["paid"]
@@ -1394,7 +1709,7 @@ def screen_map():
 
         # concentration alert
         country_sources = {}
-        for h in holdings:
+        for h in isin_holdings:
             isin = h["isin"].upper()
             info = info_map.get(isin, {})
             if info and "geo" in info:
@@ -1468,7 +1783,7 @@ def screen_map():
 
             # ── which holdings contribute to each country ───────────
             country_sources: dict[str, list[str]] = {}
-            for h in holdings:
+            for h in isin_holdings:
                 isin = h["isin"].upper()
                 info = info_map.get(isin, {})
                 h_name = info.get("name", isin)
@@ -1478,11 +1793,11 @@ def screen_map():
                         country_sources[c].append(h_name)
 
             # ── overlap detection ───────────────────────────────────
-            overlaps = find_overlapping_companies(holdings, info_map)
+            overlaps = find_overlapping_companies(isin_holdings, info_map)
             # mark countries that contain an overlapping company
             overlap_country_codes: set[str] = set()
             for sym, ov in overlaps.items():
-                for h in holdings:
+                for h in isin_holdings:
                     isin = h["isin"].upper()
                     info = info_map.get(isin, {})
                     if ov["name"] in info.get("name", ""):
@@ -1640,9 +1955,9 @@ def screen_map():
             unsafe_allow_html=True,
         )
 
-        max_port_p = max(h["current"] for h in holdings) / total_current * 100
+        max_port_p = max((h["current"] for h in isin_holdings), default=1) / total_current * 100
 
-        for i, h in enumerate(holdings):
+        for i, h in enumerate(isin_holdings):
             isin      = h["isin"].upper()
             cur       = h["current"]
             paid      = h["paid"]
@@ -1721,7 +2036,7 @@ def screen_map():
         donut_df = pd.DataFrame([{
             "name": _wrap_pie_label(info_map.get(h["isin"].upper(), {}).get("name", h["isin"].upper())),
             "value": h["current"]
-        } for h in holdings])
+        } for h in isin_holdings])
 
         fig_donut = px.pie(
             donut_df, names="name", values="value",
@@ -1759,7 +2074,7 @@ def screen_map():
                 unsafe_allow_html=True,
             )
 
-        for i, h in enumerate(holdings):
+        for i, h in enumerate(isin_holdings):
             isin   = h["isin"].upper()
             cur    = h["current"]
             paid   = h["paid"]
