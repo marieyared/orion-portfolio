@@ -1642,6 +1642,67 @@ def screen_map():
                 )
                 texts.append(f"{flag} {cname}<br>{detail}")
 
+        # ── Alt holdings: real estate, crypto, commodities ─────────
+        alt_colors = {"real_estate": "#7F77DD", "crypto": "#F59E0B", "commodity": "#D85A30"}
+        for h in alt_holdings:
+            h_type = h.get("type", "")
+            if h_type not in alt_colors:
+                continue
+            cur   = h.get("current", 0)
+            paid  = h.get("paid", 0)
+            if cur == 0:
+                continue
+            pnl   = cur - paid
+            pnl_p = (pnl / paid * 100) if paid else 0
+            port_p = cur / total_current * 100 if total_current else 0
+            pnl_str = f"+${pnl:,.0f} (+{pnl_p:.1f}%)" if pnl >= 0 else f"-${abs(pnl):,.0f} ({pnl_p:.1f}%)"
+            color  = alt_colors[h_type]
+
+            if h_type == "real_estate":
+                c_name  = h.get("country", "")
+                city    = h.get("city", "")
+                flag    = FLAGS.get(COUNTRY_NAME_TO_CODE.get(c_name, "Other"), "🏠")
+                label   = h.get("address", "Property") or "Property"
+                badge   = h.get("asset_class", "Real Estate")
+                sub_lbl = f"{flag} {city or c_name}"
+                hover   = (
+                    f"<b>{label}</b><br>Real Estate · {badge}<br>"
+                    f"{city}{', ' if city and c_name else ''}{c_name}<br>"
+                    f"Value: ${cur:,.0f}<br>Weight: {port_p:.1f}%<br>P&L: {pnl_str}"
+                )
+                text = f"<b>{label[:20]}</b><br>{port_p:.1f}% · {badge}"
+            elif h_type == "crypto":
+                label   = h.get("crypto_type", "Crypto")
+                sub_lbl = f"🌐 Digital"
+                hover   = (
+                    f"<b>{label}</b><br>Crypto · {h.get('exchange','')}<br>"
+                    f"Value: ${cur:,.0f}<br>Weight: {port_p:.1f}%<br>P&L: {pnl_str}"
+                )
+                text = f"<b>{label}</b><br>{port_p:.1f}% · Crypto"
+            else:
+                label   = h.get("commodity_type", "Commodity")
+                sub_lbl = "🌍 Global"
+                hover   = (
+                    f"<b>{label}</b><br>Commodity<br>"
+                    f"Value: ${cur:,.0f}<br>Weight: {port_p:.1f}%<br>P&L: {pnl_str}"
+                )
+                text = f"<b>{label}</b><br>{port_p:.1f}% · Commodity"
+
+            # parent node
+            labels.append(label)
+            parents.append("Portfolio")
+            values.append(cur)
+            colors.append(color)
+            hovers.append(hover)
+            texts.append(text)
+            # child node (location / type sub-block)
+            labels.append(f"{sub_lbl}||{label}")
+            parents.append(label)
+            values.append(cur)
+            colors.append(color + "99")
+            hovers.append(hover)
+            texts.append(sub_lbl)
+
         # clean display labels (strip the ||ISIN dedup suffix)
         display_labels = [l.split("||")[0] for l in labels]
 
