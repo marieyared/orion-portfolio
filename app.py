@@ -616,6 +616,26 @@ ISO3_MAP = {
     "EU":None,"Other":None,
 }
 
+COUNTRY_COORDS = {
+    "US":(38.9,-95.7), "JP":(35.7,139.7), "GB":(52.4,-1.5),
+    "FR":(46.2,2.2),   "CA":(56.1,-106.3),"CH":(46.9,7.4),
+    "DE":(51.2,10.5),  "AU":(-25.3,133.8),"NL":(52.4,4.9),
+    "CN":(35.9,104.2), "TW":(23.7,121.0), "IN":(20.6,78.9),
+    "KR":(37.6,127.0), "BR":(-14.2,-51.9),"SA":(24.7,46.7),
+    "SE":(60.1,18.6),  "NO":(60.5,8.5),   "DK":(56.3,9.5),
+    "FI":(61.9,25.7),  "ES":(40.5,-3.7),  "IT":(41.9,12.6),
+    "PT":(39.4,-8.2),  "BE":(50.5,4.5),   "AT":(47.5,14.5),
+    "IE":(53.1,-8.2),  "LU":(49.8,6.1),   "SG":(1.3,103.8),
+    "HK":(22.3,114.2), "ZA":(-29.0,25.1), "MX":(23.6,-102.6),
+    "RU":(61.5,105.3), "PL":(52.1,19.1),  "CZ":(49.8,15.5),
+    "HU":(47.2,19.5),  "TR":(38.9,35.2),  "IL":(31.5,34.8),
+    "AE":(24.5,54.4),  "QA":(25.4,51.2),  "TH":(13.0,101.0),
+    "ID":(-0.8,113.9), "MY":(4.2,108.0),  "PH":(12.9,121.8),
+    "VN":(14.1,108.3), "CL":(-35.7,-71.5),"CO":(4.6,-74.1),
+    "AR":(-38.4,-63.6),"NZ":(-40.9,174.9),"GR":(39.1,22.0),
+    "EU":(50.9,10.5),
+}
+
 # Derive country from the 2-letter ISIN prefix (ISO 3166-1 alpha-2).
 # Returns a geo dict like {"XX": 100} for use as a fallback.
 def country_from_isin(isin):
@@ -667,6 +687,56 @@ def build_info_map(holdings: list) -> dict:
     with ThreadPoolExecutor(max_workers=min(len(isins), 8)) as ex:
         infos = list(ex.map(_get, holdings))
     return dict(zip(isins, infos))
+
+
+def find_overlapping_companies(holdings: list, info_map: dict) -> dict:
+    """
+    Find companies held both directly (as equity) AND inside an ETF's top holdings.
+    Returns {ticker: {name, direct_value, etf_exposures, total_etf_value}}.
+    These are the 'shared nodes' from the diagram — same underlying company, two paths.
+    """
+    isin_cache = st.session_state.isin_cache
+    direct = {}      # ticker -> {name, value}
+    via_etf = {}     # ticker -> [{etf_name, weight_in_etf, value}]
+
+    for h in holdings:
+        isin = h["isin"].upper()
+        info = info_map.get(isin, {})
+        value = h["current"]
+        asset_type = h.get("asset_type", "stock_etf")
+
+        if asset_type in ("bond", "cash"):
+            continue
+
+        if holding_is_etf(isin):
+            etf_name = info.get("name", isin)
+            for th in info.get("top_holdings", []):
+                sym = th["symbol"].upper()
+                wt = th["weight"]
+                exposure_value = value * wt / 100
+                via_etf.setdefault(sym, []).append({
+                    "etf_name": etf_name,
+                    "weight_in_etf": wt,
+                    "value": exposure_value,
+                })
+        else:
+            cached = isin_cache.get(isin, {})
+            ticker = cached.get("ticker", "")
+            if ticker:
+                sym = ticker.upper()
+                name = info.get("name", isin)
+                entry = direct.setdefault(sym, {"name": name, "value": 0})
+                entry["value"] += value
+
+    result = {}
+    for sym in set(direct) & set(via_etf):
+        result[sym] = {
+            "name": direct[sym]["name"],
+            "direct_value": direct[sym]["value"],
+            "etf_exposures": via_etf[sym],
+            "total_etf_value": sum(e["value"] for e in via_etf[sym]),
+        }
+    return result
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -1377,36 +1447,104 @@ def screen_map():
     # ── TAB 2: WORLD MAP ──────────────────────────────────────────
     with tab2:
         st.markdown("### Geographic exposure — after look-through")
-        st.caption("Aggregated across all holdings including ETF internals. Hover any country for details.")
+        st.caption("Choropleth shows country weights; bubbles show your real $ exposure. Hover for details.")
 
         if geo_agg:
+            # ── choropleth data ─────────────────────────────────────
             map_data = []
             for code, pct in geo_agg.items():
                 iso3 = ISO3_MAP.get(code)
                 if iso3:
-                    name = COUNTRY_NAMES.get(code, code)
                     flag = FLAGS.get(code, "")
+                    name = COUNTRY_NAMES.get(code, code)
                     amount = total_current * pct / 100
                     map_data.append({
                         "iso3": iso3,
                         "country": f"{flag} {name}",
                         "pct": round(pct, 1),
-                        "amount": round(amount)
+                        "amount": round(amount),
                     })
-
             map_df = pd.DataFrame(map_data)
 
-            fig_map = px.choropleth(
-                map_df,
-                locations="iso3",
-                color="pct",
-                hover_name="country",
-                hover_data={"iso3": False, "pct": True, "amount": True},
-                color_continuous_scale=["#E6F1FB", "#0C447C"],
-                labels={"pct": "Exposure %", "amount": "Value ($)"},
-            )
+            # ── which holdings contribute to each country ───────────
+            country_sources: dict[str, list[str]] = {}
+            for h in holdings:
+                isin = h["isin"].upper()
+                info = info_map.get(isin, {})
+                h_name = info.get("name", isin)
+                for c in info.get("geo", {}):
+                    country_sources.setdefault(c, [])
+                    if h_name not in country_sources[c]:
+                        country_sources[c].append(h_name)
+
+            # ── overlap detection ───────────────────────────────────
+            overlaps = find_overlapping_companies(holdings, info_map)
+            # mark countries that contain an overlapping company
+            overlap_country_codes: set[str] = set()
+            for sym, ov in overlaps.items():
+                for h in holdings:
+                    isin = h["isin"].upper()
+                    info = info_map.get(isin, {})
+                    if ov["name"] in info.get("name", ""):
+                        for c in info.get("geo", {}):
+                            overlap_country_codes.add(c)
+
+            # ── build combined figure ───────────────────────────────
+            fig_map = go.Figure()
+
+            # Layer 1: choropleth
+            fig_map.add_trace(go.Choropleth(
+                locations=map_df["iso3"],
+                z=map_df["pct"],
+                text=map_df["country"],
+                hovertemplate="%{text}<br>%{z:.1f}% of portfolio<extra></extra>",
+                colorscale=["#E6F1FB", "#0C447C"],
+                showscale=True,
+                colorbar=dict(title="Exposure %", thickness=12, len=0.6),
+                marker_line_color="#f5f5f0",
+                marker_line_width=0.5,
+            ))
+
+            # Layer 2: scatter bubbles per country
+            for code, pct in geo_agg.items():
+                coords = COUNTRY_COORDS.get(code)
+                if not coords:
+                    continue
+                lat, lon = coords
+                flag     = FLAGS.get(code, "")
+                c_name   = COUNTRY_NAMES.get(code, code)
+                amount   = total_current * pct / 100
+                sources  = country_sources.get(code, [])
+                src_text = "<br>".join(f"· {s}" for s in sources[:6])
+                has_overlap = code in overlap_country_codes
+
+                bubble_color  = "#F59E0B" if has_overlap else "#378ADD"
+                border_color  = "#D97706" if has_overlap else "#ffffff"
+                bubble_size   = max(10, min(55, pct * 1.8))
+                hover_text    = (
+                    f"<b>{flag} {c_name}</b><br>"
+                    f"{pct:.1f}% · ${amount:,.0f}<br>"
+                    f"<span style='font-size:11px;color:#aaa;'>via</span><br>"
+                    f"{src_text}"
+                    + ("<br><b style='color:#F59E0B;'>⚠ shared exposure</b>" if has_overlap else "")
+                )
+
+                fig_map.add_trace(go.Scattergeo(
+                    lat=[lat],
+                    lon=[lon],
+                    mode="markers",
+                    marker=dict(
+                        size=bubble_size,
+                        color=bubble_color,
+                        opacity=0.75,
+                        line=dict(width=2, color=border_color),
+                    ),
+                    hovertemplate=hover_text + "<extra></extra>",
+                    showlegend=False,
+                ))
+
             fig_map.update_layout(
-                height=440,
+                height=470,
                 geo=dict(
                     showframe=False,
                     showcoastlines=True,
@@ -1417,12 +1555,54 @@ def screen_map():
                     oceancolor="#f0f4f8",
                     projection_type="natural earth",
                 ),
-                coloraxis_colorbar=dict(title="Exposure %"),
-                margin=dict(l=0, r=0, t=0, b=0),
+                margin=dict(l=0, r=0, t=8, b=0),
                 paper_bgcolor="white",
             )
             st.plotly_chart(fig_map, use_container_width=True)
 
+            # ── legend ──────────────────────────────────────────────
+            st.markdown(
+                '<div style="display:flex;gap:1.5rem;font-size:12px;color:#666;margin-bottom:1rem;">'
+                '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;'
+                'background:#378ADD;margin-right:4px;"></span>Exposure</span>'
+                '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;'
+                'background:#F59E0B;margin-right:4px;"></span>Shared (direct + ETF)</span>'
+                '<span style="color:#aaa;">Bubble size = % weight</span>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            # ── overlap companies panel ──────────────────────────────
+            if overlaps:
+                st.markdown("#### Shared exposures")
+                st.caption(
+                    "You reach these companies via two paths — directly as equities "
+                    "and inside an ETF's top holdings. Your real exposure is the sum."
+                )
+                for sym, ov in overlaps.items():
+                    total_val = ov["direct_value"] + ov["total_etf_value"]
+                    total_pct = total_val / total_current * 100 if total_current else 0
+                    via_etf_parts = ", ".join(
+                        f"{e['etf_name']} ({e['weight_in_etf']:.1f}%)"
+                        for e in ov["etf_exposures"]
+                    )
+                    st.markdown(
+                        f'<div style="background:white;border:1px solid #e8e6e0;border-radius:10px;'
+                        f'padding:0.9rem 1.1rem;margin-bottom:0.5rem;">'
+                        f'  <div style="display:flex;justify-content:space-between;align-items:baseline;">'
+                        f'    <span style="font-size:15px;font-weight:500;">{ov["name"]}</span>'
+                        f'    <span style="font-family:DM Mono,monospace;font-size:14px;color:#F59E0B;font-weight:500;">'
+                        f'      {total_pct:.2f}% total</span>'
+                        f'  </div>'
+                        f'  <div style="font-size:12px;color:#888;margin-top:4px;">'
+                        f'    Direct equity: <b>${ov["direct_value"]:,.0f}</b>'
+                        f'    &nbsp;·&nbsp; Via ETF: <b>${ov["total_etf_value"]:,.0f}</b> ({via_etf_parts})'
+                        f'  </div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+
+            # ── country breakdown ────────────────────────────────────
             st.markdown("#### Country breakdown")
             sorted_geo = sorted(geo_agg.items(), key=lambda x: -x[1])
             max_pct = sorted_geo[0][1] if sorted_geo else 1
@@ -1431,12 +1611,13 @@ def screen_map():
                 name = COUNTRY_NAMES.get(code, code)
                 amount = total_current * pct / 100
                 bar_width = int(pct / max_pct * 100)
+                bar_color = "#F59E0B" if code in overlap_country_codes else "#378ADD"
                 col_name, col_bar, col_pct, col_amt = st.columns([2, 3, 0.8, 1.2])
                 with col_name: st.markdown(f"{flag} {name}")
                 with col_bar:
                     st.markdown(
                         f'<div style="background:#e8e6e0;border-radius:4px;height:8px;margin-top:10px;">'
-                        f'<div style="background:#378ADD;width:{bar_width}%;height:100%;border-radius:4px;"></div></div>',
+                        f'<div style="background:{bar_color};width:{bar_width}%;height:100%;border-radius:4px;"></div></div>',
                         unsafe_allow_html=True)
                 with col_pct: st.markdown(f"**{pct:.1f}%**")
                 with col_amt: st.markdown(f"${amount:,.0f}")
