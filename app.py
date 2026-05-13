@@ -6,7 +6,10 @@ import plotly.graph_objects as go
 from datetime import date, datetime
 import json
 import os
+import calendar as _calendar
 from concurrent.futures import ThreadPoolExecutor
+from orion_ai_insights import generate_portfolio_insights, render_insights_card
+
 
 st.set_page_config(
     page_title="Orion: Portfolio Intelligence",
@@ -127,6 +130,7 @@ st.markdown("""
         font-size: 14px !important;
         font-weight: 500 !important;
         font-family: 'DM Sans', sans-serif !important;
+        white-space: nowrap !important;
         width: 100%;
     }
     .stButton > button:hover { opacity: 0.85 !important; }
@@ -156,6 +160,10 @@ if "isin_cache" not in st.session_state:
     st.session_state.isin_cache = {}
 if "api_issues" not in st.session_state:
     st.session_state.api_issues = {}
+if "cash_rows" not in st.session_state:
+    st.session_state.cash_rows = []
+if "bond_rows" not in st.session_state:
+    st.session_state.bond_rows = []
 
 
 def set_api_issue(service: str, message: str):
@@ -248,6 +256,56 @@ _YAHOO_SECTOR_MAP = {
     "financial_services": "Financials", "utilities": "Utilities",
     "industrials": "Industrials", "energy": "Energy", "healthcare": "Healthcare",
 }
+
+# ── Bond & Cash helpers ──────────────────────────────────────────
+_BOND_PREFIXES = {"XS", "XD", "XA", "XB", "XC", "XE", "XF"}
+_BOND_SEC_TYPES = {"Bond", "Corporate Bond", "Government Bond", "Note", "Debenture"}
+
+_CURRENCY_FLAGS = {
+    "USD": "🇺🇸", "EUR": "🇪🇺", "GBP": "🇬🇧", "JPY": "🇯🇵",
+    "CHF": "🇨🇭", "CAD": "🇨🇦", "AUD": "🇦🇺", "CNY": "🇨🇳",
+    "HKD": "🇭🇰", "SGD": "🇸🇬", "NOK": "🇳🇴", "SEK": "🇸🇪",
+    "DKK": "🇩🇰", "SAR": "🇸🇦", "AED": "🇦🇪", "INR": "🇮🇳",
+    "BRL": "🇧🇷", "MXN": "🇲🇽", "ZAR": "🇿🇦", "TRY": "🇹🇷",
+}
+_CURRENCY_COUNTRY = {
+    "USD": "US", "EUR": "EU", "GBP": "GB", "JPY": "JP",
+    "CHF": "CH", "CAD": "CA", "AUD": "AU", "CNY": "CN",
+    "HKD": "HK", "SGD": "SG", "NOK": "NO", "SEK": "SE",
+    "DKK": "DK", "SAR": "SA", "AED": "AE", "INR": "IN",
+    "BRL": "BR", "MXN": "MX", "ZAR": "ZA", "TRY": "TR",
+}
+_CURRENCIES = list(_CURRENCY_FLAGS.keys())
+
+def isin_is_likely_bond(isin: str) -> bool:
+    if isin[:2].upper() in _BOND_PREFIXES:
+        return True
+    sec_type = st.session_state.isin_cache.get(isin.upper(), {}).get("type", "")
+    return any(bt.lower() in sec_type.lower() for bt in _BOND_SEC_TYPES)
+
+def find_last_coupon_date(maturity: date, today: date) -> date:
+    """Semi-annual coupon dates anchored to the maturity month/day."""
+    m_month, m_day = maturity.month, maturity.day
+    candidates = []
+    for yr in [today.year - 1, today.year, today.year + 1]:
+        for offset in [0, 6]:
+            mo = (m_month - 1 + offset) % 12 + 1
+            yr_adj = yr + (m_month - 1 + offset) // 12
+            last = _calendar.monthrange(yr_adj, mo)[1]
+            candidates.append(date(yr_adj, mo, min(m_day, last)))
+    past = [d for d in candidates if d <= today]
+    return max(past) if past else today
+
+def bond_accrued_interest(face_value: float, quantity: float, coupon_pct: float, maturity: date) -> float:
+    today = date.today()
+    last_coupon = find_last_coupon_date(maturity, today)
+    days_accrued = max(0, (today - last_coupon).days)
+    annual = face_value * quantity * (coupon_pct / 100)
+    return annual * (days_accrued / 365.0)
+
+def bond_annual_income(face_value: float, quantity: float, coupon_pct: float) -> float:
+    return face_value * quantity * (coupon_pct / 100)
+
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def _stock_country(ticker: str) -> str:
@@ -470,8 +528,19 @@ def holding_is_etf(isin: str, isin_cache: dict = None) -> bool:
     name = cached.get("name", "").upper()
     return any(kw in name for kw in _ETF_NAME_KEYWORDS)
 
-def get_holding_info(isin: str, isin_cache: dict = None) -> dict:
+def get_holding_info(isin: str, isin_cache: dict = None, asset_type: str = "stock_etf") -> dict:
     """Return {name, geo, sectors} for an ISIN — always returns a dict, never None."""
+    if asset_type == "cash":
+        currency = isin.replace("CASH_", "")
+        flag = _CURRENCY_FLAGS.get(currency, "")
+        country = _CURRENCY_COUNTRY.get(currency, "Other")
+        return {"name": f"{flag} Cash ({currency})", "geo": {country: 100}, "sectors": {"Cash": 100}}
+    if asset_type == "bond":
+        cache = isin_cache if isin_cache is not None else st.session_state.isin_cache
+        cached_figi = cache.get(isin, {})
+        name = cached_figi.get("name", isin)
+        code = country_from_isin(isin)
+        return {"name": name, "geo": {code: 100}, "sectors": {"Fixed Income": 100}}
     cache       = isin_cache if isin_cache is not None else st.session_state.isin_cache
     cached_figi = cache.get(isin, {})
     name     = cached_figi.get("name", isin)
@@ -585,16 +654,18 @@ def compute_warnings(geo_agg: dict, sector_agg: dict) -> list:
             name = COUNTRY_NAMES.get(code, code)
             msgs.append(f"{flag} <b>{name}</b> is <b>{pct:.0f}%</b> of your portfolio — consider diversifying geographically.")
     for sector, pct in sector_agg.items():
-        if pct >= _SECTOR_WARN_PCT and sector not in ("ETF / Fund", "—", "Other"):
+        if pct >= _SECTOR_WARN_PCT and sector not in ("ETF / Fund", "—", "Other", "Cash", "Fixed Income"):
             msgs.append(f"<b>{pct:.0f}% in {sector}</b> — high concentration in one sector.")
     return msgs
 
 
 def build_info_map(holdings: list) -> dict:
+    cache = dict(st.session_state.isin_cache)
+    def _get(h):
+        return get_holding_info(h["isin"].upper(), cache, h.get("asset_type", "stock_etf"))
     isins = [h["isin"].upper() for h in holdings]
-    cache = dict(st.session_state.isin_cache)  # snapshot before threading
     with ThreadPoolExecutor(max_workers=min(len(isins), 8)) as ex:
-        infos = list(ex.map(lambda isin: get_holding_info(isin, cache), isins))
+        infos = list(ex.map(_get, holdings))
     return dict(zip(isins, infos))
 
 
@@ -662,23 +733,222 @@ def screen_entry():
         st.rerun()
 
     st.markdown("&nbsp;", unsafe_allow_html=True)
+    if st.button("＋  Add stock / ETF"):
+        st.session_state.entry_rows.append(
+            {"isin": "", "current": 0.0, "date": date.today(), "paid": 0.0})
+        st.rerun()
 
-    ca, cb = st.columns([1, 3])
-    with ca:
-        if st.button("＋  Add holding"):
-            st.session_state.entry_rows.append(
-                {"isin":"","current":0.0,"date":date.today(),"paid":0.0})
+    # ── Cash section ─────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Cash positions")
+    st.markdown(
+        '<div class="hint-box">💵 Enter cash balances by currency. '
+        'Amount is treated as current value with no market-price risk.</div>',
+        unsafe_allow_html=True,
+    )
+
+    if st.session_state.cash_rows:
+        ch1, ch2, ch3 = st.columns([1.5, 2.5, 0.4])
+        ch1.markdown("**Currency**")
+        ch2.markdown("**Amount ($)**")
+        ch3.markdown("&nbsp;", unsafe_allow_html=True)
+
+    cash_to_delete = []
+    for i, crow in enumerate(st.session_state.cash_rows):
+        cc1, cc2, cc3 = st.columns([1.5, 2.5, 0.4])
+        with cc1:
+            cur_options = _CURRENCIES
+            cur_idx = cur_options.index(crow.get("currency", "USD")) if crow.get("currency", "USD") in cur_options else 0
+            st.session_state.cash_rows[i]["currency"] = st.selectbox(
+                "Currency", cur_options, index=cur_idx,
+                key=f"cash_cur_{i}", label_visibility="collapsed",
+            )
+        with cc2:
+            st.session_state.cash_rows[i]["amount"] = st.number_input(
+                "Amount", value=float(crow.get("amount", 0.0)),
+                min_value=0.0, step=1000.0, format="%.0f",
+                key=f"cash_amt_{i}", label_visibility="collapsed",
+            )
+        with cc3:
+            if st.button("✕", key=f"cash_del_{i}", help="Remove"):
+                cash_to_delete.append(i)
+
+    for i in sorted(cash_to_delete, reverse=True):
+        st.session_state.cash_rows.pop(i)
+    if cash_to_delete:
+        st.rerun()
+
+    if st.button("＋  Add cash position"):
+        st.session_state.cash_rows.append({"currency": "USD", "amount": 0.0})
+        st.rerun()
+
+    # ── Bond section ──────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Bond holdings")
+    st.markdown(
+        '<div class="hint-box">🔗 Enter your bond ISIN — we\'ll look it up and detect the type. '
+        '<b>XS</b> and <b>XD</b> prefix ISINs are Eurobonds. '
+        'Provide coupon rate, maturity, face value, and quantity to estimate annual income and accrued interest.</div>',
+        unsafe_allow_html=True,
+    )
+
+    bonds_to_delete = []
+    for i, brow in enumerate(st.session_state.bond_rows):
+        with st.container(border=True):
+            bisin_col, bdel_col = st.columns([11, 0.5])
+            with bisin_col:
+                bisin = st.text_input(
+                    "Bond ISIN", value=brow.get("isin", ""),
+                    key=f"bond_isin_{i}", label_visibility="collapsed",
+                    placeholder="e.g. XS2479923143 or DE0001102580",
+                    max_chars=12,
+                ).upper().strip()
+                st.session_state.bond_rows[i]["isin"] = bisin
+                if len(bisin) == 12:
+                    binfo = lookup_isin(bisin)
+                    if binfo:
+                        likely = isin_is_likely_bond(bisin)
+                        badge_cls = "instrument-found" if likely else "instrument-found"
+                        bond_label = "Bond confirmed" if likely else "Instrument found — verify it is a bond"
+                        st.markdown(
+                            f'<div class="{badge_cls}">✓ {binfo["name"]} · {binfo["type"]} · {bond_label}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.markdown('<div class="instrument-error">ISIN not recognised</div>', unsafe_allow_html=True)
+            with bdel_col:
+                if st.button("✕", key=f"bond_del_{i}", help="Remove bond"):
+                    bonds_to_delete.append(i)
+
+            b1, b2, b3, b4 = st.columns(4)
+            with b1:
+                st.session_state.bond_rows[i]["coupon"] = st.number_input(
+                    "Coupon rate (% / yr)", value=float(brow.get("coupon", 5.0)),
+                    min_value=0.0, max_value=50.0, step=0.25, format="%.2f",
+                    key=f"bond_coupon_{i}",
+                )
+            with b2:
+                st.session_state.bond_rows[i]["maturity"] = st.date_input(
+                    "Maturity date",
+                    value=brow.get("maturity", date(date.today().year + 5, 1, 1)),
+                    key=f"bond_mat_{i}", min_value=date.today(),
+                )
+            with b3:
+                st.session_state.bond_rows[i]["face_value"] = st.number_input(
+                    "Face value per bond ($)", value=float(brow.get("face_value", 1000.0)),
+                    min_value=1.0, step=100.0, format="%.0f",
+                    key=f"bond_fv_{i}",
+                )
+            with b4:
+                st.session_state.bond_rows[i]["quantity"] = st.number_input(
+                    "Quantity (bonds)", value=int(brow.get("quantity", 1)),
+                    min_value=1, step=1, key=f"bond_qty_{i}",
+                )
+
+            b5, b6, b7 = st.columns(3)
+            with b5:
+                st.session_state.bond_rows[i]["purchase_date"] = st.date_input(
+                    "Purchase date", value=brow.get("purchase_date", date.today()),
+                    key=f"bond_pdate_{i}", min_value=date(2000, 1, 1), max_value=date.today(),
+                )
+            with b6:
+                st.session_state.bond_rows[i]["purchase_price"] = st.number_input(
+                    "Purchase price (% of par)", value=float(brow.get("purchase_price", 100.0)),
+                    min_value=0.1, max_value=200.0, step=0.5, format="%.2f",
+                    key=f"bond_pp_{i}",
+                )
+            with b7:
+                st.session_state.bond_rows[i]["current_price"] = st.number_input(
+                    "Current price (% of par)", value=float(brow.get("current_price", 100.0)),
+                    min_value=0.1, max_value=200.0, step=0.5, format="%.2f",
+                    key=f"bond_cp_{i}",
+                )
+
+            # Live computed estimates
+            fv   = st.session_state.bond_rows[i]["face_value"]
+            qty  = st.session_state.bond_rows[i]["quantity"]
+            coup = st.session_state.bond_rows[i]["coupon"]
+            mat  = st.session_state.bond_rows[i]["maturity"]
+            cp   = st.session_state.bond_rows[i]["current_price"]
+            pp   = st.session_state.bond_rows[i]["purchase_price"]
+            par      = fv * qty
+            curr_val = par * (cp / 100)
+            paid_val = par * (pp / 100)
+            ann_inc  = bond_annual_income(fv, qty, coup)
+            accrued  = bond_accrued_interest(fv, qty, coup, mat)
+            pnl      = curr_val - paid_val
+            pnl_sign = "+" if pnl >= 0 else ""
+            pnl_col  = "#15803d" if pnl >= 0 else "#dc2626"
+            st.markdown(
+                f'<div style="background:#f8f7f4;border-radius:8px;padding:0.6rem 1rem;'
+                f'font-size:13px;color:#555;margin-top:0.5rem;line-height:2;">'
+                f'Par value: <b>${par:,.0f}</b>'
+                f'&nbsp;&nbsp;|&nbsp;&nbsp;Current value: <b>${curr_val:,.0f}</b>'
+                f'&nbsp;&nbsp;|&nbsp;&nbsp;P&L: <b style="color:{pnl_col};">{pnl_sign}${abs(pnl):,.0f}</b>'
+                f'&nbsp;&nbsp;|&nbsp;&nbsp;Annual income: <b style="color:#15803d;">${ann_inc:,.0f}</b>'
+                f'&nbsp;&nbsp;|&nbsp;&nbsp;Accrued interest: <b>${accrued:,.2f}</b>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    for i in sorted(bonds_to_delete, reverse=True):
+        st.session_state.bond_rows.pop(i)
+    if bonds_to_delete:
+        st.rerun()
+
+    if st.button("＋  Add bond"):
+        st.session_state.bond_rows.append({
+            "isin": "", "face_value": 1000.0, "quantity": 1,
+            "coupon": 5.0, "maturity": date(date.today().year + 5, 1, 1),
+            "purchase_date": date.today(), "purchase_price": 100.0, "current_price": 100.0,
+        })
+        st.rerun()
+
+    # ── Build button ──────────────────────────────────────────────
+    st.markdown("&nbsp;", unsafe_allow_html=True)
+    if st.button("🔭  Build my portfolio map →", use_container_width=True):
+        valid = [r for r in st.session_state.entry_rows
+                 if len(r["isin"]) == 12 and r["current"] > 0]
+
+        # Aggregate cash by currency
+        cash_by_currency: dict[str, float] = {}
+        for crow in st.session_state.cash_rows:
+            cur = crow.get("currency", "USD")
+            cash_by_currency[cur] = cash_by_currency.get(cur, 0.0) + crow.get("amount", 0.0)
+        for currency, amount in cash_by_currency.items():
+            if amount > 0:
+                valid.append({
+                    "isin": f"CASH_{currency}",
+                    "current": amount, "paid": amount,
+                    "date": date.today(),
+                    "asset_type": "cash", "currency": currency,
+                })
+
+        # Bond holdings
+        for brow in st.session_state.bond_rows:
+            bisin = brow.get("isin", "").strip()
+            if len(bisin) == 12 and brow.get("face_value", 0) > 0 and brow.get("quantity", 0) > 0:
+                fv  = brow["face_value"]
+                qty = brow["quantity"]
+                valid.append({
+                    "isin": bisin,
+                    "current": fv * qty * (brow.get("current_price", 100.0) / 100),
+                    "paid":    fv * qty * (brow.get("purchase_price", 100.0) / 100),
+                    "date":    brow.get("purchase_date", date.today()),
+                    "asset_type": "bond",
+                    "face_value":  fv,
+                    "quantity":    qty,
+                    "coupon":      brow.get("coupon", 0.0),
+                    "maturity":    brow.get("maturity", date.today()),
+                    "current_price": brow.get("current_price", 100.0),
+                })
+
+        if not valid:
+            st.error("Please enter at least one valid holding.")
+        else:
+            st.session_state.holdings = valid
+            st.session_state.screen = "map"
             st.rerun()
-    with cb:
-        if st.button("🔭  Build my portfolio map →"):
-            valid = [r for r in st.session_state.entry_rows
-                     if len(r["isin"]) == 12 and r["current"] > 0]
-            if not valid:
-                st.error("Please enter at least one valid holding.")
-            else:
-                st.session_state.holdings = valid
-                st.session_state.screen = "map"
-                st.rerun()
 
 # ══════════════════════════════════════════════════════════════════
 # SCREEN 2 — MAP + PERFORMANCE
@@ -733,6 +1003,120 @@ def screen_map():
     st.markdown(f'<div style="text-align:center;font-size:13px;color:{pnl_color};margin:-0.5rem 0 1rem;">'
                 f'{pct_sign}{total_pct:.1f}% total return</div>', unsafe_allow_html=True)
 
+    # ── net worth breakdown by asset type ──────────────────────────
+    equity_val = sum(h["current"] for h in holdings if h.get("asset_type", "stock_etf") == "stock_etf")
+    bond_val   = sum(h["current"] for h in holdings if h.get("asset_type") == "bond")
+    cash_val   = sum(h["current"] for h in holdings if h.get("asset_type") == "cash")
+    equity_pct = equity_val / total_current * 100 if total_current else 0
+    bond_pct   = bond_val   / total_current * 100 if total_current else 0
+    cash_pct   = cash_val   / total_current * 100 if total_current else 0
+
+    total_annual_income = sum(
+        bond_annual_income(h["face_value"], h["quantity"], h["coupon"])
+        for h in holdings if h.get("asset_type") == "bond"
+    )
+    total_accrued = sum(
+        bond_accrued_interest(h["face_value"], h["quantity"], h["coupon"], h["maturity"])
+        for h in holdings if h.get("asset_type") == "bond"
+    )
+    n_equities = sum(1 for h in holdings if h.get("asset_type", "stock_etf") == "stock_etf")
+    n_bonds    = sum(1 for h in holdings if h.get("asset_type") == "bond")
+    n_cash_cur = len({h.get("currency") for h in holdings if h.get("asset_type") == "cash"})
+
+    nw_rows = []
+    if equity_val > 0:
+        nw_rows.append(("Equities", equity_val, equity_pct, "#378ADD",
+                         f"{n_equities} holding{'s' if n_equities != 1 else ''}"))
+    if bond_val > 0:
+        inc_str = f" · ${total_annual_income:,.0f}/yr income" if total_annual_income else ""
+        nw_rows.append(("Bonds", bond_val, bond_pct, "#1D9E75",
+                         f"{n_bonds} bond{'s' if n_bonds != 1 else ''}{inc_str}"))
+    if cash_val > 0:
+        nw_rows.append(("Cash", cash_val, cash_pct, "#EF9F27",
+                         f"{n_cash_cur} currency{'ies' if n_cash_cur != 1 else ''}"))
+
+    if len(nw_rows) >= 1:
+        st.markdown("#### Net worth by asset type")
+        nw_left, nw_right = st.columns([1, 1.5])
+
+        with nw_left:
+            pie_labels = [r[0] for r in nw_rows]
+            pie_values = [r[1] for r in nw_rows]
+            pie_colors = [r[3] for r in nw_rows]
+
+            def _fmt_center(n):
+                if n >= 1_000_000:
+                    return f"${n/1_000_000:.1f}M"
+                return f"${n/1_000:.0f}k"
+
+            fig_nw = go.Figure(go.Pie(
+                labels=pie_labels,
+                values=pie_values,
+                hole=0.62,
+                marker=dict(colors=pie_colors, line=dict(color="white", width=3)),
+                textinfo="percent",
+                textfont=dict(family="DM Sans", size=12, color="white"),
+                hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>",
+                direction="clockwise",
+                sort=False,
+            ))
+            fig_nw.add_annotation(
+                text=f"{_fmt_center(total_current)}<br>total",
+                x=0.5, y=0.5, showarrow=False,
+                font=dict(family="DM Mono", size=14, color="#1a1a1a"),
+                align="center",
+            )
+            fig_nw.update_layout(
+                height=210,
+                showlegend=False,
+                margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor="white",
+            )
+            st.plotly_chart(fig_nw, use_container_width=True)
+
+        with nw_right:
+            max_pct = max(r[2] for r in nw_rows)
+            for label, val, pct, color, detail in nw_rows:
+                bar_w = int(pct / max_pct * 100) if max_pct else 0
+                st.markdown(
+                    f'<div style="margin-bottom:0.9rem;">'
+                    f'  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">'
+                    f'    <span style="font-size:13px;font-weight:500;color:#1a1a1a;">'
+                    f'      <span style="display:inline-block;width:9px;height:9px;border-radius:50%;'
+                    f'background:{color};margin-right:7px;vertical-align:middle;"></span>'
+                    f'      {label}</span>'
+                    f'    <span style="font-family:DM Mono,monospace;font-size:13px;">'
+                    f'      ${val:,.0f}&nbsp;<span style="color:#aaa;font-size:12px;">{pct:.1f}%</span></span>'
+                    f'  </div>'
+                    f'  <div style="background:#e8e6e0;border-radius:4px;height:6px;margin-bottom:4px;">'
+                    f'    <div style="background:{color};width:{bar_w}%;height:100%;border-radius:4px;"></div>'
+                    f'  </div>'
+                    f'  <div style="font-size:11px;color:#aaa;">{detail}</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+            if bond_val > 0 and total_annual_income > 0:
+                yoc = total_annual_income / bond_val * 100
+                liq = cash_val / total_current * 100 if total_current else 0
+                st.markdown(
+                    f'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;'
+                    f'padding:0.5rem 0.85rem;font-size:12px;color:#15803d;margin-top:0.25rem;line-height:1.9;">'
+                    f'Annual bond income&nbsp;<b>${total_annual_income:,.0f}</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Accrued&nbsp;<b>${total_accrued:,.2f}</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Yield on cost&nbsp;<b>{yoc:.2f}%</b>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+                if cash_val > 0:
+                    st.markdown(
+                        f'<div style="font-size:11px;color:#aaa;margin-top:6px;">'
+                        f'Liquidity ratio (cash): {liq:.1f}% of portfolio</div>',
+                        unsafe_allow_html=True,
+                    )
+
+        st.markdown("---")
+
     # ── alerts + warnings ──────────────────────────────────────────
     if any(holding_is_etf(h["isin"].upper()) for h in holdings):
         st.markdown('<div class="alert-box">⚠ Overlap possible — your ETFs may contain stocks that also appear as direct holdings. Look-through analysis is applied below.</div>',
@@ -741,6 +1125,19 @@ def screen_map():
         st.markdown(f'<div class="warn-box">⚠ {w}</div>', unsafe_allow_html=True)
 
     st.markdown("---")
+
+    # ── AI insights ───────────────────────────────────────────────
+
+    st.markdown("---")
+
+    with st.spinner("Generating AI insights…"):
+
+        insights = generate_portfolio_insights(holdings, geo_agg, sector_agg, info_map)
+
+    render_insights_card(insights)
+
+    st.markdown("---")
+
 
     # ── TAB LAYOUT ─────────────────────────────────────────────────
     tab1, tab2, tab3, tab4 = st.tabs(["Portfolio map", "World exposure", "Performance", "Holdings"])
@@ -767,11 +1164,15 @@ def screen_map():
             pnl_p   = (pnl / paid * 100) if paid > 0 else 0
             port_p  = (cur / total_current * 100) if total_current > 0 else 0
             is_etf  = holding_is_etf(isin)
+            is_bond = h.get("asset_type") == "bond"
+            is_cash = h.get("asset_type") == "cash"
             info    = info_map.get(isin, {})
             name    = info.get("name", isin)
             color   = COLORS[i % len(COLORS)]
             pnl_str = f"+${pnl:,.0f} (+{pnl_p:.1f}%)" if pnl >= 0 else f"-${abs(pnl):,.0f} ({pnl_p:.1f}%)"
-            badge   = "Look-through" if is_etf else "Direct equity"
+            badge   = ("Look-through" if is_etf else
+                       "Bond" if is_bond else
+                       "Cash" if is_cash else "Direct equity")
 
             labels.append(name)
             parents.append("Portfolio")
@@ -819,13 +1220,13 @@ def screen_map():
                 parents.append(name)
                 values.append(cur)
                 colors.append(color + "99")
+                detail = ("Bond" if is_bond else "Cash" if is_cash else "Direct equity")
                 hovers.append(
                     f"<b>{flag} {cname}</b><br>"
-                    f"Listed: {name}<br>"
-                    f"Direct equity — single listing<br>"
+                    f"{detail}: {name}<br>"
                     f"Value: ${cur:,.0f}"
                 )
-                texts.append(f"{flag} {cname}<br>Listed")
+                texts.append(f"{flag} {cname}<br>{detail}")
 
         # clean display labels (strip the ||ISIN dedup suffix)
         display_labels = [l.split("||")[0] for l in labels]
@@ -1069,7 +1470,10 @@ def screen_map():
             port_p    = (cur / total_current * 100) if total_current > 0 else 0
             info      = info_map.get(isin, {})
             name      = info.get("name", isin)
-            kind      = "ETF" if holding_is_etf(isin) else "Equity"
+            h_type    = h.get("asset_type", "stock_etf")
+            kind      = ("ETF" if holding_is_etf(isin) else
+                         "Bond" if h_type == "bond" else
+                         "Cash" if h_type == "cash" else "Equity")
             color     = COLORS[i % len(COLORS)]
             bought_str = f"{h['date'].day} {h['date'].strftime('%b %Y')}" if h.get("date") else "—"
             days      = (date.today() - h["date"]).days if h.get("date") else None
@@ -1100,6 +1504,23 @@ def screen_map():
                 f'</div>',
                 unsafe_allow_html=True,
             )
+
+            if h_type == "bond":
+                ann_inc = bond_annual_income(h["face_value"], h["quantity"], h["coupon"])
+                accrued = bond_accrued_interest(h["face_value"], h["quantity"], h["coupon"], h["maturity"])
+                mat_str = h["maturity"].strftime("%-d %b %Y")
+                st.markdown(
+                    f'<div style="background:#f8f7f4;border-radius:8px;padding:0.5rem 1rem;'
+                    f'margin-bottom:0.75rem;font-size:12px;color:#666;line-height:2;">'
+                    f'Coupon: <b>{h["coupon"]:.2f}%</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Maturity: <b>{mat_str}</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Par: <b>${h["face_value"] * h["quantity"]:,.0f}</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Current price: <b>{h["current_price"]:.2f}%</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Annual income: <b style="color:#15803d;">${ann_inc:,.0f}</b>'
+                    f'&nbsp;&nbsp;·&nbsp;&nbsp;Accrued interest: <b>${accrued:,.2f}</b>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
         st.markdown("### Allocation — current weights")
 
@@ -1148,8 +1569,8 @@ def screen_map():
             st.session_state._editing_holding = None
 
         # Header row
-        hcols = st.columns([3, 1.5, 1.8, 1.2, 0.9, 1.7])
-        for col, lbl in zip(hcols, ["Name / ISIN", "Country", "Sector", "Value ($)", "Weight", ""]):
+        hcols = st.columns([3, 1.5, 1.8, 1.2, 0.9, 1.0, 1.0])
+        for col, lbl in zip(hcols, ["Name / ISIN", "Country", "Sector", "Value ($)", "Weight", "", ""]):
             col.markdown(
                 f'<div style="font-size:11px;color:#aaa;text-transform:uppercase;'
                 f'letter-spacing:0.07em;padding-bottom:6px;border-bottom:2px solid #e8e6e0;">'
@@ -1162,6 +1583,7 @@ def screen_map():
             cur    = h["current"]
             paid   = h["paid"]
             port_p = (cur / total_current * 100) if total_current > 0 else 0
+            h_type = h.get("asset_type", "stock_etf")
 
             info   = info_map.get(isin, {})
             name   = info.get("name", isin)
@@ -1172,8 +1594,9 @@ def screen_map():
             cname  = COUNTRY_NAMES.get(code, code)
             sector = "ETF / Fund" if holding_is_etf(isin) else max(secs.items(), key=lambda x: x[1])[0]
             is_editing = st.session_state._editing_holding == i
+            editable   = h_type == "stock_etf"
 
-            rc0, rc1, rc2, rc3, rc4, rc_btns = st.columns([3, 1.5, 1.8, 1.2, 0.9, 1.7])
+            rc0, rc1, rc2, rc3, rc4, rc5, rc6 = st.columns([3, 1.5, 1.8, 1.2, 0.9, 1.0, 1.0])
             with rc0:
                 st.markdown(
                     f'<div style="font-size:14px;font-weight:500;color:#1a1a1a;padding-top:6px;">{name}</div>'
@@ -1188,23 +1611,22 @@ def screen_map():
                 st.markdown(f'<div style="padding-top:8px;font-family:DM Mono,monospace;">${cur:,.0f}</div>', unsafe_allow_html=True)
             with rc4:
                 st.markdown(f'<div style="padding-top:8px;font-family:DM Mono,monospace;">{port_p:.1f}%</div>', unsafe_allow_html=True)
-            with rc_btns:
-                b1, b2 = st.columns(2)
-                with b1:
+            with rc5:
+                if editable:
                     edit_lbl = "Cancel" if is_editing else "Edit"
                     if st.button(edit_lbl, key=f"edit_h_{i}", use_container_width=True):
                         st.session_state._editing_holding = None if is_editing else i
                         st.rerun()
-                with b2:
-                    if st.button("Delete", key=f"del_h_{i}", use_container_width=True):
-                        deleted = st.session_state.holdings.pop(i)
-                        st.session_state.entry_rows = [r for r in st.session_state.entry_rows if r is not deleted]
-                        st.session_state._editing_holding = None
-                        if not st.session_state.holdings:
-                            st.session_state.screen = "entry"
-                        st.rerun()
+            with rc6:
+                if st.button("Delete", key=f"del_h_{i}", use_container_width=True):
+                    deleted = st.session_state.holdings.pop(i)
+                    st.session_state.entry_rows = [r for r in st.session_state.entry_rows if r is not deleted]
+                    st.session_state._editing_holding = None
+                    if not st.session_state.holdings:
+                        st.session_state.screen = "entry"
+                    st.rerun()
 
-            if is_editing:
+            if editable and is_editing:
                 with st.container(border=True):
                     st.markdown(f"**Editing: {name}**")
                     with st.form(key=f"edit_form_{i}"):
@@ -1237,6 +1659,23 @@ def screen_map():
                     if cancelled:
                         st.session_state._editing_holding = None
                         st.rerun()
+
+            if h_type == "bond":
+                ann_inc = bond_annual_income(h["face_value"], h["quantity"], h["coupon"])
+                accrued = bond_accrued_interest(h["face_value"], h["quantity"], h["coupon"], h["maturity"])
+                mat_str = h["maturity"].strftime("%-d %b %Y")
+                st.markdown(
+                    f'<div style="background:#f8f7f4;border-radius:6px;padding:0.4rem 1rem;'
+                    f'margin:2px 0 4px;font-size:12px;color:#666;line-height:2;">'
+                    f'Coupon <b>{h["coupon"]:.2f}%</b>'
+                    f'&nbsp;·&nbsp; Maturity <b>{mat_str}</b>'
+                    f'&nbsp;·&nbsp; Par <b>${h["face_value"] * h["quantity"]:,.0f}</b>'
+                    f'&nbsp;·&nbsp; Current price <b>{h["current_price"]:.2f}%</b>'
+                    f'&nbsp;·&nbsp; Annual income <b style="color:#15803d;">${ann_inc:,.0f}</b>'
+                    f'&nbsp;·&nbsp; Accrued interest <b>${accrued:,.2f}</b>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
             st.markdown('<div style="border-top:1px solid #f0ede8;margin:4px 0 2px;"></div>', unsafe_allow_html=True)
 
