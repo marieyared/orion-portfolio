@@ -612,6 +612,9 @@ COUNTRY_NAMES = {
     "Other":"Rest of world",
 }
 
+# Reverse map — full country name → ISO-2 code; used for real estate geo lookup
+COUNTRY_NAME_TO_CODE = {v: k for k, v in COUNTRY_NAMES.items()}
+
 ISO3_MAP = {
     "US":"USA","JP":"JPN","GB":"GBR","FR":"FRA","CA":"CAN","CH":"CHE",
     "DE":"DEU","AU":"AUS","NL":"NLD","CN":"CHN","TW":"TWN","IN":"IND",
@@ -1336,6 +1339,15 @@ def screen_map():
 
     geo_agg, sector_agg = aggregate_portfolio(isin_holdings, info_map) if isin_holdings else ({}, {})
 
+    # Fold real estate into geo/sector aggregates by property country
+    for h in alt_holdings:
+        if h.get("type") == "real_estate" and total_current > 0:
+            c_name = h.get("country", "")
+            code   = COUNTRY_NAME_TO_CODE.get(c_name, "Other")
+            pct    = h["current"] / total_current * 100
+            geo_agg[code]      = geo_agg.get(code, 0) + pct
+            sector_agg["Real Estate"] = sector_agg.get("Real Estate", 0) + pct
+
     # ── nav ────────────────────────────────────────────────────────
     st.markdown('<div class="orion-logo">ORION / PORTFOLIO INTELLIGENCE</div>', unsafe_allow_html=True)
     if st.button("← Back to holdings"):
@@ -1791,6 +1803,14 @@ def screen_map():
                     country_sources.setdefault(c, [])
                     if h_name not in country_sources[c]:
                         country_sources[c].append(h_name)
+            for h in alt_holdings:
+                if h.get("type") == "real_estate":
+                    c_name = h.get("country", "")
+                    code   = COUNTRY_NAME_TO_CODE.get(c_name, "Other")
+                    label  = f"Property: {h.get('city', '') or c_name}"
+                    country_sources.setdefault(code, [])
+                    if label not in country_sources[code]:
+                        country_sources[code].append(label)
 
             # ── overlap detection ───────────────────────────────────
             overlaps = find_overlapping_companies(isin_holdings, info_map)
@@ -2177,7 +2197,7 @@ def screen_map():
 
         # ── What's inside each ETF ─────────────────────────────────
         etf_holdings = [(h, info_map[h["isin"].upper()])
-                        for h in holdings if holding_is_etf(h["isin"].upper())]
+                        for h in isin_holdings if holding_is_etf(h["isin"].upper())]
         if etf_holdings:
             st.markdown("### What's inside each ETF")
             st.caption("Top holdings fetched live from Yahoo Finance")
