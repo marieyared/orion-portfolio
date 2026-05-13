@@ -1339,14 +1339,31 @@ def screen_map():
 
     geo_agg, sector_agg = aggregate_portfolio(isin_holdings, info_map) if isin_holdings else ({}, {})
 
-    # Fold real estate into geo/sector aggregates by property country
-    for h in alt_holdings:
-        if h.get("type") == "real_estate" and total_current > 0:
-            c_name = h.get("country", "")
-            code   = COUNTRY_NAME_TO_CODE.get(c_name, "Other")
-            pct    = h["current"] / total_current * 100
-            geo_agg[code]      = geo_agg.get(code, 0) + pct
-            sector_agg["Real Estate"] = sector_agg.get("Real Estate", 0) + pct
+    # Rescale geo/sector from ISIN-only basis to whole-portfolio basis, then
+    # fold in real estate and crypto/commodities at their true portfolio weights.
+    if total_current > 0:
+        isin_total = sum(h.get("current", 0) for h in isin_holdings)
+        isin_frac  = isin_total / total_current  # ≤1 when alt holdings exist
+        if isin_frac < 1.0:
+            geo_agg    = {c: v * isin_frac for c, v in geo_agg.items()}
+            sector_agg = {s: v * isin_frac for s, v in sector_agg.items()}
+
+        for h in alt_holdings:
+            h_type = h.get("type", "")
+            pct    = h.get("current", 0) / total_current * 100
+            if pct == 0:
+                continue
+            if h_type == "real_estate":
+                c_name = h.get("country", "")
+                code   = COUNTRY_NAME_TO_CODE.get(c_name, "Other")
+                geo_agg[code]              = geo_agg.get(code, 0) + pct
+                sector_agg["Real Estate"]  = sector_agg.get("Real Estate", 0) + pct
+            elif h_type == "crypto":
+                geo_agg["Other"]           = geo_agg.get("Other", 0) + pct
+                sector_agg["Crypto"]       = sector_agg.get("Crypto", 0) + pct
+            elif h_type == "commodity":
+                geo_agg["Other"]           = geo_agg.get("Other", 0) + pct
+                sector_agg["Commodities"]  = sector_agg.get("Commodities", 0) + pct
 
     # ── nav ────────────────────────────────────────────────────────
     st.markdown('<div class="orion-logo">ORION / PORTFOLIO INTELLIGENCE</div>', unsafe_allow_html=True)
