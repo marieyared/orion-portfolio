@@ -1517,7 +1517,7 @@ def screen_map():
 
     with st.spinner("Generating AI insights…"):
 
-        insights = generate_portfolio_insights(holdings, geo_agg, sector_agg, info_map)
+        insights = generate_portfolio_insights(isin_holdings, geo_agg, sector_agg, info_map)
 
     render_insights_card(insights)
 
