@@ -9,6 +9,8 @@ import os
 import calendar as _calendar
 from concurrent.futures import ThreadPoolExecutor
 from orion_ai_insights import generate_portfolio_insights, render_insights_card
+from simulation_engine import get_asset_breakdown, run_tick
+from resilience import compute_resilience
 
 
 st.set_page_config(
@@ -172,6 +174,17 @@ if "commodity_rows" not in st.session_state:
     st.session_state.commodity_rows = []
 if "debt_rows" not in st.session_state:
     st.session_state.debt_rows = []
+# ── simulation state ───────────────────────────────────────────────
+if "sim_month" not in st.session_state:
+    st.session_state.sim_month = 0
+if "simulation_mode" not in st.session_state:
+    st.session_state.simulation_mode = False
+if "sim_history" not in st.session_state:
+    st.session_state.sim_history = []
+if "sim_active_scenario" not in st.session_state:
+    st.session_state.sim_active_scenario = None
+if "sim_breakdown" not in st.session_state:
+    st.session_state.sim_breakdown = {}
 
 
 def set_api_issue(service: str, message: str):
@@ -1367,9 +1380,20 @@ def screen_map():
 
     # ── nav ────────────────────────────────────────────────────────
     st.markdown('<div class="orion-logo">ORION / PORTFOLIO INTELLIGENCE</div>', unsafe_allow_html=True)
-    if st.button("← Back to holdings"):
-        st.session_state.screen = "entry"
-        st.rerun()
+    _nav1, _nav2 = st.columns(2)
+    with _nav1:
+        if st.button("← Back to holdings"):
+            st.session_state.screen = "entry"
+            st.rerun()
+    with _nav2:
+        if st.button("🚀 Enter Simulation"):
+            # Reset sim state so we always start fresh from current portfolio
+            st.session_state.sim_history = []
+            st.session_state.sim_month = 0
+            st.session_state.sim_breakdown = {}
+            st.session_state.sim_active_scenario = None
+            st.session_state.screen = "simulation"
+            st.rerun()
     st.markdown("---")
     if "openfigi" in st.session_state.api_issues:
         st.warning(st.session_state.api_issues["openfigi"])
@@ -2322,9 +2346,269 @@ def screen_map():
                         st.info("Holdings data not available from Yahoo Finance for this ETF.")
 
 # ══════════════════════════════════════════════════════════════════
+# SCREEN 3 — SIMULATION
+# ══════════════════════════════════════════════════════════════════
+
+@st.cache_data(show_spinner=False)
+def _load_scenarios():
+    """Load scenarios.json once per session — cached so disk isn't hit on every render."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scenarios.json")
+    with open(path) as f:
+        return json.load(f)
+
+
+def screen_simulation():
+    holdings = st.session_state.holdings
+    if not holdings:
+        st.session_state.screen = "entry"
+        st.rerun()
+
+    SCENARIOS     = _load_scenarios()
+    scenarios_map = {s["id"]: s for s in SCENARIOS}
+
+    # ── nav ────────────────────────────────────────────────────────
+    st.markdown('<div class="orion-logo">ORION / PORTFOLIO INTELLIGENCE</div>', unsafe_allow_html=True)
+    if st.button("← Back to portfolio"):
+        st.session_state.screen = "map"
+        st.rerun()
+
+    st.markdown('<div class="orion-headline">Wealth Simulation</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="orion-sub">Simulate how your portfolio evolves month by month. '
+        'Select a scenario to apply stress events, then advance one turn at a time.</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown("---")
+
+    # ── Lazy initialise on first entry ─────────────────────────────
+    # Runs once per simulation session; navigating away and back keeps progress.
+    if not st.session_state.sim_history:
+        sim_breakdown = get_asset_breakdown(holdings)
+        st.session_state.sim_breakdown = sim_breakdown
+        st.session_state.sim_month     = 0
+        st.session_state.sim_history   = [{
+            "month":    0,
+            "value":    sum(sim_breakdown.values()),
+            "scenario": None,
+        }]
+
+    current_breakdown = st.session_state.sim_breakdown
+    current_value     = sum(current_breakdown.values())
+    initial_value     = st.session_state.sim_history[0]["value"]
+    delta_pct = (current_value / initial_value - 1) * 100 if initial_value > 0 else 0.0
+
+    resilience = compute_resilience(holdings, current_breakdown)
+
+    # ── Summary metrics ────────────────────────────────────────────
+    mc1, mc2, mc3, mc4 = st.columns(4)
+    with mc1:
+        st.metric("Simulation Month", st.session_state.sim_month)
+    with mc2:
+        st.metric("Portfolio Value", f"${current_value:,.0f}", f"{delta_pct:+.1f}% from start")
+    with mc3:
+        st.metric("Resilience Score", f"{resilience['score']}/100", resilience["label"])
+    with mc4:
+        scenario_label = (
+            scenarios_map[st.session_state.sim_active_scenario]["name"]
+            if st.session_state.sim_active_scenario
+            else "Baseline"
+        )
+        st.metric("Active Scenario", scenario_label)
+
+    st.markdown("---")
+
+    # ── Scenario selector ──────────────────────────────────────────
+    st.markdown("#### Scenario event")
+    scenario_ids = [None] + [s["id"] for s in SCENARIOS]
+    current_scenario_idx = (
+        scenario_ids.index(st.session_state.sim_active_scenario)
+        if st.session_state.sim_active_scenario in scenario_ids
+        else 0
+    )
+    selected_scenario_id = st.selectbox(
+        "Scenario",
+        options=scenario_ids,
+        format_func=lambda x: scenarios_map[x]["name"] if x else "None — baseline drift only",
+        index=current_scenario_idx,
+        label_visibility="collapsed",
+    )
+    st.session_state.sim_active_scenario = selected_scenario_id
+
+    # ── Scenario description card ──────────────────────────────────
+    if st.session_state.sim_active_scenario:
+        sc = scenarios_map[st.session_state.sim_active_scenario]
+        impacts = []
+        for cls, shock in sc["shocks"].items():
+            if shock != 0:
+                sign  = "+" if shock > 0 else ""
+                color = "#1D9E75" if shock > 0 else "#D85A30"
+                impacts.append(
+                    f"{cls.replace('_', ' ').title()}: "
+                    f"<b style='color:{color};'>{sign}{shock * 100:.0f}%</b>"
+                )
+        st.markdown(
+            f'<div style="background:white;border:1px solid #e8e6e0;border-left:3px solid #378ADD;'
+            f'border-radius:10px;padding:0.85rem 1.1rem;margin:0.5rem 0 1rem;">'
+            f'<div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.09em;'
+            f'color:#999;margin-bottom:4px;">ACTIVE SCENARIO · applies every month while selected</div>'
+            f'<div style="font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:4px;">{sc["name"]}</div>'
+            f'<div style="font-size:13px;color:#555;margin-bottom:8px;">{sc["description"]}</div>'
+            f'<div style="font-size:12px;line-height:1.8;">{" &nbsp;·&nbsp; ".join(impacts)}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    # ── Advance + Reset buttons ────────────────────────────────────
+    btn_col1, btn_col2 = st.columns([3, 1])
+    with btn_col1:
+        if st.button("▶  Advance One Month", use_container_width=True):
+            active_scenario = (
+                scenarios_map.get(st.session_state.sim_active_scenario)
+                if st.session_state.sim_active_scenario
+                else None
+            )
+            new_breakdown = run_tick(st.session_state.sim_breakdown, scenario=active_scenario)
+            st.session_state.sim_breakdown  = new_breakdown
+            st.session_state.sim_month     += 1
+            st.session_state.sim_history.append({
+                "month":    st.session_state.sim_month,
+                "value":    sum(new_breakdown.values()),
+                "scenario": st.session_state.sim_active_scenario,
+            })
+            st.rerun()
+    with btn_col2:
+        if st.button("↺  Reset", use_container_width=True):
+            st.session_state.sim_history        = []
+            st.session_state.sim_month          = 0
+            st.session_state.sim_breakdown      = {}
+            st.session_state.sim_active_scenario = None
+            st.rerun()
+
+    st.markdown("---")
+
+    # ── Line chart: portfolio value over time ──────────────────────
+    if len(st.session_state.sim_history) > 1:
+        st.markdown("#### Portfolio value over time")
+        history      = st.session_state.sim_history
+        months       = [h["month"]              for h in history]
+        values       = [h["value"]               for h in history]
+        had_scenario = [h["scenario"] is not None for h in history]
+
+        fig_sim = go.Figure()
+        fig_sim.add_trace(go.Scatter(
+            x=months, y=values,
+            mode="lines+markers",
+            line=dict(color="#378ADD", width=2.5),
+            marker=dict(
+                size=[9 if s else 5 for s in had_scenario],
+                color=["#EF9F27" if s else "#378ADD" for s in had_scenario],
+                line=dict(color="white", width=1.5),
+            ),
+            hovertemplate="Month %{x}<br><b>$%{y:,.0f}</b><extra></extra>",
+        ))
+        fig_sim.update_layout(
+            height=260,
+            margin=dict(l=10, r=10, t=10, b=10),
+            paper_bgcolor="white",
+            plot_bgcolor="#f8f7f4",
+            yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor="#eeece8"),
+            xaxis=dict(title="Month", gridcolor="#eeece8"),
+            showlegend=False,
+        )
+        st.plotly_chart(fig_sim, use_container_width=True)
+        st.caption("Blue = baseline month  ·  Orange = scenario was active that month")
+
+    st.markdown("---")
+
+    # ── Resilience breakdown ───────────────────────────────────────
+    score      = resilience["score"]
+    label      = resilience["label"]
+    comps      = resilience["components"]
+    score_color = "#1D9E75" if score >= 75 else "#EF9F27" if score >= 50 else "#D85A30"
+
+    left_col, right_col = st.columns([1, 2])
+    with left_col:
+        st.markdown(
+            f'<div style="background:white;border:1px solid #e8e6e0;border-radius:12px;'
+            f'padding:1.5rem;text-align:center;">'
+            f'<div style="font-size:11px;color:#999;text-transform:uppercase;'
+            f'letter-spacing:0.08em;margin-bottom:6px;">RESILIENCE</div>'
+            f'<div style="font-family:DM Mono,monospace;font-size:48px;font-weight:500;'
+            f'color:{score_color};line-height:1;">{score:.0f}</div>'
+            f'<div style="font-size:14px;color:#555;margin-top:6px;">{label}</div>'
+            f'<div style="font-size:11px;color:#aaa;margin-top:3px;">out of 100</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    with right_col:
+        st.markdown("**Score breakdown**")
+        component_meta = [
+            ("diversification", "Asset class spread"),
+            ("concentration",   "Concentration risk"),
+            ("liquidity",       "Liquidity"),
+            ("debt",            "Debt burden"),
+        ]
+        for key, display_label in component_meta:
+            val       = comps[key]
+            bar_pct   = int(val / 25 * 100)
+            comp_color = "#1D9E75" if val >= 20 else "#EF9F27" if val >= 12 else "#D85A30"
+            st.markdown(
+                f'<div style="margin-bottom:0.75rem;">'
+                f'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+                f'<span style="font-size:13px;color:#555;">{display_label}</span>'
+                f'<span style="font-family:DM Mono,monospace;font-size:13px;color:{comp_color};">'
+                f'{val:.0f} / 25</span>'
+                f'</div>'
+                f'<div style="background:#e8e6e0;border-radius:4px;height:7px;">'
+                f'<div style="background:{comp_color};width:{bar_pct}%;'
+                f'height:100%;border-radius:4px;"></div>'
+                f'</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("---")
+
+    # ── Asset class breakdown ──────────────────────────────────────
+    st.markdown("#### Current asset class breakdown (simulated)")
+    gross = sum(v for v in current_breakdown.values() if v > 0)
+    if gross > 0:
+        class_meta = {
+            "equities":    ("Equities",   "#378ADD"),
+            "bonds":       ("Bonds",      "#1D9E75"),
+            "cash":        ("Cash",       "#EF9F27"),
+            "real_estate": ("Real Estate","#7F77DD"),
+            "crypto":      ("Crypto",     "#F59E0B"),
+            "commodity":   ("Commodities","#D85A30"),
+        }
+        max_val = max((v for v in current_breakdown.values() if v > 0), default=1)
+        for cls, val in sorted(current_breakdown.items(), key=lambda x: -x[1]):
+            if val <= 0:
+                continue
+            pct   = val / gross * 100
+            bar_w = int(val / max_val * 100)
+            lbl, color = class_meta.get(cls, (cls.title(), "#999"))
+            st.markdown(
+                f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">'
+                f'<div style="width:100px;font-size:13px;color:#555;flex-shrink:0;">{lbl}</div>'
+                f'<div style="flex:1;background:#e8e6e0;border-radius:4px;height:8px;">'
+                f'<div style="background:{color};width:{bar_w}%;height:100%;border-radius:4px;"></div>'
+                f'</div>'
+                f'<div style="width:80px;text-align:right;font-family:DM Mono,monospace;'
+                f'font-size:12px;flex-shrink:0;">${val:,.0f}</div>'
+                f'<div style="width:42px;text-align:right;font-size:12px;color:#aaa;'
+                f'flex-shrink:0;">{pct:.1f}%</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ══════════════════════════════════════════════════════════════════
 # ROUTER
 # ══════════════════════════════════════════════════════════════════
 if st.session_state.screen == "entry":
     screen_entry()
 elif st.session_state.screen == "map":
     screen_map()
+elif st.session_state.screen == "simulation":
+    screen_simulation()
