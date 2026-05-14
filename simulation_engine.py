@@ -26,6 +26,23 @@ MONTHLY_DRIFT = {
 }
 
 
+def get_holding_value(h: dict) -> float:
+    """
+    Return the current market value of a holding.
+    Different asset types store their value under different keys:
+      - ISIN equities / bonds / cash  → "current"
+      - crypto / commodity            → "current_value"
+      - real estate                   → "value"
+      - debt                          → "amount"  (caller decides whether to include)
+    Falls back through all four keys in order; returns 0.0 if none are set.
+    """
+    for key in ("current", "current_value", "value", "amount"):
+        v = h.get(key)
+        if v is not None:
+            return float(v)
+    return 0.0
+
+
 def get_asset_class(holding: dict) -> str | None:
     """
     Map one holding dict to an asset class key (one of MONTHLY_DRIFT's keys).
@@ -66,7 +83,7 @@ def get_asset_breakdown(holdings: list) -> dict:
         asset_class = get_asset_class(h)
         if asset_class is None:
             continue
-        breakdown[asset_class] += h.get("current", 0.0)
+        breakdown[asset_class] += get_holding_value(h)
     return breakdown
 
 
@@ -78,8 +95,10 @@ def run_tick(breakdown: dict, scenario: dict | None = None) -> dict:
       1. Apply baseline monthly drift to each asset class (compounding).
       2. If a scenario dict is given, multiply each class by (1 + shock).
 
-    The scenario shock is applied every time this function is called with
-    that scenario — callers control how many months a scenario persists.
+    Scenario shocks are designed to be one-time events (e.g. a crash).
+    app.py should clear st.session_state.sim_active_scenario to None
+    immediately after calling run_tick() with a scenario, so the shock
+    does not carry forward into the next month automatically.
 
     Args:
         breakdown: current asset-class value dict
