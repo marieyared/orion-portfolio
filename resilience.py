@@ -20,6 +20,8 @@ compute_resilience(holdings, breakdown) → dict with keys:
                          "liquidity": float, "debt": float}
 """
 
+from simulation_engine import get_holding_value
+
 # How liquid each asset class is. 1.0 = instantly liquid, 0.0 = illiquid.
 LIQUIDITY_TIER = {
     "cash":        1.0,
@@ -83,9 +85,9 @@ def _score_concentration(holdings: list, gross_assets: float) -> float:
     if gross_assets == 0 or not holdings:
         return 0.0
     values = [
-        h.get("current", 0.0)
+        get_holding_value(h)
         for h in holdings
-        if h.get("type") != "debt" and h.get("current", 0.0) > 0
+        if h.get("type") != "debt" and get_holding_value(h) > 0
     ]
     if not values:
         return 0.0
@@ -111,18 +113,24 @@ def _score_liquidity(breakdown: dict, gross_assets: float) -> float:
     return round(min(25.0, liquid_value / gross_assets * 25), 1)
 
 
-def _score_debt(holdings: list, gross_assets: float) -> float:
+def _score_debt(holdings: list, gross_assets: float, debt_rows: list | None = None) -> float:
     """
     Debt burden as a fraction of gross assets.
     No debt       → 25 pts
     Debt ≥ 60% of gross assets → 0 pts
     Linear between.
+
+    debt_rows: if provided (st.session_state.debt_rows), use it directly.
+    Falls back to scanning holdings for type=="debt" entries.
     """
-    debt_total = sum(
-        h.get("amount", 0.0)
-        for h in holdings
-        if h.get("type") == "debt"
-    )
+    if debt_rows is not None:
+        debt_total = sum(r.get("amount", 0.0) for r in debt_rows)
+    else:
+        debt_total = sum(
+            h.get("amount", 0.0)
+            for h in holdings
+            if h.get("type") == "debt"
+        )
     if debt_total == 0:
         return 25.0
     total_gross = gross_assets + debt_total
@@ -141,7 +149,7 @@ def get_score_label(score: float) -> str:
     return "Critical"
 
 
-def compute_resilience(holdings: list, breakdown: dict) -> dict:
+def compute_resilience(holdings: list, breakdown: dict, debt_rows: list | None = None) -> dict:
     """
     Compute the full resilience score.
 
@@ -150,6 +158,9 @@ def compute_resilience(holdings: list, breakdown: dict) -> dict:
                    (used for per-holding concentration check and debt totals)
         breakdown: asset-class value dict — use the CURRENT simulated breakdown
                    (from simulation_engine.get_asset_breakdown or a later tick)
+        debt_rows: optional st.session_state.debt_rows list. When provided,
+                   debt is read from here instead of scanning holdings for
+                   type=="debt" entries. Pass it when you have it.
 
     Returns:
         {
@@ -165,10 +176,10 @@ def compute_resilience(holdings: list, breakdown: dict) -> dict:
     """
     gross_assets = sum(v for v in breakdown.values() if v > 0)
 
-    d = _score_diversification(breakdown)
-    c = _score_concentration(holdings, gross_assets)
+    d   = _score_diversification(breakdown)
+    c   = _score_concentration(holdings, gross_assets)
     liq = _score_liquidity(breakdown, gross_assets)
-    b = _score_debt(holdings, gross_assets)
+    b   = _score_debt(holdings, gross_assets, debt_rows=debt_rows)
 
     score = d + c + liq + b
 
