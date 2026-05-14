@@ -1,0 +1,67 @@
+[
+  {
+    "id": "stable_market",
+    "name": "Stable Market",
+    "description": "Calm, low-volatility environment. Steady gains across most asset classes. A good baseline to compare other scenarios against.",
+    "shocks": {
+      "equities":    0.02,
+      "bonds":       0.01,
+      "cash":        0.00,
+      "real_estate": 0.01,
+      "crypto":      0.02,
+      "commodity":   0.01
+    }
+  },
+  {
+    "id": "tech_crash",
+    "name": "Tech Crash",
+    "description": "Sharp correction in technology and growth equities. Crypto sells off heavily. Investors rotate into bonds and cash as safe havens.",
+    "shocks": {
+      "equities":   -0.20,
+      "bonds":       0.05,
+      "cash":        0.00,
+      "real_estate":-0.05,
+      "crypto":     -0.40,
+      "commodity":   0.00
+    }
+  },
+  {
+    "id": "inflation_shock",
+    "name": "Inflation Shock",
+    "description": "Inflation surges unexpectedly. Bond prices fall as real yields collapse. Cash loses purchasing power. Real assets and commodities rally strongly.",
+    "shocks": {
+      "equities":   -0.05,
+      "bonds":      -0.12,
+      "cash":       -0.03,
+      "real_estate": 0.08,
+      "crypto":      0.05,
+      "commodity":   0.15
+    }
+  },
+  {
+    "id": "rate_hike",
+    "name": "Rate Hike",
+    "description": "Central banks raise interest rates sharply to fight inflation. Bonds reprice lower. Equities sell off. Real estate financing costs rise. Cash yields improve slightly.",
+    "shocks": {
+      "equities":   -0.10,
+      "bonds":      -0.08,
+      "cash":        0.01,
+      "real_estate":-0.07,
+      "crypto":     -0.15,
+      "commodity":  -0.02
+    }
+  },
+  {
+    "id": "commodity_boom",
+    "name": "Commodity Boom",
+    "description": "Supply disruptions and geopolitical tension drive energy, metals and agricultural commodities sharply higher. Benefits commodity-heavy and real asset portfolios.",
+    "shocks": {
+      "equities":    0.03,
+      "bonds":      -0.02,
+      "cash":        0.00,
+      "real_estate": 0.02,
+      "crypto":     -0.05,
+      "commodity":   0.25
+    }
+  }
+]
