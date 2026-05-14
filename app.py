@@ -901,15 +901,15 @@ def screen_entry():
                 if len(bisin) == 12:
                     binfo = lookup_isin(bisin)
                     if binfo:
-                        likely = isin_is_likely_bond(bisin)
-                        badge_cls = "instrument-found" if likely else "instrument-found"
-                        bond_label = "Bond confirmed" if likely else "Instrument found — verify it is a bond"
                         st.markdown(
-                            f'<div class="{badge_cls}">✓ {binfo["name"]} · {binfo["type"]} · {bond_label}</div>',
+                            f'<div class="instrument-found">✓ {binfo["name"]} · {binfo["type"]}</div>',
                             unsafe_allow_html=True,
                         )
                     else:
-                        st.markdown('<div class="instrument-error">ISIN not recognised</div>', unsafe_allow_html=True)
+                        st.markdown(
+                            '<div class="instrument-found">✓ ISIN accepted — name lookup unavailable</div>',
+                            unsafe_allow_html=True,
+                        )
             with bdel_col:
                 if st.button("✕", key=f"bond_del_{i}", help="Remove bond"):
                     bonds_to_delete.append(i)
