@@ -801,7 +801,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 */
 const ORION_CONFIG = (() => {
   const host = (typeof location !== "undefined" && location.hostname) || "";
-  const isLocal = !host || host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0";
+  const isLocal = host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0";
   const LOCAL = {
     ORION_API: "http://127.0.0.1:8787",
     AI_PROXY:  "http://127.0.0.1:8788",
