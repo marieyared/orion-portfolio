@@ -1,0 +1,2770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orion · Portfolio Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8F9FA;--surface:#fff;--border:#E5E7EB;--border2:#D1D5DB;
+  --text:#111827;--muted:#6B7280;--hint:#9CA3AF;
+  --blue:#4F46E5;--blue-light:#EEF2FF;--blue-mid:#C7D2FE;--blue-dark:#3730A3;
+  --green:#059669;--amber:#F59E0B;--red:#DC2626;--purple:#7C3AED;
+  --coral:#D85A30;--navy:#1E40AF;--teal:#14B8A6;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── NAV ── */
+.top-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:0;height:52px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.nav-brand{display:flex;align-items:center;gap:8px;margin-right:2.5rem;white-space:nowrap;text-decoration:none}
+.nav-brand-mark{width:26px;height:26px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-brand-text{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:-.01em;color:var(--text)}
+.nav-brand-text span{font-weight:400;color:var(--muted);margin-left:1px}
+.nav-links{display:flex;gap:0;flex:1;overflow-x:auto}
+.nav-link{padding:0 14px;height:52px;display:flex;align-items:center;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;user-select:none;font-weight:400}
+.nav-link:hover{color:var(--text)}
+.nav-link.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.nav-right{display:flex;gap:8px;margin-left:auto;padding-left:1rem}
+
+/* ── LAYOUT ── */
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem 6rem}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── TYPOGRAPHY ── */
+.page-title{font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--text);margin-bottom:.35rem;line-height:1.25}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:1.75rem;line-height:1.65}
+h2{font-size:16px;font-weight:600;margin:1.5rem 0 .75rem;letter-spacing:-.01em}
+h3{font-size:13px;font-weight:600;margin:1rem 0 .5rem;color:var(--text);text-transform:uppercase;letter-spacing:.04em}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:3px}
+.mono{font-family:'DM Mono',monospace}
+.logo-mark{font-size:11px;letter-spacing:.08em;color:var(--blue);text-transform:uppercase;font-weight:600}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--hint)}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:13px;background:#fff;color:var(--text);
+  outline:none;transition:border .15s}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+input[readonly]{background:#f8f7f4;color:var(--muted)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;
+  transition:all .15s;text-decoration:none;white-space:nowrap;letter-spacing:-.01em}
+.btn:active{transform:scale(.97)}
+.btn-dark{background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(79,70,229,.25),0 0 0 1px var(--blue-dark)}
+.btn-dark:hover{background:var(--blue-dark);box-shadow:0 4px 12px rgba(79,70,229,.35),0 0 0 1px var(--blue-dark)}
+.btn-outline{background:#fff;color:var(--text);border:1px solid var(--border);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.btn-outline:hover{background:var(--bg);border-color:var(--border2)}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:7px}
+.btn-full{width:100%;justify-content:center}
+.btn-danger{background:#fff;color:var(--red);border:1px solid #fecaca;padding:4px 10px;font-size:12px;border-radius:6px}
+.btn-danger:hover{background:#fef2f2}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{opacity:.88}
+.mkt-btn{padding:7px 16px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s}
+.mkt-btn:hover{color:var(--text);border-color:#aaa}
+.mkt-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+.csv-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center}
+.csv-modal-overlay.open{display:flex}
+.csv-modal-box{background:#fff;border-radius:16px;width:min(700px,96vw);max-height:88vh;overflow-y:auto;padding:1.75rem;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.csv-field-row{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem}
+.csv-select{width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:5px 7px;background:#fff;color:var(--text);font-family:'DM Sans',sans-serif}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-sm{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600}
+.kpi-value{font-family:'DM Mono',monospace;font-size:21px;font-weight:500;color:var(--text);line-height:1.2;letter-spacing:-.02em}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.kpi-value.pos{color:var(--green)}
+.kpi-value.neg{color:var(--red)}
+.kpi-accent{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:14px 0 0 14px;background:var(--blue)}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr 1fr}}
+
+/* ── SCORE CARD ── */
+.score-ring{position:relative;width:90px;height:90px;flex-shrink:0}
+.score-ring canvas{position:absolute;top:0;left:0}
+.score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num .n{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;line-height:1}
+.score-num .l{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── HEALTH SCORE BAR ── */
+.hsub-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.hsub-name{font-size:12px;color:var(--muted);width:110px;flex-shrink:0}
+.hsub-bar-bg{flex:1;background:var(--border);border-radius:4px;height:6px;overflow:hidden}
+.hsub-bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.hsub-val{width:36px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+
+/* ── BREAKS CARD ── */
+.breaks-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.breaks-row:last-child{border-bottom:none}
+.breaks-rank{font-family:'DM Mono',monospace;font-size:11px;color:var(--hint);width:18px;flex-shrink:0}
+.breaks-name{font-size:13px;flex:1;margin:0 10px}
+.breaks-impact{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--red)}
+.breaks-pct{font-size:11px;color:var(--muted);margin-left:6px}
+
+/* ── AI BRIEFING ── */
+.briefing-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.briefing-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.briefing-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:5px;padding:3px 8px;font-weight:500}
+.briefing-text{font-size:13px;color:var(--text);line-height:1.8}
+.briefing-loading{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* ── FACTOR BARS ── */
+.factor-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.factor-name{font-size:12px;color:var(--muted);width:120px;flex-shrink:0}
+.factor-bar-bg{flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden}
+.factor-bar-fill{height:100%;border-radius:4px;transition:width .6s}
+.factor-val{width:40px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+
+/* ── SHOCK BUILDER ── */
+.shock-slider-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.shock-label{font-size:13px;color:var(--muted);width:140px;flex-shrink:0}
+.shock-slider-row input[type=range]{flex:1;accent-color:var(--blue)}
+.shock-val{width:60px;text-align:right;font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.shock-result-big{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;transition:color .3s}
+
+/* ── STRESS CARD ── */
+.stress-event{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:.5rem}
+.stress-event:hover,.stress-event.selected{border-color:var(--blue);background:var(--blue-light)}
+.stress-badge{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:#f8f7f4;border:1px solid var(--border)}
+
+/* ── PERF ROW ── */
+.perf-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;margin-bottom:.4rem;display:flex;align-items:center;gap:1rem}
+.perf-name{flex:2.5}
+.perf-name .name{font-size:14px;font-weight:500;margin-bottom:1px}
+.perf-name .meta{font-size:11px;color:var(--hint)}
+.perf-col{flex:1;text-align:right}
+
+/* ── TREEMAP ── */
+#treemap-container{width:100%;height:420px;position:relative;background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.tm-rect{position:absolute;border:2px solid #fff;border-radius:4px;overflow:hidden;cursor:default;display:flex;align-items:flex-end;padding:6px;transition:.15s}
+.tm-rect:hover{filter:brightness(.92)}
+.tm-label{font-size:11px;color:#fff;line-height:1.3;font-weight:500;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+
+/* ── TABLES ── */
+.row-table{width:100%;border-collapse:collapse}
+.row-table th{font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;text-align:left;padding:0 6px 8px;font-weight:400}
+.row-table td{padding:4px 6px;vertical-align:top}
+.row-table td input,.row-table td select{padding:7px 10px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
+.tab{padding:9px 16px;cursor:pointer;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
+.tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── ALERTS ── */
+.hint-box{background:var(--blue-light);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:.7rem 1rem;font-size:13px;color:var(--text);margin-bottom:1.25rem;line-height:1.6}
+.warn-box{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:9px 13px;font-size:13px;color:#92400e;margin-bottom:.5rem}
+.ok-badge{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:4px 9px;font-size:12px;color:#15803d;margin-top:3px;display:inline-block}
+.err-badge{background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:4px 9px;font-size:12px;color:var(--red);margin-top:3px;display:inline-block}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:640px){.grid-4{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+.divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0}
+
+/* ── COPILOT ── */
+.copilot-bar{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.6rem 1rem;margin-top:1rem}
+.copilot-input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:transparent}
+.copilot-input::placeholder{color:var(--hint)}
+.copilot-resp{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-top:.75rem;font-size:13px;line-height:1.75;color:var(--text);display:none}
+.copilot-resp.visible{display:block}
+
+/* ── SIMULATOR ── */
+.sim-scenario-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.25rem;cursor:pointer;transition:border .15s}
+.sim-scenario-card:hover,.sim-scenario-card.selected{border-color:var(--blue);background:var(--blue-light)}
+.sim-metric{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.sim-metric-label{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.sim-metric-value{font-family:'DM Mono',monospace;font-size:20px;font-weight:500}
+.sim-decision-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:.6rem;cursor:pointer;transition:border .15s,background .15s}
+.sim-decision-card:hover{border-color:var(--blue)}
+.sim-decision-card.selected{border-color:var(--blue);background:var(--blue-light)}
+.alloc-slider-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.alloc-slider-row label{width:110px;font-size:13px;color:var(--muted);flex-shrink:0}
+.alloc-slider-row input[type=range]{flex:1}
+.alloc-slider-row .val{width:50px;text-align:right;font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+
+/* ── LOADING ── */
+.loading-spinner{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:1rem 0}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RISK PROFILE BAR (9-segment BlackRock-style) ── */
+.rp-bar-row{display:flex;gap:3px;align-items:stretch;height:28px}
+.rp-seg{flex:1;border-radius:3px;opacity:.22;transition:opacity .3s,transform .3s}
+.rp-seg.active{opacity:1;transform:scaleY(1.18);transform-origin:center}
+
+/* ── QUESTIONNAIRE OPTION CARDS ── */
+.rq-option{padding:.85rem 1rem;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--text);background:#fff;text-align:left;transition:border-color .15s,background .15s;font-family:'DM Sans',sans-serif;width:100%}
+.rq-option:hover{border-color:var(--blue-mid);background:var(--blue-light)}
+.rq-option.selected{border-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:500}
+
+/* ── INCOME CALENDAR ── */
+.cal-month{margin-bottom:1rem}
+.cal-month-label{font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.cal-event{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;font-size:13px}
+.cal-event-name{flex:1}
+.cal-event-date{color:var(--muted);font-size:12px;margin:0 12px}
+.cal-event-amt{font-family:'DM Mono',monospace;font-weight:500;color:#15803d}
+
+/* ── ENTRY FEATURE CARDS ── */
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:border-color .15s,box-shadow .15s}
+.feature-card:hover{border-color:var(--blue-mid);box-shadow:0 4px 16px rgba(79,70,229,.1)}
+.feature-kicker{font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600}
+.feature-title{font-size:14px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em}
+.feature-copy{font-size:12.5px;color:var(--muted);line-height:1.65}
+
+/* ── ENTRY HERO ── */
+.entry-hero{text-align:center;padding:3.5rem 1rem 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
+.entry-eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--blue-light);border:1px solid var(--blue-mid);border-radius:20px;padding:4px 14px;margin-bottom:1.5rem}
+.entry-eyebrow span{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-family:'DM Mono',monospace}
+.entry-headline{font-size:36px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--text);margin-bottom:.85rem}
+.entry-headline em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;color:var(--blue)}
+.entry-subline{font-size:15px;color:var(--muted);max-width:500px;margin:0 auto;line-height:1.65}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP NAV ══ -->
+<nav class="top-nav" id="top-nav" style="display:none">
+  <div class="nav-brand">
+    <div class="nav-brand-mark">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="3" cy="7" r="1.5" fill="white"/>
+        <circle cx="7" cy="4" r="1.5" fill="white"/>
+        <circle cx="11" cy="7" r="1.5" fill="white"/>
+        <circle cx="7" cy="10" r="1" fill="white" opacity=".6"/>
+      </svg>
+    </div>
+    <span class="nav-brand-text">Orion <span>Intelligence</span></span>
+  </div>
+  <div class="nav-links">
+    <div class="nav-link active" onclick="switchScreen('command')" data-screen="command">Command</div>
+    <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Analytics</div>
+    <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
+    <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
+    <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Intelligence</div>
+    <div class="nav-link" onclick="switchScreen('holdings')" data-screen="holdings">Holdings</div>
+    <div class="nav-link" onclick="switchScreen('markets')" data-screen="markets">Markets</div>
+  </div>
+  <div class="nav-right">
+    <button class="btn btn-outline btn-sm" onclick="exportPortfolio()">↓ Export</button>
+    <button class="btn btn-outline btn-sm" onclick="goToEntry()">← Edit</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: ENTRY                                                       -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-entry" class="screen active">
+<div class="wrap">
+  <!-- Hero -->
+  <div class="entry-hero">
+    <div class="entry-eyebrow">
+      <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="3" cy="7" r="1.5" fill="#4F46E5"/><circle cx="7" cy="4" r="1.5" fill="#4F46E5"/><circle cx="11" cy="7" r="1.5" fill="#4F46E5"/><circle cx="7" cy="10" r="1" fill="#4F46E5" opacity=".5"/></svg>
+      <span>Portfolio Intelligence</span>
+    </div>
+    <div class="entry-headline">Your wealth,<br><em>intelligently</em> understood.</div>
+    <div class="entry-subline">Enter your holdings once. Orion builds a full-spectrum intelligence layer with live prices, AI briefings, risk analysis, and crisis simulations.</div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:1.75rem">
+    <div class="feature-card">
+      <div class="feature-kicker">AI Intelligence</div>
+      <div class="feature-title">Morning briefing</div>
+      <div class="feature-copy">A CIO-style narrative every session, written about your actual holdings and current macro context.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-kicker">Risk Engine</div>
+      <div class="feature-title">What breaks you first</div>
+      <div class="feature-copy">Instantly see which macro event does the most damage to your portfolio, ranked by exact dollar impact.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-kicker">Stress Lab</div>
+      <div class="feature-title">Crisis simulator</div>
+      <div class="feature-copy">Drop your portfolio into 2008, 2020, or a custom shock and navigate the crisis turn by turn.</div>
+    </div>
+  </div>
+
+  <div class="hint-box">💡 Enter what you <b>bought</b>: ISIN, quantity, purchase date, and what you paid. Orion fetches today's live prices automatically and calculates your current value and P&amp;L. You never need to update prices manually.</div>
+
+  <!-- CSV Import banner -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px">Import from broker CSV</div>
+      <div style="font-size:12px;color:var(--hint)">Upload your broker export. Orion auto-detects columns from DEGIRO, IBKR, Saxo, UBS, Swissquote, Trading 212, Schwab and more.</div>
+    </div>
+    <label class="btn btn-outline" style="cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px">
+      ↑ Import broker CSV
+      <input type="file" accept=".csv,.txt" style="display:none" onchange="handleCSVUpload(event)">
+    </label>
+  </div>
+
+  <!-- Stocks & ETFs -->
+  <h3>Stocks &amp; ETFs</h3>
+  <div style="overflow-x:auto">
+  <table class="row-table" id="isin-table">
+    <thead><tr>
+      <th style="width:180px">ISIN</th>
+      <th style="width:90px">Quantity</th>
+      <th style="width:130px">Purchase date</th>
+      <th style="width:130px">Amount paid</th>
+      <th style="width:90px">Currency</th>
+      <th style="width:36px"></th>
+    </tr></thead>
+    <tbody id="isin-tbody"></tbody>
+  </table>
+  </div>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addIsinRow()">＋ Add stock / ETF</button>
+
+  <hr class="divider">
+
+  <!-- Cash -->
+  <h3>Cash positions</h3>
+  <table class="row-table" id="cash-table">
+    <thead><tr><th style="width:160px">Currency</th><th>Amount ($)</th><th style="width:36px"></th></tr></thead>
+    <tbody id="cash-tbody"></tbody>
+  </table>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addCashRow()">＋ Add cash position</button>
+
+  <hr class="divider">
+
+  <!-- Bonds -->
+  <h3>Bond holdings</h3>
+  <div class="hint-box">🔗 Enter your bond ISIN. Provide coupon rate, maturity, face value, and quantity.</div>
+  <div id="bond-list"></div>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addBondRow()">＋ Add bond</button>
+
+  <hr class="divider">
+
+  <!-- Real Estate -->
+  <h3>Real estate</h3>
+  <div id="re-list"></div>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addRERow()">＋ Add property</button>
+
+  <hr class="divider">
+
+  <!-- Crypto -->
+  <h3>Cryptocurrency</h3>
+  <div class="hint-box" style="margin-bottom:8px">Live prices fetched automatically from CoinGecko. Enter your quantity and what you paid per coin, and current value is calculated for you.</div>
+  <table class="row-table" id="crypto-table">
+    <thead><tr><th style="width:120px">Token</th><th style="width:130px">Quantity</th><th style="width:170px">Avg buy price (USD)</th><th style="width:150px">Exchange / wallet</th><th style="width:36px"></th></tr></thead>
+    <tbody id="crypto-tbody"></tbody>
+  </table>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addCryptoRow()">＋ Add crypto</button>
+
+  <hr class="divider">
+
+  <!-- Commodities -->
+  <h3>Commodities &amp; precious metals</h3>
+  <div class="hint-box" style="margin-bottom:8px">Gold, silver, platinum and palladium prices are fetched live. For oil, gas and copper enter your current value manually.</div>
+  <table class="row-table" id="comm-table">
+    <thead><tr><th style="width:180px">Type</th><th style="width:110px">Quantity</th><th style="width:170px">Avg buy price (USD)</th><th>Current value ($) <span style="font-size:10px;color:var(--hint)">metals: auto</span></th><th style="width:36px"></th></tr></thead>
+    <tbody id="comm-tbody"></tbody>
+  </table>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addCommRow()">＋ Add commodity</button>
+
+  <hr class="divider">
+
+  <!-- Debts -->
+  <h3>Debts &amp; liabilities</h3>
+  <table class="row-table" id="debt-table">
+    <thead><tr><th style="width:150px">Type</th><th style="width:140px">Amount owed ($)</th><th style="width:130px">Rate (% / yr)</th><th>Description</th><th style="width:36px"></th></tr></thead>
+    <tbody id="debt-tbody"></tbody>
+  </table>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="addDebtRow()">＋ Add debt</button>
+
+  <hr class="divider">
+
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-dark" style="min-width:260px" onclick="buildPortfolio()">◎ Build Orion dashboard →</button>
+    <label class="btn btn-outline" style="cursor:pointer">
+      ↑ Import JSON
+      <input type="file" accept=".json" style="display:none" onchange="importPortfolio(event)">
+    </label>
+  </div>
+  <div id="entry-error" style="color:var(--red);font-size:13px;margin-top:.75rem"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: COMMAND                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-command" class="screen">
+<div class="wrap">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem">
+    <div>
+      <div class="page-title" style="margin-bottom:0">Command</div>
+      <div style="font-size:12px;color:var(--hint)" id="cmd-timestamp"></div>
+    </div>
+    <div id="warnings-area"></div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="kpi-grid" id="kpi-strip"></div>
+
+  <!-- Row 1: Health score + AI briefing -->
+  <div class="grid-2" style="margin-bottom:12px">
+    <!-- Health score -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div>
+          <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:3px">Portfolio health score</div>
+          <div style="font-size:12px;color:var(--muted)" id="health-grade"></div>
+        </div>
+        <div class="score-ring">
+          <canvas id="health-ring" width="90" height="90"></canvas>
+          <div class="score-num"><div class="n" id="health-num">—</div><div class="l">/ 100</div></div>
+        </div>
+      </div>
+      <div id="health-subs"></div>
+    </div>
+
+    <!-- AI Briefing -->
+    <div class="briefing-card">
+      <div class="briefing-header">
+        <div style="font-size:13px;font-weight:500">AI morning briefing</div>
+        <div class="briefing-tag">Orion AI</div>
+      </div>
+      <div id="briefing-content" class="briefing-loading">
+        <div class="ai-dot"></div>
+        <span>Generating your briefing…</span>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Row 2: What breaks me + Factor exposure -->
+  <div class="grid-2" style="margin-bottom:12px">
+    <!-- What breaks my portfolio -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.1rem">What breaks my portfolio?</div>
+      <div style="font-size:11px;color:var(--hint);margin-bottom:.9rem">Top single-factor shocks ranked by $ impact</div>
+      <div id="breaks-list"></div>
+    </div>
+
+    <!-- Factor exposure -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.1rem">Factor exposure</div>
+      <div style="font-size:11px;color:var(--hint);margin-bottom:.9rem">Portfolio sensitivity to macro drivers</div>
+      <div id="factor-bars"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Asset mix + Income + Stress teaser -->
+  <div class="grid-3">
+    <!-- Asset mix -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.75rem">Asset mix</div>
+      <div style="position:relative;height:180px">
+        <canvas id="cmd-alloc-chart"></canvas>
+      </div>
+      <div id="cmd-alloc-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11px;color:var(--muted)"></div>
+    </div>
+
+    <!-- Income this year -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.75rem">Income this year</div>
+      <div id="income-summary"></div>
+    </div>
+
+    <!-- Stress teaser -->
+    <div class="card" style="border-color:#e0d8f8;cursor:pointer" onclick="switchScreen('stress')">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.3rem">Stress Lab →</div>
+      <div style="font-size:11px;color:var(--hint);margin-bottom:.75rem">Your portfolio in a crisis</div>
+      <div id="stress-teaser"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: RISK                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-risk" class="screen">
+<div class="wrap">
+  <div class="page-title">Analytics</div>
+  <div class="page-sub">Quantitative diagnostics: factor exposure, rate sensitivity, shock impact, and concentration.</div>
+
+  <div class="grid-2" style="margin-bottom:12px">
+    <!-- Expanded breaks card -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Shock sensitivity</div>
+      <div style="font-size:12px;color:var(--hint);margin-bottom:1rem">Estimated portfolio impact per single macro shock</div>
+      <div id="risk-breaks-full"></div>
+    </div>
+
+    <!-- Custom Shock Builder -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Custom shock builder</div>
+      <div style="font-size:12px;color:var(--hint);margin-bottom:1rem">Drag to simulate a custom scenario in real time</div>
+      <div class="shock-slider-row">
+        <div class="shock-label">Equities</div>
+        <input type="range" min="-60" max="40" value="0" step="1" id="shock-eq" oninput="updateShock()">
+        <div class="shock-val" id="shock-eq-val">0%</div>
+      </div>
+      <div class="shock-slider-row">
+        <div class="shock-label">Rates (+bps)</div>
+        <input type="range" min="-300" max="400" value="0" step="25" id="shock-rate" oninput="updateShock()">
+        <div class="shock-val" id="shock-rate-val">0</div>
+      </div>
+      <div class="shock-slider-row">
+        <div class="shock-label">USD move</div>
+        <input type="range" min="-25" max="25" value="0" step="1" id="shock-usd" oninput="updateShock()">
+        <div class="shock-val" id="shock-usd-val">0%</div>
+      </div>
+      <div class="shock-slider-row">
+        <div class="shock-label">Crypto</div>
+        <input type="range" min="-85" max="100" value="0" step="5" id="shock-crypto" oninput="updateShock()">
+        <div class="shock-val" id="shock-crypto-val">0%</div>
+      </div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--hint);margin-bottom:4px">Estimated portfolio impact</div>
+        <div class="shock-result-big" id="shock-result">$0</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="shock-result-pct"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rate sensitivity curve -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Rate sensitivity curve</div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:1rem">Portfolio value as interest rates move from −300bps to +400bps</div>
+    <div style="position:relative;height:200px">
+      <canvas id="rate-curve-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Concentration analysis -->
+  <div class="card">
+    <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Concentration analysis</div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:1rem">Holdings ranked by portfolio weight. The more concentrated, the more exposed.</div>
+    <div id="concentration-list"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: STRESS LAB                                                  -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-stress" class="screen">
+<div class="wrap">
+  <div class="page-title">Stress Lab</div>
+  <div class="page-sub">Test your portfolio against historical crises and custom macro scenarios. Make strategic decisions across 10 economic cycles.</div>
+  <div id="sim-area"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: INTELLIGENCE                                                -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-intelligence" class="screen">
+<div class="wrap">
+  <div class="page-title">Intelligence</div>
+  <div class="page-sub">AI-powered analysis of your portfolio. Ask anything about your holdings, risk, or macro context.</div>
+
+  <!-- Full briefing -->
+  <div class="briefing-card" style="margin-bottom:12px">
+    <div class="briefing-header">
+      <div style="font-size:14px;font-weight:500">AI portfolio briefing</div>
+      <div class="briefing-tag">Orion AI</div>
+    </div>
+    <div id="intel-briefing-content" class="briefing-loading">
+      <div class="ai-dot"></div>
+      <span>Generating your briefing…</span>
+    </div>
+    <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateIntelBriefing()">↺ Refresh</button>
+  </div>
+
+  <!-- AI Copilot -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:14px;font-weight:500;margin-bottom:.3rem">Copilot: ask anything</div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:.9rem">Ask about your portfolio, risk, macro context, or investment strategy</div>
+    <div id="copilot-suggestions" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem"></div>
+    <div class="copilot-bar">
+      <input class="copilot-input" id="copilot-input" placeholder="e.g. What is my effective bond duration?" onkeydown="if(event.key==='Enter')askCopilot()">
+      <button class="btn btn-blue btn-sm" onclick="askCopilot()">Ask →</button>
+    </div>
+    <div class="copilot-resp" id="copilot-resp"></div>
+  </div>
+
+  <!-- Sector breakdown -->
+  <div class="card">
+    <div style="font-size:14px;font-weight:500;margin-bottom:.75rem">Sector breakdown, after look-through</div>
+    <div style="position:relative;height:280px">
+      <canvas id="intel-sector-chart"></canvas>
+    </div>
+    <div id="intel-sector-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12px;color:var(--muted)"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: HOLDINGS                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-holdings" class="screen">
+<div class="wrap">
+  <div class="page-title">Holdings</div>
+  <div class="page-sub">All positions, performance, and income schedule.</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchHTab(0)">Positions</div>
+    <div class="tab" onclick="switchHTab(1)">Performance</div>
+    <div class="tab" onclick="switchHTab(2)">Income calendar</div>
+    <div class="tab" onclick="switchHTab(3)">Treemap</div>
+  </div>
+
+  <!-- Tab 0: Holdings table -->
+  <div class="tab-panel active" id="htab-0">
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px" id="holdings-table">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">Name</th>
+        <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">Type</th>
+        <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">Weight</th>
+        <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">Invested</th>
+        <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">Current</th>
+        <th style="text-align:right;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">P&amp;L</th>
+      </tr></thead>
+      <tbody id="holdings-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Tab 1: Performance -->
+  <div class="tab-panel" id="htab-1">
+    <div id="perf-list"></div>
+  </div>
+
+  <!-- Tab 2: Income calendar -->
+  <div class="tab-panel" id="htab-2">
+    <div id="income-calendar"></div>
+  </div>
+
+  <!-- Tab 3: Treemap -->
+  <div class="tab-panel" id="htab-3">
+    <div id="treemap-container"></div>
+  </div>
+</div>
+</div>
+
+<div id="screen-markets" class="screen">
+<div class="wrap">
+  <div class="page-title">Markets</div>
+  <div class="page-sub">Live charts. Click any index to explore.</div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button class="mkt-btn active" onclick="switchMarket(this,'AMEX:SPY','S&P 500')">S&P 500</button>
+    <button class="mkt-btn" onclick="switchMarket(this,'NASDAQ:QQQ','NASDAQ 100')">NASDAQ 100</button>
+    <button class="mkt-btn" onclick="switchMarket(this,'AMEX:URTH','MSCI World')">MSCI World</button>
+    <button class="mkt-btn" onclick="switchMarket(this,'AMEX:EEM','MSCI EM')">MSCI EM</button>
+    <button class="mkt-btn" onclick="switchMarket(this,'AMEX:GLD','Gold')">Gold</button>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;border-radius:14px">
+    <div id="tv-chart" style="height:520px"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SCREEN: RISK PROFILE
+══════════════════════════════════════════════════════════════════ -->
+<div id="screen-riskprofile" class="screen">
+<div class="wrap">
+  <div class="page-title">Risk Profile</div>
+  <div class="page-sub">Compare your portfolio's actual risk against your personal investor profile.</div>
+
+  <div class="grid-2" style="margin-bottom:1.25rem">
+    <div class="card">
+      <div class="section-label" style="margin-bottom:.75rem">Portfolio Risk</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:.85rem">
+        <span id="rp-port-score" style="font-family:'DM Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-.03em;color:var(--text)">—</span>
+        <span style="font-family:'DM Mono',monospace;font-size:16px;color:var(--hint)">/9</span>
+        <span id="rp-port-label" style="font-size:13px;color:var(--muted);margin-left:4px"></span>
+      </div>
+      <div id="rp-port-bar" class="rp-bar-row"></div>
+      <div id="rp-port-breakdown" style="margin-top:1rem;font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div class="card">
+      <div class="section-label" style="margin-bottom:.75rem">Your Target Profile</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:.85rem">
+        <span id="rp-target-score" style="font-family:'DM Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-.03em;color:var(--text)">—</span>
+        <span style="font-family:'DM Mono',monospace;font-size:16px;color:var(--hint)">/9</span>
+        <span id="rp-target-label" style="font-size:13px;color:var(--muted);margin-left:4px"></span>
+      </div>
+      <div id="rp-target-bar" class="rp-bar-row"></div>
+      <button id="rp-q-btn" class="btn btn-outline btn-sm" style="margin-top:1rem" onclick="openRiskQuestionnaire()">Take the risk questionnaire →</button>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:1.25rem">
+    <div class="card">
+      <div class="section-label" style="margin-bottom:1rem">Current Allocation</div>
+      <div style="position:relative;height:220px"><canvas id="rp-current-pie"></canvas></div>
+      <div id="rp-current-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:.75rem"></div>
+    </div>
+    <div class="card">
+      <div class="section-label" style="margin-bottom:1rem">Proposed Allocation</div>
+      <div style="position:relative;height:220px;display:flex;align-items:center;justify-content:center">
+        <canvas id="rp-proposed-pie" style="display:none"></canvas>
+        <div id="rp-proposed-empty" style="text-align:center;color:var(--hint);font-size:13px;line-height:1.7">Complete the questionnaire<br>to see your target allocation.</div>
+      </div>
+      <div id="rp-proposed-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:.75rem"></div>
+    </div>
+  </div>
+
+  <div id="rp-gap-msg" style="display:none"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     RISK QUESTIONNAIRE MODAL
+══════════════════════════════════════════════════════════════════ -->
+<div id="rq-modal" class="csv-modal-overlay">
+  <div class="csv-modal-box" style="max-width:560px;width:min(560px,96vw)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem">
+      <div>
+        <div style="font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:3px">Risk questionnaire</div>
+        <div id="rq-progress" style="font-size:12px;color:var(--hint)">Question 1 of 4</div>
+      </div>
+      <button onclick="closeRiskQuestionnaire()" style="border:none;background:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:0 2px">✕</button>
+    </div>
+    <div style="background:var(--border);border-radius:4px;height:3px;margin-bottom:1.75rem">
+      <div id="rq-prog-bar" style="height:100%;border-radius:4px;background:var(--blue);transition:width .35s;width:25%"></div>
+    </div>
+    <div id="rq-question" style="font-size:17px;font-weight:600;letter-spacing:-.01em;line-height:1.4;margin-bottom:1.25rem;color:var(--text)"></div>
+    <div id="rq-options" style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem"></div>
+    <div id="rq-result" style="display:none;text-align:center;padding:.5rem 0 .25rem">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:.5rem">Your profile</div>
+      <div id="rq-result-name" style="font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:.25rem"></div>
+      <div id="rq-result-score" style="font-family:'DM Mono',monospace;font-size:15px;color:var(--muted);margin-bottom:1.25rem"></div>
+      <div id="rq-result-bar" class="rp-bar-row" style="justify-content:center;margin-bottom:1.5rem"></div>
+      <button class="btn btn-dark" style="width:100%;justify-content:center" onclick="closeRiskQuestionnaire()">View my profile →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     CSV IMPORT MODAL
+══════════════════════════════════════════════════════════════════ -->
+<div id="csv-modal" class="csv-modal-overlay">
+  <div class="csv-modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem">
+      <div>
+        <div style="font-size:16px;font-weight:500;margin-bottom:4px">Import broker CSV</div>
+        <div id="csv-broker-badge"></div>
+      </div>
+      <button onclick="closeCSVModal()" style="border:none;background:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:0 2px">✕</button>
+    </div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:3px">Map columns <span style="font-size:11px;color:var(--hint);font-weight:400">(we've made our best guess, adjust if needed)</span></div>
+    <div id="csv-mapping-ui" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem"></div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:.5rem">Preview <span id="csv-row-count" style="font-size:11px;color:var(--hint);font-weight:400"></span></div>
+    <div id="csv-preview-table" style="overflow-x:auto;margin-bottom:1.25rem"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button id="csv-import-btn" class="btn btn-dark" onclick="doCSVImport()">Import holdings</button>
+      <button class="btn btn-outline" onclick="closeCSVModal()">Cancel</button>
+      <span id="csv-import-msg" style="font-size:12px;color:var(--hint)"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════════════════════════════════════ */
+/*
+  ORION_CONFIG — backend endpoints.
+  Auto-detect: if the page is served from localhost / 127.0.0.1 / file://, use local URLs.
+  Otherwise use the deployed URLs below. Fill them in after you deploy:
+    - ORION_API_PROD: where orion_api.py is hosted (Render / Railway / Fly / etc.)
+    - AI_PROXY_PROD : where worker.js is deployed (Cloudflare Workers)
+  Leave them blank to keep the app local-only.
+*/
+const ORION_CONFIG = (() => {
+  const host = (typeof location !== "undefined" && location.hostname) || "";
+  const isLocal = !host || host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0";
+  const LOCAL = {
+    ORION_API: "http://127.0.0.1:8787",
+    AI_PROXY:  "http://127.0.0.1:8788",
+  };
+  const PROD = {
+    ORION_API: "",  // e.g. "https://orion-api.onrender.com"
+    AI_PROXY:  "https://orion-ai.marieyared10.workers.dev",
+  };
+  return {
+    ORION_API: isLocal ? LOCAL.ORION_API : (PROD.ORION_API || LOCAL.ORION_API),
+    AI_PROXY:  isLocal ? LOCAL.AI_PROXY  : (PROD.AI_PROXY  || LOCAL.AI_PROXY),
+    isLocal,
+  };
+})();
+const AI_PROXY_URL = ORION_CONFIG.AI_PROXY;
+
+const FLAGS = {"US":"🇺🇸","JP":"🇯🇵","GB":"🇬🇧","FR":"🇫🇷","CA":"🇨🇦","CH":"🇨🇭","DE":"🇩🇪","AU":"🇦🇺","NL":"🇳🇱","CN":"🇨🇳","TW":"🇹🇼","IN":"🇮🇳","KR":"🇰🇷","BR":"🇧🇷","SA":"🇸🇦","EU":"🇪🇺","SE":"🇸🇪","NO":"🇳🇴","DK":"🇩🇰","FI":"🇫🇮","ES":"🇪🇸","IT":"🇮🇹","PT":"🇵🇹","BE":"🇧🇪","AT":"🇦🇹","IE":"🇮🇪","LU":"🇱🇺","SG":"🇸🇬","HK":"🇭🇰","ZA":"🇿🇦","MX":"🇲🇽","RU":"🇷🇺","PL":"🇵🇱","CZ":"🇨🇿","HU":"🇭🇺","TR":"🇹🇷","IL":"🇮🇱","AE":"🇦🇪","QA":"🇶🇦","TH":"🇹🇭","ID":"🇮🇩","MY":"🇲🇾","PH":"🇵🇭","VN":"🇻🇳","CL":"🇨🇱","CO":"🇨🇴","AR":"🇦🇷","NZ":"🇳🇿","GR":"🇬🇷","Other":"🌍"};
+const COUNTRY_NAMES = {"US":"United States","JP":"Japan","GB":"United Kingdom","FR":"France","CA":"Canada","CH":"Switzerland","DE":"Germany","AU":"Australia","NL":"Netherlands","CN":"China","TW":"Taiwan","IN":"India","KR":"South Korea","BR":"Brazil","SA":"Saudi Arabia","EU":"Europe (other)","SE":"Sweden","NO":"Norway","DK":"Denmark","FI":"Finland","ES":"Spain","IT":"Italy","PT":"Portugal","BE":"Belgium","AT":"Austria","IE":"Ireland","LU":"Luxembourg","SG":"Singapore","HK":"Hong Kong","ZA":"South Africa","MX":"Mexico","RU":"Russia","PL":"Poland","CZ":"Czech Republic","HU":"Hungary","TR":"Turkey","IL":"Israel","AE":"UAE","QA":"Qatar","TH":"Thailand","ID":"Indonesia","MY":"Malaysia","PH":"Philippines","VN":"Vietnam","CL":"Chile","CO":"Colombia","AR":"Argentina","NZ":"New Zealand","GR":"Greece","Other":"Rest of world"};
+const CURRENCIES = ["USD","EUR","GBP","JPY","CHF","CAD","AUD","CNY","HKD","SGD","NOK","SEK","DKK","SAR","AED","INR","BRL","MXN","ZAR","TRY"];
+const CURRENCY_FLAGS = {"USD":"🇺🇸","EUR":"🇪🇺","GBP":"🇬🇧","JPY":"🇯🇵","CHF":"🇨🇭","CAD":"🇨🇦","AUD":"🇦🇺","CNY":"🇨🇳","HKD":"🇭🇰","SGD":"🇸🇬","NOK":"🇳🇴","SEK":"🇸🇪","DKK":"🇩🇰","SAR":"🇸🇦","AED":"🇦🇪","INR":"🇮🇳","BRL":"🇧🇷","MXN":"🇲🇽","ZAR":"🇿🇦","TRY":"🇹🇷"};
+const CURRENCY_COUNTRY = {"USD":"US","EUR":"EU","GBP":"GB","JPY":"JP","CHF":"CH","CAD":"CA","AUD":"AU","CNY":"CN","HKD":"HK","SGD":"SG","NOK":"NO","SEK":"SE","DKK":"DK","SAR":"SA","AED":"AE","INR":"IN","BRL":"BR","MXN":"MX","ZAR":"ZA","TRY":"TR"};
+const CRYPTO_OPTIONS = ["BTC","ETH","USDT","USDC","XRP","SOL","ADA","DOT","DOGE","Other"];
+const COMM_OPTIONS = ["Gold (oz)","Silver (oz)","Platinum (oz)","Palladium (oz)","Oil (bbl)","Natural Gas (MMBtu)","Copper (lb)","Other"];
+const DEBT_TYPES = ["Mortgage","Personal loan","Student loan","Auto loan","Credit card","Other"];
+const RE_TYPES = ["Primary residence","Secondary residence","Investment property","Commercial property","Land"];
+const WORLD_COUNTRIES_SIMPLE = ["Afghanistan","Albania","Algeria","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Brazil","Bulgaria","Cambodia","Canada","Chile","China","Colombia","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Ecuador","Egypt","Estonia","Finland","France","Georgia","Germany","Ghana","Greece","Guatemala","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya","Kuwait","Latvia","Lebanon","Lithuania","Luxembourg","Malaysia","Malta","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway","Oman","Pakistan","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Korea","Spain","Sweden","Switzerland","Taiwan","Thailand","Turkey","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Venezuela","Vietnam","Zimbabwe"];
+const ETF_KEYWORDS = ["ETF","UCITS","INDEX FUND","ISHARES","VANGUARD","SPDR","INVESCO","AMUNDI","LYXOR","XTRACKERS","WISDOMTREE"];
+const ETF_TYPES = ["ETP","ETF","Open-End Fund","Exchange Traded Fund","UCITS","Fund","Mutual Fund"];
+const COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922"];
+
+/* ════════════════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════════════════ */
+const state = {
+  isinRows:[],cashRows:[],bondRows:[],reRows:[],cryptoRows:[],commRows:[],debtRows:[],
+  holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},infoMap:{},geoAgg:{},sectorAgg:{},
+  simGame:null,activeScreen:'command',
+  healthScore:0,healthSubs:{},
+  briefingText:'',intelBriefingText:'',
+  riskProfile:null
+};
+
+// Resolved from ORION_CONFIG above; Frankfurter (ECB FX) is always public.
+const ORION_API = ORION_CONFIG.ORION_API;
+const FX_API    = "https://api.frankfurter.app";
+
+// Pull a live (or historical) Yahoo quote for an ISIN through the local proxy.
+async function fetchQuote(isin, date) {
+  isin = (isin||"").trim().toUpperCase();
+  if (isin.length !== 12) return null;
+  const key = `${isin}|${date||'live'}`;
+  const cache = date ? state.purchaseQuoteCache : state.quoteCache;
+  if (cache[key]) return cache[key];
+  try {
+    const url = `${ORION_API}/api/quote/${encodeURIComponent(isin)}${date?`?date=${encodeURIComponent(date)}`:""}`;
+    const r = await fetch(url, {signal: AbortSignal.timeout(date?12000:8000)});
+    if (!r.ok) { state._lastQuoteError = (await r.json().catch(()=>({}))).error || `HTTP ${r.status}`; return null; }
+    const data = await r.json();
+    if (!data.ok) { state._lastQuoteError = data.error || "Quote unavailable"; return null; }
+    cache[key] = data;
+    state._lastQuoteError = null;
+    return data;
+  } catch(e) {
+    state._lastQuoteError = ORION_CONFIG.isLocal
+      ? "Local API unreachable on :8787. Start it with python orion_api.py"
+      : "Pricing API is unreachable. The hosted backend may be down or sleeping; try again in a moment.";
+    return null;
+  }
+}
+
+/* ── CoinGecko live crypto prices (free, no key) ── */
+const CRYPTO_CG_IDS = {
+  "BTC":"bitcoin","ETH":"ethereum","USDT":"tether","USDC":"usd-coin",
+  "XRP":"ripple","SOL":"solana","ADA":"cardano","DOT":"polkadot","DOGE":"dogecoin"
+};
+async function fetchCryptoPrices(tokens) {
+  const ids = [...new Set(tokens.map(t=>CRYPTO_CG_IDS[t]).filter(Boolean))];
+  if (!ids.length) return {};
+  try {
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(",")}&vs_currencies=usd`,{signal:AbortSignal.timeout(8000)});
+    if (!r.ok) return {};
+    const data = await r.json();
+    const out = {};
+    Object.entries(CRYPTO_CG_IDS).forEach(([sym,id])=>{ if(data[id]) out[sym]=data[id].usd; });
+    return out;
+  } catch(e) { return {}; }
+}
+
+/* ── metals.live spot prices (free, no key), USD per troy oz ── */
+const METAL_KEYS = {"Gold (oz)":"gold","Silver (oz)":"silver","Platinum (oz)":"platinum","Palladium (oz)":"palladium"};
+async function fetchMetalPrices() {
+  try {
+    const r = await fetch("https://api.metals.live/v1/spot",{signal:AbortSignal.timeout(8000)});
+    if (!r.ok) return {};
+    const arr = await r.json();
+    const out = {};
+    arr.forEach(item=>{ Object.entries(item).forEach(([k,v])=>{ out[k]=v; }); });
+    return out; // {gold: 2350.4, silver: 29.1, ...}
+  } catch(e) { return {}; }
+}
+
+// ECB FX rate via Frankfurter. `date` optional (YYYY-MM-DD).
+async function fetchFX(from, to, date) {
+  from = (from||"USD").toUpperCase(); to = (to||"USD").toUpperCase();
+  if (from === to) return 1;
+  const key = `${from}-${to}-${date||'latest'}`;
+  if (state.fxCache[key] != null) return state.fxCache[key];
+  try {
+    const url = `${FX_API}/${date||"latest"}?from=${from}&to=${to}`;
+    const r = await fetch(url, {signal: AbortSignal.timeout(7000)});
+    if (!r.ok) return null;
+    const data = await r.json();
+    const rate = data && data.rates && data.rates[to];
+    if (typeof rate === "number") { state.fxCache[key] = rate; return rate; }
+    // Frankfurter falls back to nearest available date; cache that too.
+    return null;
+  } catch(e) { return null; }
+}
+
+async function toUSD(amount, fromCcy, date) {
+  if (!amount) return 0;
+  fromCcy = (fromCcy||"USD").toUpperCase();
+  if (fromCcy === "USD") return amount;
+  const r = await fetchFX(fromCcy, "USD", date);
+  return r ? amount * r : amount;  // if FX fails, fall back to nominal (better than dropping the value)
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ANTHROPIC AI
+════════════════════════════════════════════════════════════════════ */
+async function callAI(prompt, maxTokens=800) {
+  try {
+    const r = await fetch(AI_PROXY_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens: maxTokens,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message||r.status); }
+    const d = await r.json();
+    return d.content[0].text;
+  } catch(e) {
+    console.error("AI error:",e);
+    return null;
+  }
+}
+
+function buildPortfolioSummary() {
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const debts = state.holdings.filter(h=>h.type==="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  const paid = assets.reduce((s,h)=>s+(h.paid||0),0);
+  const totalDebt = debts.reduce((s,h)=>s+(h.amount||0),0);
+  const items = assets.map(h=>{
+    const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
+    const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||h.type||"Unknown";
+    const type = h.asset_type==="bond"?"Bond":h.asset_type==="cash"?"Cash":h.type==="real_estate"?"Real Estate":h.type==="crypto"?"Crypto":h.type==="commodity"?"Commodity":(h.isin&&isETF(h.isin))?"ETF":"Equity";
+    return `${name} (${type}): $${fmt(h.current||0)}, ${total>0?((h.current||0)/total*100).toFixed(1):0}% of portfolio`;
+  });
+  return {total,paid,pnl:total-paid,netWorth:total-totalDebt,totalDebt,items,classes:computeAssetClasses()};
+}
+
+async function generateBriefing() {
+  const el = document.getElementById("briefing-content");
+  if (!el) return;
+  el.className = "briefing-loading";
+  el.innerHTML = '<div class="ai-dot"></div><span>Generating your briefing…</span>';
+  const s = buildPortfolioSummary();
+  const today = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const prompt = `You are a senior portfolio manager writing a morning briefing memo. Today is ${today}.
+
+Portfolio summary:
+- Total value: $${fmt(s.total)}
+- Net worth (after debts): $${fmt(s.netWorth)}
+- P&L since purchase: ${s.pnl>=0?'+':''}$${fmt(s.pnl)} (${s.pnl>=0?'+':''}${s.paid>0?(s.pnl/s.paid*100).toFixed(1):0}%)
+- Asset classes: ${Object.entries(s.classes).filter(([,v])=>v>0).map(([k,v])=>`${k} ${(v/s.total*100).toFixed(0)}%`).join(', ')}
+
+Holdings:
+${s.items.join('\n')}
+
+Write a 3-sentence CIO-style morning briefing. Be specific by naming actual holdings and dollar amounts. Identify the biggest active bet, the key risk, and one concrete observation. Plain text, no bullet points, no markdown.`;
+
+  const text = await callAI(prompt, 400);
+  state.briefingText = text || "Unable to generate briefing. Check your API connection.";
+  el.className = "briefing-text";
+  el.innerHTML = state.briefingText;
+}
+
+async function generateIntelBriefing() {
+  const el = document.getElementById("intel-briefing-content");
+  if (!el) return;
+  el.className = "briefing-loading";
+  el.innerHTML = '<div class="ai-dot"></div><span>Generating your briefing…</span>';
+  if (state.briefingText) {
+    el.className = "briefing-text";
+    el.innerHTML = state.briefingText;
+    return;
+  }
+  const s = buildPortfolioSummary();
+  const today = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const prompt = `You are a senior portfolio manager writing a detailed morning briefing. Today is ${today}.
+
+Portfolio: $${fmt(s.total)} total, $${fmt(s.netWorth)} net worth.
+Holdings: ${s.items.join('; ')}
+Asset mix: ${Object.entries(s.classes).filter(([,v])=>v>0).map(([k,v])=>`${k} ${(v/s.total*100).toFixed(0)}%`).join(', ')}
+
+Write 4-5 sentences of CIO-style portfolio commentary. Cover: (1) biggest active bet and whether it's paying off, (2) key macro risk to this portfolio right now, (3) one defensive observation, (4) one opportunity. Name specific holdings and dollar amounts. Professional tone, plain text, no markdown.`;
+
+  const text = await callAI(prompt, 600);
+  state.briefingText = text || "Unable to generate briefing. Check your API connection.";
+  state.intelBriefingText = state.briefingText;
+  el.className = "briefing-text";
+  el.innerHTML = state.briefingText;
+}
+
+async function askCopilot() {
+  const input = document.getElementById("copilot-input");
+  const resp = document.getElementById("copilot-resp");
+  const q = input.value.trim();
+  if (!q) return;
+  resp.className = "copilot-resp visible";
+  resp.innerHTML = '<div class="briefing-loading"><div class="ai-dot"></div><span>Thinking…</span></div>';
+  const s = buildPortfolioSummary();
+  const prompt = `You are Orion, an intelligent portfolio advisor. Answer this question about the user's portfolio concisely and specifically.
+
+Portfolio: $${fmt(s.total)} total value.
+Holdings: ${s.items.join('; ')}
+Asset mix: ${Object.entries(s.classes).filter(([,v])=>v>0).map(([k,v])=>`${k} ${(v/s.total*100).toFixed(0)}%`).join(', ')}
+
+Question: ${q}
+
+Answer in 2-4 sentences. Be specific, reference actual holdings and numbers where relevant. Plain text, no markdown.`;
+
+  const text = await callAI(prompt, 500);
+  resp.innerHTML = text || "Unable to get a response. Check your API connection.";
+  input.value = "";
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ISIN / OPENFIGI LOOKUP
+════════════════════════════════════════════════════════════════════ */
+async function lookupISIN(isin) {
+  isin = isin.trim().toUpperCase();
+  if (!isin || isin.length !== 12) { state._lastIsinError = "invalid_format"; return null; }
+  if (state.isinCache[isin]) { state._lastIsinError = null; return state.isinCache[isin]; }
+  let result = null;
+  let localReachable = false;
+  let localStatus = 0;
+  try {
+    const r = await fetch(`${ORION_API}/api/isin/${encodeURIComponent(isin)}`,{signal:AbortSignal.timeout(4000)});
+    localReachable = true;
+    localStatus = r.status;
+    if (r.ok) {
+      const data = await r.json();
+      if (data && data.ok && data.instrument) {
+        const item = data.instrument;
+        result = {name:item.name||isin,type:item.type||"",exchange:item.exchange||"",ticker:item.ticker||"",listings:item.listings||[]};
+      }
+    }
+  } catch(e) {}
+  if (!result && !localReachable) {
+    try {
+      const r = await fetch("https://api.openfigi.com/v3/mapping",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify([{"idType":"ID_ISIN","idValue":isin}]),signal:AbortSignal.timeout(10000)
+      });
+      if (r.ok) {
+        const payload = await r.json();
+        if (payload && payload[0] && payload[0].data && payload[0].data.length > 0) {
+          const data = payload[0].data, first = data[0];
+          const seen = new Set(), listings = [];
+          for (const item of data) { if(item.ticker && !seen.has(item.ticker)){seen.add(item.ticker);listings.push({ticker:item.ticker,exch:item.exchCode||""});} }
+          result = {name:first.name||isin,type:first.securityType||first.securityType2||"",exchange:first.exchCode||"",ticker:first.ticker||"",listings};
+        }
+      }
+    } catch(e) {}
+  }
+  if (result) { state.isinCache[isin] = result; state._lastIsinError = null; }
+  else if (!localReachable) state._lastIsinError = "api_down";
+  else if (localStatus === 400) state._lastIsinError = "invalid_checksum";
+  else if (localStatus === 404) state._lastIsinError = "not_found";
+  else if (localStatus === 429) state._lastIsinError = "rate_limit";
+  else state._lastIsinError = "upstream_error";
+  return result;
+}
+
+function isETF(isin) {
+  const c = state.isinCache[isin];
+  if (!c) return false;
+  if (ETF_TYPES.some(t=>c.type===t)) return true;
+  const n = (c.name||"").toUpperCase();
+  return ETF_KEYWORDS.some(k=>n.includes(k));
+}
+
+function countryFromISIN(isin) {
+  const code = (isin||"").slice(0,2).toUpperCase();
+  return COUNTRY_NAMES[code] ? code : "Other";
+}
+
+function escapeHtml(s) {
+  return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
+}
+
+function classifyFromQuote(quote, instrument, kind) {
+  if (kind === "bond") return "Bond";
+  if (quote && quote.asset_class === "etf") return "ETF";
+  if (quote && quote.asset_class === "bond") return "Bond";
+  const info = instrument || (state.isinCache[quote?.isin]||{});
+  const isEtf = info && (ETF_TYPES.some(t=>info.type===t) || ETF_KEYWORDS.some(k=>(info.name||"").toUpperCase().includes(k)));
+  if (isEtf) return "ETF";
+  return "Stock";
+}
+
+function detectBadgeHTML(isin, kind, opts) {
+  isin = (isin||"").trim().toUpperCase();
+  if (isin.length !== 12) return "";
+  const quote = state.quoteCache[`${isin}|live`];
+  const cached = state.isinCache[isin];
+  if (!quote && !cached) return "";
+  const name = (quote && quote.name) || (cached && cached.name) || isin;
+  const label = classifyFromQuote(quote, cached, kind);
+  const country = countryFromISIN(isin);
+  const flag = FLAGS[country] || "";
+  const ticker = (quote && quote.symbol) || (cached && cached.ticker) || "";
+  const live = quote && quote.price != null
+    ? ` · <b>${quote.currency} ${fmt2(quote.price)}</b> <span style="color:var(--muted);font-size:11px">${escapeHtml(quote.as_of||"")}</span>`
+    : "";
+  let preview = "";
+  const extra = (opts && opts.previewLine) || "";
+  if (extra) preview = `<div style="font-size:11px;color:var(--muted);margin-top:3px">${extra}</div>`;
+  return `<div class="ok-badge" style="margin-top:5px;line-height:1.4">✓ Detected: <b>${escapeHtml(name)}</b> · ${escapeHtml(label)}${flag?` ${flag}`:""}${ticker?` · <span class="mono">${escapeHtml(ticker)}</span>`:""}${live}</div>${preview}`;
+}
+
+function setDetectStatus(elId, html) {
+  const el = document.getElementById(elId);
+  if (el) el.innerHTML = html || "";
+}
+
+// Two-decimal formatter for prices.
+function fmt2(n){ const v=Number(n)||0; return v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// Compute "x shares × live_price → $USD current value" preview for a given row.
+async function rowComputedPreview(row) {
+  const isin = (row.isin||"").trim().toUpperCase();
+  if (isin.length !== 12) return "";
+  const quote = state.quoteCache[`${isin}|live`];
+  if (!quote || quote.price == null) return "";
+  const qty = parseFloat(row.quantity)||0;
+  const localValue = qty * quote.price;
+  if (!qty) return `<span class="mono">${quote.currency} ${fmt2(quote.price)}</span> per share`;
+  const usd = await toUSD(localValue, quote.currency);
+  return `→ ${qty} × ${quote.currency} ${fmt2(quote.price)} = <b style="color:#15803d">$${fmt2(usd)}</b> today`;
+}
+
+// Re-render only the detection badge + preview for one row (no full table re-render → keeps focus).
+async function refreshRowPreview(idx, listKey) {
+  const row = state[listKey] && state[listKey][idx];
+  if (!row) return;
+  const elId = `isin-detect-${listKey}-${idx}`;
+  const preview = await rowComputedPreview(row);
+  setDetectStatus(elId, detectBadgeHTML(row.isin, listKey==="bondRows"?"bond":"stock_etf", {previewLine: preview}));
+}
+
+async function detectIsinRow(idx, listKey, kind) {
+  const row = state[listKey] && state[listKey][idx];
+  if (!row) return;
+  const elId = `isin-detect-${listKey}-${idx}`;
+  const isin = (row.isin||"").trim().toUpperCase();
+  if (isin.length < 12) { setDetectStatus(elId, ""); return; }
+  // Fast path: cached quote
+  if (state.quoteCache[`${isin}|live`]) { refreshRowPreview(idx, listKey); return; }
+  setDetectStatus(elId, '<div style="margin-top:5px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px"><div class="spinner" style="width:10px;height:10px;border-width:1.5px"></div>Looking up & fetching live price…</div>');
+  const quote = await fetchQuote(isin);
+  // Mirror into legacy isinCache so other readers still work.
+  if (quote) state.isinCache[isin] = {name:quote.name, type:(quote.asset_class==="etf"?"ETF":quote.asset_class==="bond"?"Bond":"Equity"), ticker:quote.symbol, exchange:quote.exchange, listings:[]};
+  const current = state[listKey] && state[listKey][idx];
+  if (!current || (current.isin||"").trim().toUpperCase() !== isin) return;
+  if (!quote) {
+    let msg = state._lastQuoteError || "Not found";
+    setDetectStatus(elId, `<div class="err-badge" style="margin-top:5px">✗ ${msg}</div>`);
+    return;
+  }
+  // Pre-fetch historical purchase quote in background if date is set.
+  if (current.date) fetchQuote(isin, current.date);
+  refreshRowPreview(idx, listKey);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   INFO MAP
+════════════════════════════════════════════════════════════════════ */
+// Map a Yahoo "country" name back to our ISO-2 code where possible.
+const YH_COUNTRY_TO_CODE = {"United States":"US","Japan":"JP","United Kingdom":"GB","France":"FR","Canada":"CA","Switzerland":"CH","Germany":"DE","Australia":"AU","Netherlands":"NL","China":"CN","Taiwan":"TW","India":"IN","South Korea":"KR","Korea":"KR","Brazil":"BR","Saudi Arabia":"SA","Sweden":"SE","Norway":"NO","Denmark":"DK","Finland":"FI","Spain":"ES","Italy":"IT","Portugal":"PT","Belgium":"BE","Austria":"AT","Ireland":"IE","Luxembourg":"LU","Singapore":"SG","Hong Kong":"HK","South Africa":"ZA","Mexico":"MX","Russia":"RU","Poland":"PL","Czech Republic":"CZ","Hungary":"HU","Turkey":"TR","Israel":"IL","United Arab Emirates":"AE","UAE":"AE","Qatar":"QA","Thailand":"TH","Indonesia":"ID","Malaysia":"MY","Philippines":"PH","Vietnam":"VN","Chile":"CL","Colombia":"CO","Argentina":"AR","New Zealand":"NZ","Greece":"GR"};
+
+// Honest ETF geographic bucket from name keywords. Single bucket, no faked %.
+function etfRegionBucket(name) {
+  const n = (name||"").toUpperCase();
+  if (n.includes("WORLD") || n.includes("GLOBAL") || n.includes("ACWI") || n.includes("ALL COUNTRY")) return "Global";
+  if (n.includes("EMERG") || /\bEM\b/.test(n) || n.includes("FRONTIER")) return "Emerging Markets";
+  if (n.includes("S&P 500") || n.includes("S&P500") || n.includes("SP500") || n.includes("USA ") || n.includes("US ") || n.includes("RUSSELL")) return "United States";
+  if (n.includes("EUROPE") || n.includes("STOXX") || n.includes("EURO ")) return "Europe";
+  if (n.includes("JAPAN") || n.includes("NIKKEI") || n.includes("TOPIX")) return "Japan";
+  if (n.includes("CHINA") || n.includes("CSI ") || n.includes("HSI")) return "China";
+  if (n.includes("INDIA") || n.includes("NIFTY")) return "India";
+  if (n.includes("ASIA") || n.includes("PACIFIC")) return "Asia Pacific";
+  return null;
+}
+
+async function getHoldingInfo(isin, assetType) {
+  isin = isin.toUpperCase();
+
+  if (assetType === "cash") {
+    const cur = isin.replace("CASH_","");
+    const flag = CURRENCY_FLAGS[cur]||"";
+    const country = CURRENCY_COUNTRY[cur]||"Other";
+    return {name:`${flag} Cash (${cur})`,geo:{[country]:100},sectors:{Cash:100}};
+  }
+
+  if (assetType === "bond") {
+    const c = state.isinCache[isin]||{};
+    const code = countryFromISIN(isin);
+    return {name:c.name||isin,geo:{[code]:100},sectors:{"Fixed Income":100}};
+  }
+
+  // Yahoo quote (already fetched during buildPortfolio for stocks/ETFs)
+  const quote = state.quoteCache[`${isin}|live`] || null;
+  const cached = state.isinCache[isin]||{};
+  const name = (quote && quote.name) || cached.name || isin;
+
+  // ETFs / funds: region bucket by name, sectors from Yahoo top-holdings if present.
+  if (quote && (quote.asset_class === "etf" || quote.asset_class === "fund")) {
+    const region = etfRegionBucket(name) || COUNTRY_NAMES[countryFromISIN(isin)] || "Global";
+    const regionCode = YH_COUNTRY_TO_CODE[region] || (region==="Global"?"Other":region==="Emerging Markets"?"Other":region==="Europe"?"EU":region==="Asia Pacific"?"Other":"Other");
+    let sectors = {};
+    if (Array.isArray(quote.sector_weights) && quote.sector_weights.length) {
+      quote.sector_weights.forEach(obj => {
+        // Yahoo returns [{realestate: {raw: 0.03}}, ...]
+        Object.entries(obj).forEach(([k,v])=>{
+          const w = (v && typeof v === "object" ? v.raw : v) || 0;
+          const label = ({realestate:"Real Estate",consumer_cyclical:"Consumer Discretionary",basic_materials:"Materials",consumer_defensive:"Consumer Staples",technology:"Technology",communication_services:"Communication",financial_services:"Financials",utilities:"Utilities",industrials:"Industrials",energy:"Energy",healthcare:"Healthcare"})[k] || k;
+          sectors[label] = (sectors[label]||0) + w*100;
+        });
+      });
+    }
+    if (!Object.keys(sectors).length) sectors = {[`${region} ETF`]:100};
+    return {name, geo:{[regionCode]:100}, sectors, region_label: region};
+  }
+
+  // Individual equities: Yahoo sector + country
+  const country = (quote && quote.country) || "";
+  const code = YH_COUNTRY_TO_CODE[country] || countryFromISIN(isin);
+  const sector = (quote && quote.sector) || "—";
+  return {name, geo:{[code]:100}, sectors:{[sector]:100}};
+}
+
+async function buildInfoMap(isinHoldings) {
+  const map = {};
+  await Promise.all(isinHoldings.map(async h => {
+    map[h.isin.toUpperCase()] = await getHoldingInfo(h.isin, h.asset_type);
+  }));
+  return map;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM ROW RENDERERS (same as original)
+════════════════════════════════════════════════════════════════════ */
+function renderISINRows() {
+  const tbody = document.getElementById("isin-tbody");
+  tbody.innerHTML = "";
+  state.isinRows.forEach((row,i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="vertical-align:top">
+        <input type="text" maxlength="12" placeholder="e.g. IE00B4L5Y983" value="${escapeHtml(row.isin||'')}" oninput="state.isinRows[${i}].isin=this.value.trim().toUpperCase();detectIsinRow(${i},'isinRows','stock_etf')" style="font-family:'DM Mono',monospace;letter-spacing:.05em;text-transform:uppercase">
+        <div id="isin-detect-isinRows-${i}">${detectBadgeHTML(row.isin,'stock_etf')}</div>
+      </td>
+      <td style="vertical-align:top"><input type="number" min="0" step="0.01" value="${row.quantity||0}" oninput="state.isinRows[${i}].quantity=parseFloat(this.value)||0;refreshRowPreview(${i},'isinRows')" placeholder="shares"></td>
+      <td style="vertical-align:top"><input type="date" value="${row.date||''}" oninput="state.isinRows[${i}].date=this.value;detectIsinRow(${i},'isinRows','stock_etf')"></td>
+      <td style="vertical-align:top"><input type="number" min="0" step="100" value="${row.amount_paid||0}" oninput="state.isinRows[${i}].amount_paid=parseFloat(this.value)||0;refreshRowPreview(${i},'isinRows')" placeholder="total cash"></td>
+      <td style="vertical-align:top"><select onchange="state.isinRows[${i}].currency=this.value;refreshRowPreview(${i},'isinRows')">${CURRENCIES.map(c=>`<option value="${c}" ${c===(row.currency||'USD')?"selected":""}>${CURRENCY_FLAGS[c]||""} ${c}</option>`).join("")}</select></td>
+      <td style="vertical-align:top"><button class="btn-danger" onclick="state.isinRows.splice(${i},1);renderISINRows()">✕</button></td>`;
+    tbody.appendChild(tr);
+    if ((row.isin||"").length === 12 && !state.quoteCache[row.isin.toUpperCase()]) detectIsinRow(i,'isinRows','stock_etf');
+  });
+}
+function addIsinRow(){state.isinRows.push({isin:"",quantity:0,date:"",amount_paid:0,currency:"USD"});renderISINRows();}
+
+function renderCashRows() {
+  const tbody = document.getElementById("cash-tbody");
+  tbody.innerHTML = "";
+  state.cashRows.forEach((row,i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><select onchange="state.cashRows[${i}].currency=this.value">${CURRENCIES.map(c=>`<option value="${c}" ${c===row.currency?"selected":""}>${CURRENCY_FLAGS[c]||""} ${c}</option>`).join("")}</select></td>
+      <td><input type="number" min="0" step="100" value="${row.amount||0}" oninput="state.cashRows[${i}].amount=parseFloat(this.value)||0"></td>
+      <td><button class="btn-danger" onclick="state.cashRows.splice(${i},1);renderCashRows()">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addCashRow(){state.cashRows.push({currency:"USD",amount:0});renderCashRows();}
+
+function renderBondRows() {
+  const el = document.getElementById("bond-list");
+  el.innerHTML = "";
+  state.bondRows.forEach((row,i) => {
+    const div = document.createElement("div");
+    div.style.cssText = "background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem";
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <div style="font-size:13px;font-weight:500">Bond ${i+1}</div>
+        <button class="btn-danger" onclick="state.bondRows.splice(${i},1);renderBondRows()">✕ Remove</button>
+      </div>
+      <div class="grid-3" style="margin-bottom:8px;align-items:start">
+        <div>
+          <label>ISIN</label>
+          <input type="text" maxlength="12" placeholder="e.g. XS2345678901" value="${escapeHtml(row.isin||'')}" oninput="state.bondRows[${i}].isin=this.value.trim().toUpperCase();detectIsinRow(${i},'bondRows','bond')" style="font-family:'DM Mono',monospace;text-transform:uppercase">
+          <div id="isin-detect-bondRows-${i}">${detectBadgeHTML(row.isin,'bond')}</div>
+        </div>
+        <div><label>Coupon (%)</label><input type="number" min="0" max="20" step=".25" value="${row.coupon||0}" oninput="state.bondRows[${i}].coupon=parseFloat(this.value)||0"></div>
+        <div><label>Maturity</label><input type="date" value="${row.maturity||''}" oninput="state.bondRows[${i}].maturity=this.value"></div>
+      </div>
+      <div class="grid-3">
+        <div><label>Face value ($)</label><input type="number" min="0" step="1000" value="${row.face_value||1000}" oninput="state.bondRows[${i}].face_value=parseFloat(this.value)||0"></div>
+        <div><label>Quantity</label><input type="number" min="1" step="1" value="${row.quantity||1}" oninput="state.bondRows[${i}].quantity=parseInt(this.value)||1"></div>
+        <div><label>Current price (%)</label><input type="number" min="0" max="200" step=".1" value="${row.current_price||100}" oninput="state.bondRows[${i}].current_price=parseFloat(this.value)||100"></div>
+      </div>`;
+    el.appendChild(div);
+    if ((row.isin||"").length === 12 && !state.isinCache[row.isin.toUpperCase()]) detectIsinRow(i,'bondRows','bond');
+  });
+}
+function addBondRow(){state.bondRows.push({isin:"",coupon:3,maturity:"",face_value:1000,quantity:1,current_price:100,purchase_price:100});renderBondRows();}
+
+function renderRERows() {
+  const el = document.getElementById("re-list");
+  el.innerHTML = "";
+  state.reRows.forEach((row,i) => {
+    const div = document.createElement("div");
+    div.style.cssText = "background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem";
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <div style="font-size:13px;font-weight:500">Property ${i+1}</div>
+        <button class="btn-danger" onclick="state.reRows.splice(${i},1);renderRERows()">✕ Remove</button>
+      </div>
+      <div class="grid-2" style="margin-bottom:8px">
+        <div><label>Address</label><input type="text" placeholder="Street address" value="${row.address||''}" oninput="state.reRows[${i}].address=this.value"></div>
+        <div><label>City</label><input type="text" placeholder="City" value="${row.city||''}" oninput="state.reRows[${i}].city=this.value"></div>
+      </div>
+      <div class="grid-2" style="margin-bottom:8px">
+        <div><label>Country</label><select onchange="state.reRows[${i}].country=this.value">${WORLD_COUNTRIES_SIMPLE.map(c=>`<option value="${c}" ${c===row.country?"selected":""}>${c}</option>`).join("")}</select></div>
+        <div><label>Type</label><select onchange="state.reRows[${i}].type=this.value">${RE_TYPES.map(t=>`<option value="${t}" ${t===row.type?"selected":""}>${t}</option>`).join("")}</select></div>
+      </div>
+      <div class="grid-3">
+        <div><label>Current value ($)</label><input type="number" min="0" step="10000" value="${row.value||0}" oninput="state.reRows[${i}].value=parseFloat(this.value)||0"></div>
+        <div><label>Purchase price ($)</label><input type="number" min="0" step="10000" value="${row.purchase_price||0}" oninput="state.reRows[${i}].purchase_price=parseFloat(this.value)||0"></div>
+        <div><label>Mortgage owed ($)</label><input type="number" min="0" step="1000" value="${row.mortgage||0}" oninput="state.reRows[${i}].mortgage=parseFloat(this.value)||0"></div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+function addRERow(){state.reRows.push({address:"",city:"",country:"United States",type:"Primary residence",value:0,purchase_price:0,mortgage:0});renderRERows();}
+
+function renderCryptoRows() {
+  const tbody = document.getElementById("crypto-tbody");
+  tbody.innerHTML = "";
+  state.cryptoRows.forEach((row,i) => {
+    const tr = document.createElement("tr");
+    const exchanges = ["Self-custodied","Coinbase","Kraken","Binance","Other"];
+    tr.innerHTML = `
+      <td><select onchange="state.cryptoRows[${i}].type=this.value">${CRYPTO_OPTIONS.map(c=>`<option value="${c}" ${c===row.type?"selected":""}>${c}</option>`).join("")}</select></td>
+      <td><input type="number" min="0" step="0.000001" value="${row.quantity||0}" oninput="state.cryptoRows[${i}].quantity=parseFloat(this.value)||0" placeholder="e.g. 0.5"></td>
+      <td><input type="number" min="0" step="1" value="${row.avg_buy_price||0}" oninput="state.cryptoRows[${i}].avg_buy_price=parseFloat(this.value)||0" placeholder="price when you bought"></td>
+      <td><select onchange="state.cryptoRows[${i}].exchange=this.value">${exchanges.map(e=>`<option value="${e}" ${e===row.exchange?"selected":""}>${e}</option>`).join("")}</select></td>
+      <td><button class="btn-danger" onclick="state.cryptoRows.splice(${i},1);renderCryptoRows()">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addCryptoRow(){state.cryptoRows.push({type:"BTC",quantity:0,avg_buy_price:0,exchange:"Coinbase"});renderCryptoRows();}
+
+const COMM_AUTO_METALS = ["Gold (oz)","Silver (oz)","Platinum (oz)","Palladium (oz)"];
+function renderCommRows() {
+  const tbody = document.getElementById("comm-tbody");
+  tbody.innerHTML = "";
+  state.commRows.forEach((row,i) => {
+    const isMetal = COMM_AUTO_METALS.includes(row.type);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><select onchange="state.commRows[${i}].type=this.value;renderCommRows()">${COMM_OPTIONS.map(c=>`<option value="${c}" ${c===row.type?"selected":""}>${c}</option>`).join("")}</select></td>
+      <td><input type="number" min="0" step="0.01" value="${row.quantity||0}" oninput="state.commRows[${i}].quantity=parseFloat(this.value)||0" placeholder="e.g. 10"></td>
+      <td><input type="number" min="0" step="1" value="${row.avg_buy_price||0}" oninput="state.commRows[${i}].avg_buy_price=parseFloat(this.value)||0" placeholder="price when you bought"></td>
+      <td>${isMetal
+        ? `<span style="font-size:12px;color:var(--hint);font-style:italic">Fetched live ✦</span>`
+        : `<input type="number" min="0" step="100" value="${row.current_value||0}" oninput="state.commRows[${i}].current_value=parseFloat(this.value)||0" placeholder="total USD value">`
+      }</td>
+      <td><button class="btn-danger" onclick="state.commRows.splice(${i},1);renderCommRows()">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addCommRow(){state.commRows.push({type:"Gold (oz)",quantity:0,avg_buy_price:0,current_value:0});renderCommRows();}
+
+function renderDebtRows() {
+  const tbody = document.getElementById("debt-tbody");
+  tbody.innerHTML = "";
+  state.debtRows.forEach((row,i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><select onchange="state.debtRows[${i}].type=this.value">${DEBT_TYPES.map(d=>`<option value="${d}" ${d===row.type?"selected":""}>${d}</option>`).join("")}</select></td>
+      <td><input type="number" min="0" step="1000" value="${row.amount||0}" oninput="state.debtRows[${i}].amount=parseFloat(this.value)||0"></td>
+      <td><input type="number" min="0" max="50" step=".25" value="${row.interest_rate||3.5}" oninput="state.debtRows[${i}].interest_rate=parseFloat(this.value)||0"></td>
+      <td><input type="text" value="${row.description||''}" placeholder="e.g. Primary home mortgage" oninput="state.debtRows[${i}].description=this.value"></td>
+      <td><button class="btn-danger" onclick="state.debtRows.splice(${i},1);renderDebtRows()">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function addDebtRow(){state.debtRows.push({type:"Mortgage",amount:0,interest_rate:3.5,description:""});renderDebtRows();}
+
+/* ════════════════════════════════════════════════════════════════════
+   BUILD PORTFOLIO
+════════════════════════════════════════════════════════════════════ */
+async function buildPortfolio() {
+  const errEl = document.getElementById("entry-error");
+  errEl.textContent = "";
+
+  document.getElementById("top-nav").style.display = "flex";
+  switchScreen('command');
+  document.getElementById("kpi-strip").innerHTML = '<div class="loading-spinner"><div class="spinner"></div> Fetching live prices for stocks, crypto, metals and FX rates…</div>';
+
+  const holdings = [];
+
+  // Stocks / ETFs: live-priced, FX-normalized to USD
+  const isinTasks = state.isinRows.filter(r => (r.isin||"").length===12 && (r.quantity||0)>0).map(async r => {
+    const isin = r.isin.toUpperCase();
+    const quote = await fetchQuote(isin);
+    if (!quote) return null;
+    const qty = parseFloat(r.quantity)||0;
+    const localValue = qty * quote.price;
+    const current = await toUSD(localValue, quote.currency);
+    const paidCcy = r.currency || quote.currency || "USD";
+    const paidLocal = parseFloat(r.amount_paid)||0;
+    const paid = paidLocal>0 ? await toUSD(paidLocal, paidCcy, r.date) : current;
+    return {
+      isin, quantity: qty, current, paid,
+      date: r.date || "",
+      asset_type: "stock_etf",
+      asset_class_yh: quote.asset_class,  // "etf" | "equity" | "bond"
+      live_price: quote.price,
+      live_currency: quote.currency,
+      paid_currency: paidCcy,
+      paid_local: paidLocal,
+      ticker: quote.symbol
+    };
+  });
+  const isinResults = (await Promise.all(isinTasks)).filter(Boolean);
+  holdings.push(...isinResults);
+
+  // Cash: FX-normalized to USD
+  const cashByCur = {};
+  state.cashRows.forEach(r => { if(r.amount>0) cashByCur[r.currency]=(cashByCur[r.currency]||0)+r.amount; });
+  const cashTasks = Object.entries(cashByCur).map(async ([cur,amt]) => {
+    const usd = await toUSD(amt, cur);
+    return {isin:`CASH_${cur}`, current:usd, paid:usd, date:new Date().toISOString().split("T")[0], asset_type:"cash", currency:cur, local_amount:amt};
+  });
+  holdings.push(...await Promise.all(cashTasks));
+
+  // Bonds: keep manual current_price%; user provides paid + face × qty
+  state.bondRows.forEach(r => {
+    if (r.isin && r.isin.length===12 && r.face_value>0 && r.quantity>0)
+      holdings.push({isin:r.isin,current:r.face_value*r.quantity*(r.current_price/100),paid:r.face_value*r.quantity*((r.purchase_price||100)/100),date:new Date().toISOString().split("T")[0],asset_type:"bond",face_value:r.face_value,quantity:r.quantity,coupon:r.coupon,maturity:r.maturity,current_price:r.current_price});
+  });
+
+  state.reRows.forEach(r => {
+    if (r.address && r.value>0) holdings.push({type:"real_estate",address:r.address,city:r.city,country:r.country,current:r.value,paid:r.purchase_price||r.value,mortgage:r.mortgage||0,date:new Date().toISOString().split("T")[0],asset_class:r.type});
+  });
+  // Crypto: live prices from CoinGecko
+  const cryptoTokens = state.cryptoRows.map(r=>r.type);
+  const cryptoPrices = await fetchCryptoPrices(cryptoTokens);
+  state.cryptoRows.forEach(r => {
+    if (!r.quantity) return;
+    const livePrice = cryptoPrices[r.type] || 0;
+    const current = livePrice ? r.quantity * livePrice : r.quantity * (r.avg_buy_price||0);
+    const paid    = r.quantity * (r.avg_buy_price||0) || current;
+    if (current>0) holdings.push({type:"crypto",crypto_type:r.type,quantity:r.quantity,exchange:r.exchange,current,paid,live_price:livePrice||null});
+  });
+
+  // Commodities: live metals prices; manual fallback for others
+  const metalPrices = await fetchMetalPrices();
+  state.commRows.forEach(r => {
+    if (!r.quantity) return;
+    const metalKey = METAL_KEYS[r.type];
+    const livePrice = metalKey ? (metalPrices[metalKey]||0) : 0;
+    const current = livePrice ? r.quantity * livePrice
+                  : (r.current_value||0) > 0 ? r.current_value
+                  : r.quantity * (r.avg_buy_price||0);
+    const paid = r.quantity * (r.avg_buy_price||0) || current;
+    if (current>0) holdings.push({type:"commodity",commodity_type:r.type,quantity:r.quantity,current,paid,live_price:livePrice||null});
+  });
+  state.debtRows.forEach(r => {
+    if (r.amount>0) holdings.push({type:"debt",debt_type:r.type,amount:r.amount,interest_rate:r.interest_rate,description:r.description});
+  });
+
+  if (holdings.filter(h=>!h.type||h.type!=="debt").length === 0) {
+    errEl.textContent = ORION_CONFIG.isLocal
+      ? "Couldn't price any holdings. Check the ISINs, quantities, and that the local API is running."
+      : "Couldn't price any holdings. Check the ISINs and quantities; the pricing backend may also be temporarily unavailable.";
+    return;
+  }
+  state.holdings = holdings;
+
+  // Bonds: still lookup ISIN for name (no Yahoo quote)
+  const bondHoldings = holdings.filter(h => h.asset_type==="bond" && h.isin);
+  await Promise.all(bondHoldings.map(h => lookupISIN(h.isin)));
+
+  state.infoMap = await buildInfoMap(holdings.filter(h=>h.isin));
+  computeAggregates();
+  renderCommandScreen();
+  renderRiskScreen();
+  renderHoldingsScreens();
+  renderSimulator();
+  renderIntelligenceScreen();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   AGGREGATES
+════════════════════════════════════════════════════════════════════ */
+function computeAggregates() {
+  const isinHoldings = state.holdings.filter(h=>h.isin);
+  const altHoldings = state.holdings.filter(h=>!h.isin);
+  const assetHoldings = state.holdings.filter(h=>h.type!=="debt");
+  const totalCurrent = assetHoldings.reduce((s,h)=>s+(h.current||0),0);
+  const isinTotal = isinHoldings.reduce((s,h)=>s+h.current,0);
+  const isinFrac = totalCurrent > 0 ? isinTotal/totalCurrent : 1;
+  let geoAgg = {}, secAgg = {};
+  isinHoldings.forEach(h => {
+    const info = state.infoMap[h.isin.toUpperCase()]||{};
+    const w = totalCurrent > 0 ? h.current/totalCurrent : 0;
+    Object.entries(info.geo||{}).forEach(([c,p])=>{geoAgg[c]=(geoAgg[c]||0)+p*w;});
+    Object.entries(info.sectors||{}).forEach(([s,p])=>{secAgg[s]=(secAgg[s]||0)+p*w;});
+  });
+  if (isinFrac < 1) {
+    Object.keys(geoAgg).forEach(k=>geoAgg[k]*=isinFrac);
+    Object.keys(secAgg).forEach(k=>secAgg[k]*=isinFrac);
+  }
+  altHoldings.forEach(h => {
+    const pct = totalCurrent > 0 ? h.current/totalCurrent*100 : 0;
+    if (!pct) return;
+    if (h.type==="real_estate") {
+      const nameToCode = Object.fromEntries(Object.entries(COUNTRY_NAMES).map(([k,v])=>[v,k]));
+      const code = nameToCode[h.country]||"Other";
+      geoAgg[code]=(geoAgg[code]||0)+pct;
+      secAgg["Real Estate"]=(secAgg["Real Estate"]||0)+pct;
+    } else if (h.type==="crypto") {
+      geoAgg["Other"]=(geoAgg["Other"]||0)+pct;
+      secAgg["Crypto"]=(secAgg["Crypto"]||0)+pct;
+    } else if (h.type==="commodity") {
+      geoAgg["Other"]=(geoAgg["Other"]||0)+pct;
+      secAgg["Commodities"]=(secAgg["Commodities"]||0)+pct;
+    }
+  });
+  state.geoAgg = geoAgg;
+  state.sectorAgg = secAgg;
+}
+
+function computeAssetClasses() {
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const classes = {Equities:0,ETFs:0,Bonds:0,Cash:0,"Real Estate":0,Crypto:0,Commodities:0};
+  assets.forEach(h => {
+    if (h.asset_type==="bond") classes["Bonds"]+=h.current||0;
+    else if (h.asset_type==="cash") classes["Cash"]+=h.current||0;
+    else if (h.type==="real_estate") classes["Real Estate"]+=h.current||0;
+    else if (h.type==="crypto") classes["Crypto"]+=h.current||0;
+    else if (h.type==="commodity") classes["Commodities"]+=h.current||0;
+    else if (h.isin && isETF(h.isin)) classes["ETFs"]+=h.current||0;
+    else classes["Equities"]+=h.current||0;
+  });
+  return classes;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   PORTFOLIO HEALTH SCORE
+════════════════════════════════════════════════════════════════════ */
+function computeHealthScore() {
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const debts = state.holdings.filter(h=>h.type==="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  if (!total) return {score:0,subs:{diversification:0,liquidity:0,rateResilience:0,drawdownBuffer:0,debtRatio:0}};
+
+  const classes = computeAssetClasses();
+  const weights = Object.values(classes).map(v=>v/total).filter(v=>v>0);
+  const hhi = weights.reduce((s,w)=>s+w*w,0);
+  const diversification = Math.round(Math.max(0,Math.min(100,(1-hhi)*1.4*100)));
+
+  const liquid = (classes["Equities"]||0)+(classes["ETFs"]||0)+(classes["Cash"]||0)+(classes["Bonds"]||0);
+  const liquidity = Math.round(Math.min(100,liquid/total*120));
+
+  const bondPct = ((classes["Bonds"]||0)/total);
+  const rePct = ((classes["Real Estate"]||0)/total);
+  const eqPct = (((classes["Equities"]||0)+(classes["ETFs"]||0))/total);
+  const rateSens = bondPct*0.8 + rePct*0.4 + eqPct*0.15;
+  const rateResilience = Math.round(Math.max(0,Math.min(100,100-rateSens*100)));
+
+  const cashBuf = (classes["Cash"]||0)/total;
+  const bondBuf = (classes["Bonds"]||0)/total;
+  const drawdownBuffer = Math.round(Math.min(100,(cashBuf+bondBuf*0.5)*200));
+
+  const totalDebt = debts.reduce((s,h)=>s+(h.amount||0),0);
+  const dtr = totalDebt > 0 ? Math.max(0,100-Math.round(totalDebt/total*100)) : 100;
+  const debtRatio = Math.min(100,dtr);
+
+  const score = Math.round(diversification*.25 + liquidity*.20 + rateResilience*.20 + drawdownBuffer*.20 + debtRatio*.15);
+  return {score,subs:{Diversification:diversification,Liquidity:liquidity,"Rate resilience":rateResilience,"Drawdown buffer":drawdownBuffer,"Debt ratio":debtRatio}};
+}
+
+function renderHealthScore(score, subs) {
+  const el = document.getElementById("health-num");
+  const gradeEl = document.getElementById("health-grade");
+  const subsEl = document.getElementById("health-subs");
+  if (!el) return;
+
+  el.textContent = score;
+  const grade = score>=90?"Institutional grade":score>=75?"Good, well balanced":score>=60?"Moderate, some risk":score>=45?"Elevated risk":"High risk";
+  const gradeColor = score>=75?"#15803d":score>=60?"var(--amber)":"var(--red)";
+  gradeEl.textContent = grade;
+  gradeEl.style.color = gradeColor;
+
+  // Draw ring
+  const canvas = document.getElementById("health-ring");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,90,90);
+  const r = 38, cx2=45, cy2=45;
+  ctx.beginPath(); ctx.arc(cx2,cy2,r,0,Math.PI*2);
+  ctx.strokeStyle="#f0ede8"; ctx.lineWidth=7; ctx.stroke();
+  const color = score>=75?"#1D9E75":score>=60?"#EF9F27":"#dc2626";
+  ctx.beginPath(); ctx.arc(cx2,cy2,r,-Math.PI/2,-Math.PI/2+(score/100)*Math.PI*2);
+  ctx.strokeStyle=color; ctx.lineWidth=7; ctx.lineCap="round"; ctx.stroke();
+
+  const subColors = {Diversification:"#378ADD",Liquidity:"#1D9E75","Rate resilience":"#EF9F27","Drawdown buffer":"#7F77DD","Debt ratio":"#5DCAA5"};
+  subsEl.innerHTML = Object.entries(subs).map(([k,v])=>`
+    <div class="hsub-row">
+      <div class="hsub-name">${k}</div>
+      <div class="hsub-bar-bg"><div class="hsub-bar-fill" style="width:${v}%;background:${subColors[k]||'#378ADD'}"></div></div>
+      <div class="hsub-val" style="color:${subColors[k]||'#378ADD'}">${v}</div>
+    </div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   WHAT BREAKS MY PORTFOLIO
+════════════════════════════════════════════════════════════════════ */
+function computeBreaks() {
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  if (!total) return [];
+  const classes = computeAssetClasses();
+  const eqPct = ((classes.Equities||0)+(classes.ETFs||0))/total;
+  const bondPct = (classes.Bonds||0)/total;
+  const rePct = (classes["Real Estate"]||0)/total;
+  const cryptoPct = (classes.Crypto||0)/total;
+  const commPct = (classes.Commodities||0)/total;
+
+  // Bond duration estimate: avg 5yr duration sensitivity ~-4.5% per 100bps
+  const bondDurSens = bondPct * 4.5;
+  const scenarios = [
+    {name:"Rate spike +200bps",impact:-(bondDurSens*2 + eqPct*0.08 + rePct*0.10)*total},
+    {name:"Rate spike +300bps",impact:-(bondDurSens*3 + eqPct*0.12 + rePct*0.15)*total},
+    {name:"Equity crash −35%",impact:-(eqPct*0.35)*total},
+    {name:"Equity crash −50%",impact:-(eqPct*0.50)*total},
+    {name:"Crypto −80%",impact:-(cryptoPct*0.80)*total},
+    {name:"Real estate −25%",impact:-(rePct*0.25)*total},
+    {name:"Commodities −40%",impact:-(commPct*0.40)*total},
+    {name:"Recession scenario",impact:-(eqPct*0.22+bondPct*-0.08+rePct*0.12+cryptoPct*0.35+commPct*0.18)*total},
+    {name:"Tech crash −40%",impact:-(eqPct*0.30)*total},
+    {name:"USD +20% (FX)",impact:-(eqPct*0.06+bondPct*0.03)*total},
+  ].filter(s=>Math.abs(s.impact)>500);
+
+  return scenarios.sort((a,b)=>a.impact-b.impact).slice(0,6);
+}
+
+function renderBreaksCard(elId, maxItems=4) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const breaks = computeBreaks();
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  const items = breaks.slice(0,maxItems);
+  if (!items.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px">Not enough holdings to compute.</div>'; return; }
+  el.innerHTML = items.map((b,i)=>`
+    <div class="breaks-row">
+      <div class="breaks-rank">${i+1}</div>
+      <div class="breaks-name">${b.name}</div>
+      <div class="breaks-impact">${b.impact<0?"-":"+"}$${fmt(Math.abs(b.impact))}</div>
+      <div class="breaks-pct">${total>0?(b.impact/total*100).toFixed(1):0}%</div>
+    </div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FACTOR BARS
+════════════════════════════════════════════════════════════════════ */
+function renderFactorBars(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  if (!total) return;
+  const classes = computeAssetClasses();
+  const eqPct = ((classes.Equities||0)+(classes.ETFs||0))/total*100;
+  const bondPct = (classes.Bonds||0)/total*100;
+  const rePct = (classes["Real Estate"]||0)/total*100;
+  const cryptoPct = (classes.Crypto||0)/total*100;
+  const cashPct = (classes.Cash||0)/total*100;
+  const commPct = (classes.Commodities||0)/total*100;
+
+  const factors = [
+    {name:"Growth beta",val:Math.min(100,Math.round(eqPct*0.9+cryptoPct*0.5)),color:"#378ADD"},
+    {name:"Rate sensitivity",val:Math.min(100,Math.round(bondPct*0.85+rePct*0.5+eqPct*0.15)),color:"#D85A30"},
+    {name:"Inflation hedge",val:Math.min(100,Math.round(commPct*0.9+rePct*0.4+cryptoPct*0.2)),color:"#1D9E75"},
+    {name:"Crypto volatility",val:Math.min(100,Math.round(cryptoPct*1.2)),color:"#F59E0B"},
+    {name:"Illiquidity risk",val:Math.min(100,Math.round(rePct*0.8+bondPct*0.1)),color:"#7F77DD"},
+    {name:"Liquidity (cash)",val:Math.min(100,Math.round(cashPct*1.1+bondPct*0.3)),color:"#5DCAA5"},
+  ];
+  el.innerHTML = factors.map(f=>`
+    <div class="factor-row">
+      <div class="factor-name">${f.name}</div>
+      <div class="factor-bar-bg"><div class="factor-bar-fill" style="width:${f.val}%;background:${f.color}"></div></div>
+      <div class="factor-val" style="color:${f.color}">${f.val}%</div>
+    </div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   COMMAND SCREEN
+════════════════════════════════════════════════════════════════════ */
+let cmdAllocChart = null;
+function renderCommandScreen() {
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const debts = state.holdings.filter(h=>h.type==="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  const paid = assets.reduce((s,h)=>s+(h.paid||0),0);
+  const pnl = total-paid;
+  const pnlPct = paid>0?pnl/paid*100:0;
+  const totalDebt = debts.reduce((s,h)=>s+(h.amount||0),0);
+  const netWorth = total-totalDebt;
+
+  // Timestamp
+  const ts = document.getElementById("cmd-timestamp");
+  if (ts) ts.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // KPI strip
+  const kpiEl = document.getElementById("kpi-strip");
+  if (kpiEl) kpiEl.innerHTML = `
+    <div class="kpi"><div class="kpi-accent" style="background:#378ADD"></div><div class="kpi-label">Portfolio value</div><div class="kpi-value mono">$${fmt(total)}</div><div class="kpi-sub">gross assets</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:${pnl>=0?'#1D9E75':'#dc2626'}"></div><div class="kpi-label">Total P&L</div><div class="kpi-value mono ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':'-'}$${fmt(Math.abs(pnl))}</div><div class="kpi-sub">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}% since purchase</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#7F77DD"></div><div class="kpi-label">Net worth</div><div class="kpi-value mono ${netWorth>=0?'pos':'neg'}">${netWorth>=0?'':'-'}$${fmt(Math.abs(netWorth))}</div><div class="kpi-sub">${totalDebt>0?`after $${fmt(totalDebt)} debt`:'no debt'}</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#EF9F27"></div><div class="kpi-label">Health score</div><div class="kpi-value mono" id="kpi-health-num">—</div><div class="kpi-sub" id="kpi-health-grade"></div></div>`;
+
+  // Health score
+  const hs = computeHealthScore();
+  state.healthScore = hs.score;
+  state.healthSubs = hs.subs;
+  renderHealthScore(hs.score, hs.subs);
+  const kpiHN = document.getElementById("kpi-health-num");
+  const kpiHG = document.getElementById("kpi-health-grade");
+  if (kpiHN) { kpiHN.textContent = hs.score; kpiHN.style.color = hs.score>=75?"#1D9E75":hs.score>=60?"#EF9F27":"#dc2626"; }
+  if (kpiHG) kpiHG.textContent = hs.score>=75?"Good":hs.score>=60?"Moderate":"Elevated risk";
+
+  // What breaks card
+  renderBreaksCard("breaks-list", 4);
+
+  // Factor bars
+  renderFactorBars("factor-bars");
+
+  // Asset allocation donut
+  if (cmdAllocChart) { cmdAllocChart.destroy(); cmdAllocChart=null; }
+  const classes = computeAssetClasses();
+  const classColors = {Equities:"#378ADD",ETFs:"#185FA5",Bonds:"#7F77DD",Cash:"#94a3b8","Real Estate":"#1D9E75",Crypto:"#f97316",Commodities:"#EF9F27"};
+  const labels=[], values=[], colors2=[];
+  Object.entries(classes).forEach(([k,v])=>{ if(v>0){labels.push(k);values.push(parseFloat((v/total*100).toFixed(1)));colors2.push(classColors[k]||"#888");} });
+  const allocCtx = document.getElementById("cmd-alloc-chart");
+  if (allocCtx && labels.length) {
+    cmdAllocChart = new Chart(allocCtx, {
+      type:"doughnut",
+      data:{labels,datasets:[{data:values,backgroundColor:colors2,borderColor:"#fff",borderWidth:3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(1)}%`}}},cutout:"60%"}
+    });
+    const legendEl = document.getElementById("cmd-alloc-legend");
+    if (legendEl) legendEl.innerHTML = labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${colors2[i]}"></span>${l} ${values[i]}%</span>`).join("");
+  }
+
+  // Income summary
+  renderIncomeSummary();
+
+  // Stress teaser
+  renderStressTeaser();
+
+  // Warnings
+  const warnEl = document.getElementById("warnings-area");
+  if (warnEl) {
+    const msgs = [];
+    Object.entries(state.geoAgg).forEach(([code,pct])=>{ if(pct>=60){const flag=FLAGS[code]||"",name=COUNTRY_NAMES[code]||code;msgs.push(`${flag} <b>${name}</b> is <b>${pct.toFixed(0)}%</b> of your portfolio.`);} });
+    Object.entries(state.sectorAgg).forEach(([sec,pct])=>{ if(pct>=40&&!["ETF / Fund","—","Other","Cash","Fixed Income"].includes(sec))msgs.push(`<b>${pct.toFixed(0)}% in ${sec}</b>: high sector concentration.`); });
+    warnEl.innerHTML = msgs.map(m=>`<div class="warn-box">⚠ ${m}</div>`).join("");
+  }
+
+  // Trigger AI briefing
+  generateBriefing();
+}
+
+function renderIncomeSummary() {
+  const el = document.getElementById("income-summary");
+  if (!el) return;
+  const bonds = state.holdings.filter(h=>h.asset_type==="bond");
+  const re = state.holdings.filter(h=>h.type==="real_estate");
+  const bondIncome = bonds.reduce((s,h)=>s+(h.face_value||0)*(h.quantity||1)*(h.coupon||0)/100,0);
+  const reIncome = re.reduce((s,h)=>s+(h.current||0)*0.04,0); // estimate 4% yield
+  const divIncome = state.holdings.filter(h=>h.isin&&h.asset_type!=="bond"&&h.asset_type!=="cash").reduce((s,h)=>s+(h.current||0)*0.018,0);
+  const total = bondIncome+reIncome+divIncome;
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="color:var(--muted)">Estimated dividends</span><span class="mono">$${fmt(divIncome)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="color:var(--muted)">Bond coupons</span><span class="mono">$${fmt(bondIncome)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px"><span style="color:var(--muted)">Rental estimate</span><span class="mono">$${fmt(reIncome)}</span></div>
+    <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between;font-size:14px;font-weight:500"><span>Total est. annual</span><span class="mono" style="color:#15803d">$${fmt(total)}</span></div>
+    <div style="font-size:11px;color:var(--hint);margin-top:4px">Income estimates are approximate. Dividends based on 1.8% yield estimate.</div>`;
+}
+
+function renderStressTeaser() {
+  const el = document.getElementById("stress-teaser");
+  if (!el) return;
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  const classes = computeAssetClasses();
+  const eqPct = ((classes.Equities||0)+(classes.ETFs||0))/total;
+  const bondPct = (classes.Bonds||0)/total;
+  const rePct = (classes["Real Estate"]||0)/total;
+  const cryptoPct = (classes.Crypto||0)/total;
+  const commPct = (classes.Commodities||0)/total;
+  // 2008 simulation
+  const gfc = -(eqPct*0.38+bondPct*-0.06+rePct*0.22+cryptoPct*0.70+commPct*0.40)*total;
+  const gfcPct = total>0?gfc/total*100:0;
+  const covid = -(eqPct*0.34+bondPct*-0.08+rePct*0.15+cryptoPct*0.50+commPct*0.35)*total;
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--hint);margin-bottom:8px">Estimated impact on your portfolio</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="color:var(--muted)">2008 GFC</span><span class="mono" style="color:var(--red)">${gfc<0?"-":"+"}$${fmt(Math.abs(gfc))} (${gfcPct.toFixed(1)}%)</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">2020 COVID</span><span class="mono" style="color:var(--red)">${covid<0?"-":"+"}$${fmt(Math.abs(covid))} (${total>0?(covid/total*100).toFixed(1):0}%)</span></div>
+    <div style="font-size:11px;color:var(--blue);margin-top:8px">Run full Stress Lab →</div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RISK SCREEN
+════════════════════════════════════════════════════════════════════ */
+let rateCurveChart = null;
+function renderRiskScreen() {
+  renderBreaksCard("risk-breaks-full", 10);
+  renderRateCurve();
+  renderConcentration();
+  updateShock();
+}
+
+function renderRateCurve() {
+  if (rateCurveChart) { rateCurveChart.destroy(); rateCurveChart=null; }
+  const ctx = document.getElementById("rate-curve-chart");
+  if (!ctx) return;
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  if (!total) return;
+  const classes = computeAssetClasses();
+  const bondPct = (classes.Bonds||0)/total;
+  const rePct = (classes["Real Estate"]||0)/total;
+  const eqPct = ((classes.Equities||0)+(classes.ETFs||0))/total;
+
+  const bps = [-300,-200,-100,0,100,200,300,400];
+  const vals = bps.map(b => {
+    const bondImpact = bondPct * (-b/100*4.5/100);
+    const reImpact = rePct * (-b/100*0.35/100);
+    const eqImpact = eqPct * (-b/100*0.10/100);
+    return Math.round(total * (1 + bondImpact + reImpact + eqImpact));
+  });
+
+  rateCurveChart = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels:bps.map(b=>(b>=0?"+":"")+b+"bps"),
+      datasets:[{
+        data:vals, borderColor:"#378ADD", borderWidth:2.5,
+        pointBackgroundColor:vals.map(v=>v>=total?"#1D9E75":"#dc2626"),
+        pointBorderColor:"#fff",pointBorderWidth:2,pointRadius:5,
+        fill:{target:"origin",above:"rgba(29,158,117,0.07)",below:"rgba(220,38,38,0.07)"},
+        tension:0.35
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"$"+fmt(c.parsed.y)}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11}}},
+        y:{grid:{color:"#f0ede8"},ticks:{callback:v=>"$"+fmt(v),font:{size:11}}}
+      }
+    }
+  });
+}
+
+function updateShock() {
+  const eq = parseFloat(document.getElementById("shock-eq")?.value||0);
+  const rate = parseFloat(document.getElementById("shock-rate")?.value||0);
+  const usd = parseFloat(document.getElementById("shock-usd")?.value||0);
+  const crypto = parseFloat(document.getElementById("shock-crypto")?.value||0);
+
+  document.getElementById("shock-eq-val").textContent = (eq>=0?"+":"")+eq+"%";
+  document.getElementById("shock-rate-val").textContent = (rate>=0?"+":"")+rate;
+  document.getElementById("shock-usd-val").textContent = (usd>=0?"+":"")+usd+"%";
+  document.getElementById("shock-crypto-val").textContent = (crypto>=0?"+":"")+crypto+"%";
+
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  if (!total) return;
+  const classes = computeAssetClasses();
+  const eqV = (classes.Equities||0)+(classes.ETFs||0);
+  const bondV = classes.Bonds||0;
+  const cryptoV = classes.Crypto||0;
+  const bondDurImpact = bondV * (-rate/100*4.5/100);
+  const eqImpact = eqV * (eq/100);
+  const cryptoImpact = cryptoV * (crypto/100);
+  const usdImpact = (eqV*0.3+bondV*0.2) * (-usd/100*0.3);
+  const totalImpact = bondDurImpact+eqImpact+cryptoImpact+usdImpact;
+
+  const resEl = document.getElementById("shock-result");
+  const pctEl = document.getElementById("shock-result-pct");
+  if (resEl) {
+    resEl.textContent = (totalImpact>=0?"+":"-")+"$"+fmt(Math.abs(totalImpact));
+    resEl.style.color = totalImpact>=0?"#15803d":"#dc2626";
+  }
+  if (pctEl) pctEl.textContent = total>0?((totalImpact/total*100).toFixed(1)+"% of portfolio"):"";
+}
+
+function renderConcentration() {
+  const el = document.getElementById("concentration-list");
+  if (!el) return;
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  const sorted = [...assets].sort((a,b)=>(b.current||0)-(a.current||0));
+  el.innerHTML = sorted.map(h=>{
+    const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
+    const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||"Unknown";
+    const pct = total>0?(h.current||0)/total*100:0;
+    const barColor = pct>20?"#dc2626":pct>10?"#EF9F27":"#378ADD";
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px">
+      <div style="width:160px;white-space:normal;overflow-wrap:break-word;word-break:break-word;color:var(--text);line-height:1.3">${name}</div>
+      <div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px"></div></div>
+      <div style="width:48px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${barColor}">${pct.toFixed(1)}%</div>
+      <div style="width:80px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">$${fmt(h.current||0)}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   INTELLIGENCE SCREEN
+════════════════════════════════════════════════════════════════════ */
+let intelSectorChart = null;
+function renderIntelligenceScreen() {
+  // Copilot suggestions
+  const sugEl = document.getElementById("copilot-suggestions");
+  if (sugEl) {
+    const suggestions = ["What is my effective bond duration?","How correlated are my crypto and tech?","What's my biggest single risk?","How would 1970s stagflation affect me?","What's my USD exposure?"];
+    sugEl.innerHTML = suggestions.map(s=>`<button class="btn btn-outline btn-sm" onclick="document.getElementById('copilot-input').value='${s}';askCopilot()">${s}</button>`).join("");
+  }
+  // Sector chart
+  renderIntelSectorChart();
+  // Trigger intel briefing (may reuse command briefing)
+  setTimeout(()=>generateIntelBriefing(), 500);
+}
+
+function renderIntelSectorChart() {
+  if (intelSectorChart) { intelSectorChart.destroy(); intelSectorChart=null; }
+  const ctx = document.getElementById("intel-sector-chart");
+  if (!ctx) return;
+  const entries = Object.entries(state.sectorAgg).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
+  if (!entries.length) return;
+  const labels = entries.map(([k])=>k);
+  const values = entries.map(([,v])=>parseFloat(v.toFixed(1)));
+  const colors2 = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922","#94a3b8","#f97316"];
+  intelSectorChart = new Chart(ctx, {
+    type:"doughnut",
+    data:{labels,datasets:[{data:values,backgroundColor:colors2.slice(0,labels.length),borderColor:"#fff",borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(1)}%`}}},cutout:"55%"}
+  });
+  const legendEl = document.getElementById("intel-sector-legend");
+  if (legendEl) legendEl.innerHTML = labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:${colors2[i]}"></span>${l} ${values[i]}%</span>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   HOLDINGS SCREENS
+════════════════════════════════════════════════════════════════════ */
+let htabActive = 0;
+function switchHTab(i) {
+  document.querySelectorAll(".tab-panel[id^='htab-']").forEach((p,j)=>p.classList.toggle("active",j===i));
+  document.querySelectorAll("#screen-holdings .tab").forEach((t,j)=>t.classList.toggle("active",j===i));
+  htabActive = i;
+  if (i===3) setTimeout(renderTreemap, 50);
+}
+
+function renderHoldingsScreens() {
+  renderHoldingsTable();
+  renderPerformance();
+  renderIncomeCalendar();
+}
+
+function renderHoldingsTable() {
+  const tbody = document.getElementById("holdings-tbody");
+  if (!tbody) return;
+  const assets = state.holdings.filter(h=>h.type!=="debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  tbody.innerHTML = assets.map(h=>{
+    const cur=h.current||0, paid=h.paid||0, pnl=cur-paid;
+    const pnlP = paid>0?pnl/paid*100:0;
+    const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
+    const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||h.type;
+    const type = h.asset_type==="bond"?"Bond":h.asset_type==="cash"?"Cash":h.type==="real_estate"?"Real Estate":h.type==="crypto"?"Crypto":h.type==="commodity"?"Commodity":(h.isin&&isETF(h.isin))?"ETF":"Equity";
+    const pc = total>0?cur/total*100:0;
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px">${name}</td>
+      <td style="padding:10px;text-align:right;color:var(--muted)">${type}</td>
+      <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">${pc.toFixed(1)}%</td>
+      <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">$${fmt(paid)}</td>
+      <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">$${fmt(cur)}</td>
+      <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace;color:${pnl>=0?"#15803d":"var(--red)"}">${pnl>=0?"+":"-"}$${fmt(Math.abs(pnl))}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderPerformance() {
+  const el = document.getElementById("perf-list");
+  if (!el) return;
+  const assets = state.holdings.filter(h=>h.type!=="debt"&&(h.paid||0)>0);
+  const sorted = [...assets].sort((a,b)=>{
+    const pa = a.paid||1, pb = b.paid||1;
+    return (b.current-b.paid)/pb - (a.current-a.paid)/pa;
+  });
+  el.innerHTML = sorted.map(h=>{
+    const cur=h.current||0, paid=h.paid||0, pnl=cur-paid;
+    const pnlP = paid>0?pnl/paid*100:0;
+    const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
+    const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||"Unknown";
+    const type = h.asset_type==="bond"?"Bond":h.asset_type==="cash"?"Cash":h.type==="real_estate"?"Real Estate":h.type==="crypto"?"Crypto":h.type==="commodity"?"Commodity":(h.isin&&isETF(h.isin))?"ETF":"Equity";
+    const sub = h.ticker ? `${type} · ${h.ticker}${h.live_currency&&h.live_price?` · ${h.live_currency} ${fmt2(h.live_price)}`:""}` : `${type}${h.isin?" · "+h.isin:""}`;
+    return `<div class="perf-row">
+      <div class="perf-name"><div class="name">${name}</div><div class="meta">${sub}</div></div>
+      <div class="perf-col"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">Invested</div><div class="mono" style="font-size:13px">$${fmt(paid)}</div></div>
+      <div class="perf-col"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">Current</div><div class="mono" style="font-size:13px">$${fmt(cur)}</div></div>
+      <div class="perf-col"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">P&L</div><div class="mono" style="font-size:13px;color:${pnl>=0?"#15803d":"var(--red)"}">${pnl>=0?"+":"-"}$${fmt(Math.abs(pnl))}<span style="font-size:11px;margin-left:4px">(${pnlP>=0?"+":""}${pnlP.toFixed(1)}%)</span></div></div>
+    </div>`;
+  }).join("");
+}
+
+function renderIncomeCalendar() {
+  const el = document.getElementById("income-calendar");
+  if (!el) return;
+  const events = [];
+  state.holdings.filter(h=>h.asset_type==="bond").forEach(h=>{
+    const info = state.infoMap[(h.isin||"").toUpperCase()]||{};
+    const name = info.name||h.isin||"Bond";
+    const annual = (h.face_value||0)*(h.quantity||1)*(h.coupon||0)/100;
+    if (annual > 0) {
+      [3,6,9,12].forEach(m=>{ events.push({month:m,name,type:"Coupon",amount:annual/4,date:`${new Date().getFullYear()}-${String(m).padStart(2,'0')}-15`}); });
+    }
+  });
+  state.holdings.filter(h=>h.isin&&!["bond","cash"].includes(h.asset_type)).forEach(h=>{
+    const info = state.infoMap[(h.isin||"").toUpperCase()]||{};
+    const name = info.name||h.isin;
+    const est = (h.current||0)*0.018/4;
+    if (est > 100) {
+      [3,6,9,12].forEach(m=>{ events.push({month:m,name,type:"Dividend (est.)",amount:est,date:`${new Date().getFullYear()}-${String(m).padStart(2,'0')}-20`}); });
+    }
+  });
+  if (!events.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:1rem 0">No income events detected. Add bonds or equity holdings to see income projections.</div>'; return; }
+  const byMonth = {};
+  events.forEach(e=>{ const k=e.month; (byMonth[k]=byMonth[k]||[]).push(e); });
+  const months = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  el.innerHTML = Object.entries(byMonth).sort(([a],[b])=>a-b).map(([m,evs])=>`
+    <div class="cal-month">
+      <div class="cal-month-label">${months[m]}</div>
+      ${evs.map(e=>`<div class="cal-event"><div class="cal-event-name">${e.name} <span style="font-size:11px;color:var(--hint)">${e.type}</span></div><div class="cal-event-date">${e.date}</div><div class="cal-event-amt">+$${fmt(e.amount)}</div></div>`).join("")}
+    </div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TREEMAP
+════════════════════════════════════════════════════════════════════ */
+function squarify(items,x,y,w,h) {
+  if (!items.length) return [];
+  const rects=[];let remaining=[...items],cx=x,cy=y,cw=w,ch=h;
+  while(remaining.length){
+    const total=remaining.reduce((s,i)=>s+i.value,0);
+    const row=[];let rowSum=0;const isHoriz=cw>=ch;const dim=isHoriz?ch:cw;
+    for(const item of remaining){
+      row.push(item);rowSum+=item.value;
+      const aspect=row.map(it=>{const a=it.value/rowSum*dim;const b=rowSum/total*(isHoriz?cw:ch);return Math.max(a/b,b/a)||1e9;});
+      const worstNow=Math.max(...aspect);
+      if(row.length>1){const prevAspect=row.slice(0,-1).map(it=>{const ps=rowSum-item.value;const a=it.value/ps*dim;const b=ps/total*(isHoriz?cw:ch);return Math.max(a/b,b/a)||1e9;});if(Math.max(...prevAspect)<worstNow){row.pop();rowSum-=item.value;break;}}
+    }
+    remaining=remaining.filter(i=>!row.includes(i));const rowFrac=rowSum/total;
+    if(isHoriz){const rw=cw*rowFrac;let ry=cy;row.forEach(it=>{const rh=ch*(it.value/rowSum);rects.push({...it,x:cx,y:ry,w:rw,h:rh});ry+=rh;});cx+=rw;cw-=rw;}
+    else{const rh=ch*rowFrac;let rx=cx;row.forEach(it=>{const rw=cw*(it.value/rowSum);rects.push({...it,x:rx,y:cy,w:rw,h:rh});rx+=rw;});cy+=rh;ch-=rh;}
+  }
+  return rects;
+}
+
+function renderTreemap() {
+  const container = document.getElementById("treemap-container");
+  if (!container) return;
+  container.innerHTML = "";
+  const W=container.offsetWidth||860,H=420;
+  const assets=state.holdings.filter(h=>h.type!=="debt");
+  const total=assets.reduce((s,h)=>s+(h.current||0),0);
+  if(!total)return;
+  const items=[];
+  state.holdings.filter(h=>h.isin).forEach((h,i)=>{
+    const info=state.infoMap[h.isin.toUpperCase()]||{};
+    const pnl=h.current-h.paid,pnlP=h.paid>0?pnl/h.paid*100:0;
+    items.push({value:h.current,label:info.name||h.isin,sub:`${(h.current/total*100).toFixed(1)}%`,color:COLORS[i%COLORS.length],tooltip:`${info.name||h.isin}\n$${fmt(h.current)} · ${(h.current/total*100).toFixed(1)}%\nP&L: ${pnl>=0?"+":""}${pnlP.toFixed(1)}%`});
+  });
+  const altColors={real_estate:"#7F77DD",crypto:"#F59E0B",commodity:"#D85A30"};
+  state.holdings.filter(h=>!h.isin&&h.type!=="debt").forEach(h=>{
+    if(!h.current)return;
+    items.push({value:h.current,label:h.type==="real_estate"?(h.address||"Property"):h.type==="crypto"?h.crypto_type:h.commodity_type,sub:`${(h.current/total*100).toFixed(1)}%`,color:altColors[h.type]||"#888"});
+  });
+  const rects=squarify(items.filter(i=>i.value>0).sort((a,b)=>b.value-a.value),0,0,W,H);
+  rects.forEach(r=>{
+    const div=document.createElement("div");
+    div.className="tm-rect";
+    div.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:${r.color}`;
+    if(r.w>60&&r.h>40)div.innerHTML=`<div class="tm-label">${r.label}<br><span style="font-size:10px;opacity:.8">${r.sub}</span></div>`;
+    div.title=r.tooltip||r.label;
+    container.appendChild(div);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SIMULATOR DATA
+════════════════════════════════════════════════════════════════════ */
+const EVENTS = {
+  inflation_shock:{id:"inflation_shock",name:"Inflation Shock",category:"monetary",severity:"high",headline:"Consumer Prices Surge Past 8%",description:"Inflation accelerates beyond central bank targets. Real yields collapse as bond markets sell off. Hard assets and commodities surge as investors seek inflation protection. Growth equities face a brutal repricing.",effects:{equities:-0.06,bonds:-0.14,real_estate:+0.03,commodities:+0.18,cash:0.00,crypto:-0.08},resilience_impact:-8,historical_analogue:"Mirrors 2021–2022, when US CPI peaked at 9.1%. The Bloomberg Global Agg bond index lost 16% while energy commodities gained over 60%."},
+  tech_crash:{id:"tech_crash",name:"Technology Crash",category:"market",severity:"severe",headline:"AI Valuation Bubble Bursts",description:"High-multiple technology stocks enter a violent correction. Growth equities shed a third of their value in weeks. Quality and value hold. A flight to safety begins.",effects:{equities:-0.22,bonds:+0.04,real_estate:-0.02,commodities:-0.03,cash:0.00,crypto:-0.38},resilience_impact:-12,historical_analogue:"Echoes 2022, when the Nasdaq fell 33% and high-multiple growth stocks lost 50–70%."},
+  banking_crisis:{id:"banking_crisis",name:"Banking System Stress",category:"financial",severity:"severe",headline:"Systemic Banking Stress Detected",description:"Regional bank failures trigger contagion fears. Credit markets seize. Depositors flee to safety. Equities fall sharply as systemic risk spikes.",effects:{equities:-0.18,bonds:+0.06,real_estate:-0.08,commodities:-0.04,cash:0.00,crypto:-0.28},resilience_impact:-15,historical_analogue:"Echoes the 2023 SVB collapse and the 2008 GFC."},
+  commodity_boom:{id:"commodity_boom",name:"Commodity Supercycle",category:"supply",severity:"medium",headline:"Energy and Metals Hit Decade Highs",description:"Supply constraints and geopolitical tension send energy and metals prices surging.",effects:{equities:+0.03,bonds:-0.03,real_estate:+0.05,commodities:+0.28,cash:0.00,crypto:+0.05},resilience_impact:+2,historical_analogue:"Mirrors 2021–2022, when the Bloomberg Commodity Index gained 38% in 12 months."},
+  rate_hike_cycle:{id:"rate_hike_cycle",name:"Aggressive Rate Hike Cycle",category:"monetary",severity:"high",headline:"Central Bank Raises Rates 150bps",description:"Central banks move aggressively to contain inflation. Bond yields spike as long-duration assets reprice violently.",effects:{equities:-0.10,bonds:-0.16,real_estate:-0.10,commodities:+0.04,cash:+0.04,crypto:-0.15},resilience_impact:-10,historical_analogue:"Parallels the 2022–2023 Fed cycle: 525bps of hikes over 18 months."},
+  ai_boom:{id:"ai_boom",name:"AI Productivity Surge",category:"technology",severity:"medium",headline:"AI Breakthrough Triggers Broad Market Rally",description:"A landmark AI capability breakthrough triggers a productivity boom narrative. Technology stocks lead a broad market rally.",effects:{equities:+0.18,bonds:-0.02,real_estate:+0.04,commodities:-0.03,cash:0.00,crypto:+0.25},resilience_impact:+5,historical_analogue:"Echoes the 1995–2000 productivity boom, when S&P 500 returned 28% annually."},
+  recession:{id:"recession",name:"Global Recession",category:"macro",severity:"severe",headline:"GDP Contracts for Second Consecutive Quarter",description:"A global recession takes hold. Corporate earnings collapse. Risk assets sell off broadly as investors flee to safety.",effects:{equities:-0.20,bonds:+0.08,real_estate:-0.12,commodities:-0.18,cash:0.00,crypto:-0.35},resilience_impact:-18,historical_analogue:"Mirrors 2008–2009 and 2020. In 2008, the S&P 500 fell 38%."},
+  geopolitical_shock:{id:"geopolitical_shock",name:"Geopolitical Crisis",category:"geopolitical",severity:"high",headline:"Major Geopolitical Event Destabilizes Markets",description:"A major geopolitical event triggers global market volatility. Safe-haven assets surge. Energy prices spike.",effects:{equities:-0.12,bonds:+0.04,real_estate:-0.03,commodities:+0.14,cash:0.00,crypto:-0.10},resilience_impact:-6,historical_analogue:"Echoes the 1973 oil embargo and 2022 Russia–Ukraine conflict."},
+  fed_rate_cut_cycle:{id:"fed_rate_cut_cycle",name:"Fed Rate Cut Cycle",category:"monetary",severity:"medium",headline:"Central Bank Pivots to Rate Cuts",description:"Central banks begin an aggressive rate-cutting cycle. Bond prices surge as yields fall. Growth assets benefit from lower discount rates.",effects:{equities:+0.12,bonds:+0.10,real_estate:+0.08,commodities:+0.03,cash:-0.02,crypto:+0.15},resilience_impact:+8,historical_analogue:"Mirrors the 2019 and 2020 Fed pivot cycles."},
+  post_crisis_recovery:{id:"post_crisis_recovery",name:"Post-Crisis Recovery",category:"macro",severity:"medium",headline:"Markets Stage Strong Recovery Rally",description:"Markets stage a powerful recovery as fear subsides. Credit spreads tighten. Risk appetite returns.",effects:{equities:+0.22,bonds:-0.03,real_estate:+0.08,commodities:+0.10,cash:0.00,crypto:+0.40},resilience_impact:+12,historical_analogue:"Mirrors the 2009 and 2020 recoveries. S&P 500 rallied 68% from March 2009 lows."},
+};
+
+const DECISIONS = {
+  stabilize:{id:"stabilize",name:"Hold steady",description:"Maintain current allocations. No rebalancing. Wait for clarity before acting.",tag:"HOLD",tag_color:"#94a3b8",allocation_changes:{},effect_modifiers:{},resilience_delta:0},
+  defensive_shift:{id:"defensive_shift",name:"Defensive shift",description:"Rotate into bonds and cash. Reduce equity exposure by 15%. Build a defensive buffer.",tag:"DEFENSIVE",tag_color:"#7F77DD",allocation_changes:{equities:-0.15,bonds:+0.10,cash:+0.05},effect_modifiers:{equities:0.8,bonds:1.1,crypto:0.7},resilience_delta:+8},
+  go_aggressive:{id:"go_aggressive",name:"Buy the dip",description:"Increase equity exposure aggressively. Add 20% to equities, funded from cash and bonds.",tag:"AGGRESSIVE",tag_color:"#D85A30",allocation_changes:{equities:+0.20,bonds:-0.10,cash:-0.10},effect_modifiers:{equities:1.3,bonds:0.9,crypto:1.4},resilience_delta:-10},
+  commodity_hedge:{id:"commodity_hedge",name:"Commodity hedge",description:"Shift 15% into commodities as an inflation and geopolitical hedge.",tag:"HEDGE",tag_color:"#EF9F27",allocation_changes:{equities:-0.10,bonds:-0.05,commodities:+0.15},effect_modifiers:{commodities:1.2,equities:0.9},resilience_delta:+3},
+  cash_raise:{id:"cash_raise",name:"Raise cash",description:"Convert 20% to cash. Maximum liquidity. Preserve capital above all else.",tag:"CASH",tag_color:"#1D9E75",allocation_changes:{equities:-0.10,bonds:-0.05,real_estate:-0.05,cash:+0.20},effect_modifiers:{cash:1.0,equities:0.7,bonds:0.7},resilience_delta:+12},
+  real_asset_rotation:{id:"real_asset_rotation",name:"Real asset rotation",description:"Shift 20% into real estate and commodities. Hard assets as a store of value.",tag:"REAL ASSETS",tag_color:"#639922",allocation_changes:{equities:-0.10,bonds:-0.10,real_estate:+0.10,commodities:+0.10},effect_modifiers:{real_estate:1.15,commodities:1.15},resilience_delta:+4},
+};
+
+const SCENARIOS = [
+  {id:"balanced",name:"Balanced Investor",subtitle:"Classic 60/40 facing macro headwinds",starting_capital:100000,portfolio:{equities:0.60,bonds:0.30,real_estate:0.00,commodities:0.00,cash:0.10,crypto:0.00},starting_event:"inflation_shock",event_pool:["inflation_shock","rate_hike_cycle","recession","ai_boom","geopolitical_shock","fed_rate_cut_cycle","post_crisis_recovery"],description:"A classic balanced portfolio. Global inflation is rising and rates are about to move. Test your conviction.",risk_level:"Medium",risk_color:"#F59E0B"},
+  {id:"tech_heavy",name:"Technology Overweight",subtitle:"Concentrated equity position into a market correction",starting_capital:100000,portfolio:{equities:0.80,bonds:0.10,real_estate:0.00,commodities:0.00,cash:0.10,crypto:0.00},starting_event:"tech_crash",event_pool:["tech_crash","ai_boom","inflation_shock","recession","geopolitical_shock","rate_hike_cycle","post_crisis_recovery"],description:"High conviction in equities. Markets are frothy. A severe correction is already underway in technology.",risk_level:"High",risk_color:"#dc2626"},
+  {id:"conservative",name:"Conservative Allocator",subtitle:"Bond-heavy portfolio in an aggressive rate hike cycle",starting_capital:100000,portfolio:{equities:0.25,bonds:0.55,real_estate:0.10,commodities:0.00,cash:0.10,crypto:0.00},starting_event:"rate_hike_cycle",event_pool:["rate_hike_cycle","inflation_shock","banking_crisis","recession","ai_boom","fed_rate_cut_cycle"],description:"Safety-first allocation. But rates are rising fast and your bond-heavy portfolio faces severe pressure.",risk_level:"Low–Medium",risk_color:"#1D9E75"},
+  {id:"real_assets",name:"Real Assets Portfolio",subtitle:"Hard assets at the start of a geopolitical commodity shock",starting_capital:100000,portfolio:{equities:0.30,bonds:0.10,real_estate:0.25,commodities:0.25,cash:0.10,crypto:0.00},starting_event:"commodity_boom",event_pool:["commodity_boom","geopolitical_shock","inflation_shock","recession","rate_hike_cycle","ai_boom"],description:"Concentrated in real assets. A commodity supercycle is beginning. Can you ride the wave?",risk_level:"Medium",risk_color:"#F59E0B"},
+  {id:"crisis",name:"Systemic Crisis",subtitle:"A banking crisis unfolds from a fully invested position",starting_capital:100000,portfolio:{equities:0.50,bonds:0.30,real_estate:0.10,commodities:0.00,cash:0.10,crypto:0.00},starting_event:"banking_crisis",event_pool:["banking_crisis","recession","rate_hike_cycle","geopolitical_shock","fed_rate_cut_cycle","post_crisis_recovery"],description:"Systemic banking stress is unfolding. Credit is tightening. Fear is spreading. Can you preserve capital?",risk_level:"Very High",risk_color:"#dc2626"},
+];
+
+const MAX_TURNS = 10;
+const ASSET_META = {equities:{label:"Equities",color:"#378ADD"},bonds:{label:"Bonds",color:"#7F77DD"},real_estate:{label:"Real Estate",color:"#1D9E75"},commodities:{label:"Commodities",color:"#EF9F27"},cash:{label:"Cash",color:"#94a3b8"},crypto:{label:"Crypto",color:"#f97316"}};
+const SEV_COLORS = {medium:"#F59E0B",high:"#f97316",severe:"#dc2626"};
+
+function computeResilience(portfolio) {
+  const weights=Object.values(portfolio);const hhi=weights.reduce((s,w)=>s+w*w,0);
+  const diversif=Math.max(0,(1-hhi))*60;const liquidity=Math.min((portfolio.cash||0)*200,25);
+  const maxW=Math.max(...weights,0);const penalty=Math.max(0,(maxW-0.5))*50;
+  return Math.max(0,Math.min(100,Math.round((diversif+liquidity-penalty+15)*10)/10));
+}
+function applyDecision(portfolio,decision){const np={...portfolio};Object.entries(decision.allocation_changes||{}).forEach(([a,d])=>{np[a]=Math.max(0,(np[a]||0)+d);});const total=Object.values(np).reduce((s,v)=>s+v,0);if(total>0)Object.keys(np).forEach(k=>np[k]=np[k]/total);return np;}
+function initSimState(scenario){const portfolio={...scenario.portfolio};const total=Object.values(portfolio).reduce((s,v)=>s+v,0);if(total>0)Object.keys(portfolio).forEach(k=>portfolio[k]=portfolio[k]/total);return{scenario_id:scenario.id,scenario_name:scenario.name,turn:1,capital:scenario.starting_capital,starting_capital:scenario.starting_capital,portfolio,resilience:computeResilience(portfolio),phase:"event",current_event_id:scenario.starting_event,selected_decision:null,history:[],event_pool:[...scenario.event_pool],events_seen:[],last_snapshot:null};}
+function resolveTurn(s){const event=EVENTS[s.current_event_id];const decId=s.selected_decision||"stabilize";const decision=DECISIONS[decId];const preP={...s.portfolio};const postP=applyDecision(preP,decision);const capital=s.capital;const mods=decision.effect_modifiers||{};let newCapital=0;const assetResults={};Object.entries(postP).forEach(([asset,alloc])=>{const av=capital*alloc;const effRet=(event.effects[asset]||0)*(mods[asset]||1);const nav=av*(1+effRet);newCapital+=nav;assetResults[asset]={pre_value:Math.round(av),post_value:Math.round(nav),return_pct:parseFloat((effRet*100).toFixed(1)),alloc_pct:parseFloat((alloc*100).toFixed(1))};});const capChange=newCapital-capital;const capChangePct=capital?capChange/capital*100:0;const newRes=Math.max(0,Math.min(100,Math.round((computeResilience(postP)+event.resilience_impact+(decision.resilience_delta||0))*10)/10));const snapshot={turn:s.turn,event_id:event.id,event_name:event.name,decision_id:decision.id,decision_name:decision.name,capital_before:Math.round(capital),capital_after:Math.round(newCapital),capital_change:Math.round(capChange),capital_change_pct:parseFloat(capChangePct.toFixed(1)),resilience_before:s.resilience,resilience_after:newRes,portfolio_before:preP,portfolio_after:postP,asset_results:assetResults};return{...s,capital:Math.round(newCapital),portfolio:postP,resilience:newRes,history:[...s.history,snapshot],events_seen:[...s.events_seen,event.id],last_snapshot:snapshot,selected_decision:null,phase:s.turn>=MAX_TURNS?"end":"resolution"};}
+function advanceTurn(s){const recent=s.events_seen.slice(-2);const choices=s.event_pool.filter(e=>!recent.includes(e));const pool=choices.length?choices:s.event_pool;return{...s,turn:s.turn+1,phase:"event",selected_decision:null,current_event_id:pool[Math.floor(Math.random()*pool.length)]};}
+
+/* ════════════════════════════════════════════════════════════════════
+   SIMULATOR RENDERER
+════════════════════════════════════════════════════════════════════ */
+let simHistChart = null;
+function renderSimulator() {
+  const el = document.getElementById("sim-area");
+  if (!el) return;
+  if (!state.simGame) { renderSimScenarioSelect(); return; }
+  const sim = state.simGame;
+  if (sim.phase==="event") renderSimEvent();
+  else if (sim.phase==="decision") renderSimDecision();
+  else if (["resolution","end"].includes(sim.phase)&&sim.last_snapshot) renderSimResolution();
+  else renderSimEnd();
+}
+
+// Build a Scenario object from the user's actual portfolio.
+function userPortfolioScenario() {
+  const total = state.holdings.filter(h=>h.type!=="debt").reduce((s,h)=>s+(h.current||0),0);
+  if (!total) return null;
+  const c = computeAssetClasses();
+  const allocation = {
+    equities:    ((c.Equities||0)+(c.ETFs||0))/total,
+    bonds:       (c.Bonds||0)/total,
+    real_estate: (c["Real Estate"]||0)/total,
+    commodities: (c.Commodities||0)/total,
+    cash:        (c.Cash||0)/total,
+    crypto:      (c.Crypto||0)/total,
+  };
+  // Choose a starting event that hits the largest sleeve hardest.
+  const biggestBucket = Object.entries(allocation).sort((a,b)=>b[1]-a[1])[0][0];
+  const startMap = {
+    equities:"tech_crash", bonds:"rate_hike_cycle", real_estate:"banking_crisis",
+    commodities:"commodity_boom", cash:"inflation_shock", crypto:"tech_crash"
+  };
+  // Risk label from concentration
+  const maxW = Math.max(...Object.values(allocation));
+  const riskLevel = maxW>0.7?"Very High":maxW>0.5?"High":maxW>0.35?"Medium":"Balanced";
+  const riskColor = maxW>0.7?"#dc2626":maxW>0.5?"#f97316":maxW>0.35?"#F59E0B":"#1D9E75";
+  return {
+    id:"my_portfolio",
+    name:"My actual portfolio",
+    subtitle:`Your $${fmt(total)} drop-zone across 10 cycles of real market stress`,
+    starting_capital: Math.round(total),
+    portfolio: allocation,
+    starting_event: startMap[biggestBucket] || "inflation_shock",
+    event_pool: ["inflation_shock","tech_crash","banking_crisis","commodity_boom","rate_hike_cycle","ai_boom","recession","geopolitical_shock","fed_rate_cut_cycle","post_crisis_recovery"],
+    description: `Orion drops your real allocation into 10 random macro events. Same decisions, same mechanics, but the outcome is your own portfolio's. Largest sleeve: ${ASSET_META[biggestBucket]?.label||biggestBucket} ${(allocation[biggestBucket]*100).toFixed(0)}%.`,
+    risk_level: riskLevel,
+    risk_color: riskColor,
+    is_user: true,
+  };
+}
+
+function renderSimScenarioSelect() {
+  const el = document.getElementById("sim-area");
+  el.innerHTML = `
+    <div class="hint-box" style="margin-bottom:1rem">Pick a scenario. Either drop <b>your real portfolio</b> into 10 random crisis cycles, or play one of the archetypes. Same engine either way.</div>
+    <div class="grid-2" id="scenario-grid"></div>`;
+  const grid = document.getElementById("scenario-grid");
+
+  // Insert "My portfolio" first, highlighted.
+  const userSc = userPortfolioScenario();
+  const scenarios = userSc ? [userSc, ...SCENARIOS] : SCENARIOS;
+
+  scenarios.forEach(sc => {
+    const div = document.createElement("div");
+    div.className = "sim-scenario-card";
+    if (sc.is_user) div.style.cssText = "background:linear-gradient(135deg,#f7fbff 0%,#fff 100%);border-color:var(--blue)";
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem">
+        <div style="font-size:15px;font-weight:500">${sc.is_user?"◎ ":""}${sc.name}</div>
+        <span class="stress-badge" style="color:${sc.risk_color}">${sc.risk_level}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:.75rem">${sc.subtitle}</div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:1rem;line-height:1.6">${sc.description}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem">
+        ${Object.entries(sc.portfolio).filter(([,v])=>v>0).map(([k,v])=>`<span style="font-size:11px;background:#f0f0ec;border-radius:5px;padding:2px 8px">${ASSET_META[k]?.label||k} ${Math.round(v*100)}%</span>`).join("")}
+      </div>
+      <button class="btn ${sc.is_user?"btn-blue":"btn-dark"} btn-sm" onclick="startSimScenario('${sc.id}')">${sc.is_user?"Drop my portfolio in →":"Start scenario →"}</button>`;
+    grid.appendChild(div);
+  });
+}
+
+function startSimScenario(id) {
+  let sc;
+  if (id === "my_portfolio") { sc = userPortfolioScenario(); }
+  else { sc = SCENARIOS.find(s=>s.id===id); }
+  if (!sc) return;
+  state.simGame = initSimState(sc);
+  renderSimulator();
+}
+
+function renderSimEvent() {
+  const sim = state.simGame;
+  const event = EVENTS[sim.current_event_id];
+  if (!event) return;
+  const el = document.getElementById("sim-area");
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--hint)">CYCLE ${sim.turn} / ${MAX_TURNS}</div>
+      <div style="flex:1;background:var(--border);border-radius:4px;height:4px"><div style="width:${sim.turn/MAX_TURNS*100}%;height:100%;background:var(--blue);border-radius:4px"></div></div>
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">Resilience ${sim.resilience.toFixed(0)}</div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+        <span class="stress-badge" style="color:${SEV_COLORS[event.severity]||'#888'}">${event.severity?.toUpperCase()||""}</span>
+        <div style="font-size:11px;color:var(--hint)">${event.category?.toUpperCase()||""}</div>
+      </div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:.5rem">${event.headline}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.7">${event.description}</div>
+      <div style="background:#f8f7f4;border-radius:8px;padding:.75rem 1rem;font-size:12px;color:#666;line-height:1.6"><b>Historical analogue:</b> ${event.historical_analogue}</div>
+    </div>
+    <div class="grid-3" style="margin-bottom:1.5rem">
+      <div class="sim-metric"><div class="sim-metric-label">Portfolio value</div><div class="sim-metric-value mono">$${fmt(sim.capital)}</div></div>
+      <div class="sim-metric"><div class="sim-metric-label">vs start</div><div class="sim-metric-value mono ${sim.capital>=sim.starting_capital?"pos":"neg"}">${sim.capital>=sim.starting_capital?"+":"-"}${Math.abs((sim.capital-sim.starting_capital)/sim.starting_capital*100).toFixed(1)}%</div></div>
+      <div class="sim-metric"><div class="sim-metric-label">Resilience score</div><div class="sim-metric-value mono">${sim.resilience.toFixed(0)}</div></div>
+    </div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:.75rem">How do you respond?</div>
+    <div id="decision-cards"></div>`;
+  const dCards = document.getElementById("decision-cards");
+  Object.values(DECISIONS).forEach(d => {
+    const div = document.createElement("div");
+    div.className = "sim-decision-card" + (sim.selected_decision===d.id?" selected":"");
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+        <div style="font-size:14px;font-weight:500">${d.name}</div>
+        <span class="stress-badge" style="color:${d.tag_color}">${d.tag}</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">${d.description}</div>`;
+    div.onclick = () => {
+      sim.selected_decision = d.id;
+      document.querySelectorAll(".sim-decision-card").forEach(c=>c.classList.remove("selected"));
+      div.classList.add("selected");
+      document.getElementById("sim-confirm-btn").style.display = "block";
+    };
+    dCards.appendChild(div);
+  });
+  const btn = document.createElement("button");
+  btn.id = "sim-confirm-btn";
+  btn.className = "btn btn-dark";
+  btn.style.cssText = "margin-top:1rem;display:none";
+  btn.textContent = "Confirm decision →";
+  btn.onclick = () => { state.simGame = resolveTurn(sim); renderSimulator(); };
+  dCards.appendChild(btn);
+}
+
+function renderSimDecision() { renderSimEvent(); }
+
+function renderSimResolution() {
+  const sim = state.simGame;
+  const snap = sim.last_snapshot;
+  const el = document.getElementById("sim-area");
+  const isEnd = sim.phase==="end";
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--hint)">CYCLE ${snap.turn} RESULT</div>
+      <div style="flex:1;background:var(--border);border-radius:4px;height:4px"><div style="width:${snap.turn/MAX_TURNS*100}%;height:100%;background:var(--blue);border-radius:4px"></div></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem">
+      <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem">${snap.event_name} · ${snap.decision_name}</div>
+      <div style="font-size:28px;font-weight:500;font-family:'DM Mono',monospace;color:${snap.capital_change>=0?"#15803d":"#dc2626"};margin-bottom:.25rem">${snap.capital_change>=0?"+":"-"}$${fmt(Math.abs(snap.capital_change))}</div>
+      <div style="font-size:13px;color:var(--muted)">${snap.capital_change_pct>=0?"+":""}${snap.capital_change_pct.toFixed(1)}% this cycle · Portfolio now $${fmt(snap.capital_after)}</div>
+    </div>
+    <div class="grid-3" style="margin-bottom:1.25rem">
+      ${Object.entries(snap.asset_results).filter(([,r])=>r.alloc_pct>0).map(([asset,r])=>`
+        <div class="sim-metric">
+          <div class="sim-metric-label">${ASSET_META[asset]?.label||asset}</div>
+          <div class="sim-metric-value mono ${r.return_pct>=0?"pos":"neg"}">${r.return_pct>=0?"+":""}${r.return_pct.toFixed(1)}%</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.alloc_pct.toFixed(0)}% alloc</div>
+        </div>`).join("")}
+    </div>
+    ${isEnd ? `<button class="btn btn-dark" onclick="renderSimEnd()">See final results →</button>` : `<button class="btn btn-dark" onclick="state.simGame=advanceTurn(state.simGame);renderSimulator()">Next cycle →</button>`}`;
+}
+
+function renderSimEnd() {
+  const sim = state.simGame;
+  const history = sim.history;
+  const finalCapital = sim.capital;
+  const startCapital = sim.starting_capital;
+  const totalReturn = (finalCapital-startCapital)/startCapital*100;
+  const turns = ["Start",...history.map(h=>"C"+h.turn)];
+  const vals = [startCapital,...history.map(h=>h.capital_after)];
+  const grade = totalReturn>=30?"S: Outstanding":totalReturn>=15?"A: Excellent":totalReturn>=5?"B: Good":totalReturn>=-5?"C: Neutral":totalReturn>=-15?"D: Below average":"F: Significant loss";
+  const el = document.getElementById("sim-area");
+  el.innerHTML = `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;text-align:center">
+      <div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.5rem">Final result · ${sim.scenario_name}</div>
+      <div style="font-size:40px;font-weight:500;font-family:'DM Mono',monospace;color:${totalReturn>=0?"#15803d":"#dc2626"};margin-bottom:.25rem">$${fmt(finalCapital)}</div>
+      <div style="font-size:15px;color:var(--muted);margin-bottom:.75rem">${totalReturn>=0?"+":""}${totalReturn.toFixed(1)}% total return</div>
+      <div style="font-size:13px;font-weight:500;padding:6px 16px;background:#f8f7f4;border-radius:8px;display:inline-block">${grade}</div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1.25rem">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.75rem">Capital history</div>
+      <div style="position:relative;height:200px"><canvas id="sim-hist-chart"></canvas></div>
+    </div>
+    <h3>Cycle-by-cycle history</h3>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:1px solid var(--border)">${["Cycle","Event","Decision","Return","Value","Resilience"].map(h=>`<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;font-weight:400">${h}</th>`).join("")}</tr></thead>
+      <tbody>${history.map(h=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 10px;font-family:'DM Mono',monospace">${h.turn}</td>
+        <td style="padding:8px 10px">${h.event_name}</td>
+        <td style="padding:8px 10px">${h.decision_name}</td>
+        <td style="padding:8px 10px;font-family:'DM Mono',monospace;color:${h.capital_change_pct>=0?"#15803d":"#dc2626"}">${h.capital_change_pct>=0?"▲":"▼"} ${h.capital_change_pct>=0?"+":""}${h.capital_change_pct.toFixed(1)}%</td>
+        <td style="padding:8px 10px;font-family:'DM Mono',monospace">$${fmt(h.capital_after)}</td>
+        <td style="padding:8px 10px;font-family:'DM Mono',monospace">${h.resilience_after.toFixed(0)}</td>
+      </tr>`).join("")}</tbody>
+    </table>
+    </div>
+    <div style="text-align:center;margin-top:1.5rem"><button class="btn btn-dark" onclick="state.simGame=null;renderSimulator()">Play again →</button></div>`;
+  setTimeout(()=>{
+    if(simHistChart){simHistChart.destroy();simHistChart=null;}
+    const ctx=document.getElementById("sim-hist-chart");if(!ctx)return;
+    const ptColors=vals.map((v,i)=>i===0?"#94a3b8":v>=vals[i-1]?"#1D9E75":"#dc2626");
+    simHistChart=new Chart(ctx,{type:"line",data:{labels:turns,datasets:[{data:vals,borderColor:"#378ADD",borderWidth:2.5,pointBackgroundColor:ptColors,pointBorderColor:"#fff",pointBorderWidth:2,pointRadius:6,fill:{target:"origin",above:"rgba(55,138,221,0.07)"},tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"$"+fmt(c.parsed.y)}}},scales:{x:{grid:{display:false}},y:{grid:{color:"#f0ede8"},ticks:{callback:v=>"$"+fmt(v)}}}}});
+  },100);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RISK PROFILE
+════════════════════════════════════════════════════════════════════ */
+const RP_ASSET_SCORES = {cash:1, bond:2, real_estate:4, etf:5, equity:6, commodity:5, crypto:8};
+const RP_SEG_COLORS = ["#1D9E75","#1D9E75","#1D9E75","#EF9F27","#EF9F27","#EF9F27","#D85A30","#dc2626","#dc2626"];
+const RP_LABELS = {1:"Very conservative",2:"Conservative",3:"Moderately conservative",4:"Moderate",5:"Balanced",6:"Moderately aggressive",7:"Growth",8:"Aggressive",9:"Very aggressive"};
+const RP_PROFILES = {
+  Conservative:{score:2, alloc:{Cash:20,Bonds:50,Equities:25,Alternatives:5}},
+  Balanced:    {score:4, alloc:{Cash:10,Bonds:35,Equities:45,Alternatives:10}},
+  Growth:      {score:6, alloc:{Cash:5, Bonds:15,Equities:65,Alternatives:15}},
+  Aggressive:  {score:8, alloc:{Cash:2, Bonds:5, Equities:75,Alternatives:18}}
+};
+const RP_PIE_COLORS = {Cash:"#94a3b8",Bonds:"#7F77DD",Equities:"#378ADD",Alternatives:"#f97316"};
+
+function computePortfolioRiskScore() {
+  const assets = state.holdings.filter(h => h.type !== "debt");
+  const total = assets.reduce((s, h) => s + (h.current || 0), 0);
+  if (!total) return {score:0, breakdown:{}};
+  let weightedScore = 0;
+  const breakdown = {};
+  assets.forEach(h => {
+    const w = (h.current || 0) / total;
+    let score = 5, label = "Equity";
+    if      (h.asset_type === "cash")     { score = RP_ASSET_SCORES.cash;        label = "Cash"; }
+    else if (h.asset_type === "bond")     { score = RP_ASSET_SCORES.bond;        label = "Bond"; }
+    else if (h.type === "real_estate")    { score = RP_ASSET_SCORES.real_estate; label = "Real Estate"; }
+    else if (h.type === "crypto")         { score = RP_ASSET_SCORES.crypto;      label = "Crypto"; }
+    else if (h.type === "commodity")      { score = RP_ASSET_SCORES.commodity;   label = "Commodity"; }
+    else if (h.isin) {
+      const etfHolding = (h.asset_class_yh === "etf") || isETF(h.isin);
+      score = etfHolding ? RP_ASSET_SCORES.etf : RP_ASSET_SCORES.equity;
+      label = etfHolding ? "ETF" : "Equity";
+    }
+    weightedScore += score * w;
+    breakdown[label] = (breakdown[label] || 0) + w * 100;
+  });
+  return {score: Math.max(1, Math.min(9, Math.round(weightedScore))), breakdown};
+}
+
+function renderRpBar(containerId, score) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = Array.from({length:9}, (_, i) => {
+    const seg = i + 1;
+    return `<div class="rp-seg ${seg === score ? 'active' : ''}" style="background:${RP_SEG_COLORS[i]}" title="${RP_LABELS[seg]}"></div>`;
+  }).join("");
+}
+
+let rpCurrentChart = null, rpProposedChart = null;
+function renderRpPie(canvasId, legendId, data) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const labels = Object.keys(data).filter(k => (data[k] || 0) > 0);
+  const values = labels.map(k => data[k]);
+  const colors = labels.map(k => RP_PIE_COLORS[k] || "#888");
+  if (canvasId === "rp-current-pie"  && rpCurrentChart)  { rpCurrentChart.destroy();  rpCurrentChart  = null; }
+  if (canvasId === "rp-proposed-pie" && rpProposedChart) { rpProposedChart.destroy(); rpProposedChart = null; }
+  const chart = new Chart(ctx, {
+    type:"doughnut",
+    data:{labels, datasets:[{data:values, backgroundColor:colors, borderColor:"#fff", borderWidth:3}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(0)}%`}}}, cutout:"58%"}
+  });
+  if (canvasId === "rp-current-pie")  rpCurrentChart  = chart;
+  else                                rpProposedChart = chart;
+  const legendEl = document.getElementById(legendId);
+  if (legendEl) legendEl.innerHTML = labels.map((l,i) =>
+    `<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${colors[i]}"></span>${l} ${values[i].toFixed(0)}%</span>`
+  ).join("");
+}
+
+function computeCurrentAlloc() {
+  const assets = state.holdings.filter(h => h.type !== "debt");
+  const total = assets.reduce((s, h) => s + (h.current || 0), 0);
+  if (!total) return {};
+  const alloc = {Cash:0, Bonds:0, Equities:0, Alternatives:0};
+  assets.forEach(h => {
+    const pct = (h.current || 0) / total * 100;
+    if      (h.asset_type === "cash")                            alloc.Cash         += pct;
+    else if (h.asset_type === "bond")                            alloc.Bonds        += pct;
+    else if (h.type === "crypto" || h.type === "commodity")      alloc.Alternatives += pct;
+    else                                                         alloc.Equities     += pct;
+  });
+  return alloc;
+}
+
+function renderRiskProfile() {
+  const {score, breakdown} = computePortfolioRiskScore();
+
+  // Portfolio score card
+  const portScoreEl = document.getElementById("rp-port-score");
+  const portLabelEl = document.getElementById("rp-port-label");
+  if (portScoreEl) portScoreEl.textContent = score || "—";
+  if (portLabelEl) portLabelEl.textContent = score ? RP_LABELS[score] : "";
+  if (score) renderRpBar("rp-port-bar", score);
+
+  // Breakdown text
+  const breakdownEl = document.getElementById("rp-port-breakdown");
+  if (breakdownEl && Object.keys(breakdown).length) {
+    breakdownEl.innerHTML = Object.entries(breakdown).sort((a,b)=>b[1]-a[1])
+      .map(([k,v]) => `<span style="margin-right:12px;white-space:nowrap">${k}: <b>${v.toFixed(0)}%</b></span>`).join("");
+  }
+
+  // Target profile card
+  const rp = state.riskProfile;
+  const targetScoreEl = document.getElementById("rp-target-score");
+  const targetLabelEl = document.getElementById("rp-target-label");
+  const qBtn = document.getElementById("rp-q-btn");
+  if (rp) {
+    const profile = RP_PROFILES[rp.name];
+    if (targetScoreEl) targetScoreEl.textContent = profile.score;
+    if (targetLabelEl) targetLabelEl.textContent = rp.name;
+    renderRpBar("rp-target-bar", profile.score);
+    if (qBtn) qBtn.textContent = "Retake questionnaire →";
+  } else {
+    if (targetScoreEl) targetScoreEl.textContent = "—";
+    if (targetLabelEl) targetLabelEl.textContent = "";
+    const barEl = document.getElementById("rp-target-bar");
+    if (barEl) barEl.innerHTML = Array.from({length:9}, () =>
+      `<div class="rp-seg" style="background:#e5e7eb"></div>`).join("");
+    if (qBtn) qBtn.textContent = "Take the risk questionnaire →";
+  }
+
+  // Current allocation pie
+  const currentAlloc = computeCurrentAlloc();
+  renderRpPie("rp-current-pie", "rp-current-legend", currentAlloc);
+
+  // Proposed allocation pie & gap message
+  const proposedCanvas = document.getElementById("rp-proposed-pie");
+  const emptyEl = document.getElementById("rp-proposed-empty");
+  const gapEl = document.getElementById("rp-gap-msg");
+
+  if (rp) {
+    const profile = RP_PROFILES[rp.name];
+    if (proposedCanvas) proposedCanvas.style.display = "";
+    if (emptyEl) emptyEl.style.display = "none";
+    renderRpPie("rp-proposed-pie", "rp-proposed-legend", profile.alloc);
+
+    // Gap logic: only show if meaningful gap (≥ 2 steps on /9 scale)
+    const gap = Math.abs(score - profile.score);
+    if (gap >= 2 && gapEl) {
+      const tooCautious = score < profile.score;
+      const biggestHolding = Object.entries(breakdown).sort((a,b)=>b[1]-a[1])[0]?.[0] || "high-risk";
+      const msg = tooCautious
+        ? `Your portfolio (${score}/9) is <b>more conservative</b> than your <b>${rp.name}</b> target (${profile.score}/9). You may be under-investing in equities relative to your stated risk capacity.`
+        : `Your portfolio (${score}/9) is <b>more aggressive</b> than your <b>${rp.name}</b> target (${profile.score}/9). Consider reducing ${biggestHolding} exposure and adding bonds or cash.`;
+      gapEl.style.display = "";
+      gapEl.innerHTML = `<div class="hint-box" style="border-left-color:${tooCautious?"var(--blue)":"var(--amber)"}">⚡ ${msg}</div>`;
+    } else if (gapEl) {
+      if (gap < 2) {
+        gapEl.style.display = "";
+        gapEl.innerHTML = `<div class="ok-badge" style="font-size:13px;padding:10px 16px;display:block">✓ Your portfolio risk (${score}/9) aligns with your <b>${rp.name}</b> profile (${profile.score}/9).</div>`;
+      } else {
+        gapEl.style.display = "none";
+      }
+    }
+  } else {
+    if (proposedCanvas) proposedCanvas.style.display = "none";
+    if (emptyEl) emptyEl.style.display = "";
+    if (gapEl) gapEl.style.display = "none";
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RISK QUESTIONNAIRE
+════════════════════════════════════════════════════════════════════ */
+const RQ_QUESTIONS = [
+  {q:"What is your investment time horizon?",
+   opts:[{label:"Under 2 years",score:2},{label:"2–5 years",score:4},{label:"5–10 years",score:6},{label:"Over 10 years",score:8}]},
+  {q:"If your portfolio dropped 20% in a single month, you would:",
+   opts:[{label:"Sell everything, I can't handle these losses",score:2},{label:"Sell some to reduce exposure",score:4},{label:"Hold and wait for recovery",score:6},{label:"Buy more at lower prices",score:8}]},
+  {q:"What is your primary investment goal?",
+   opts:[{label:"Preserve capital above all else",score:2},{label:"Steady income with modest growth",score:4},{label:"Balanced growth over time",score:6},{label:"Maximum long-term growth",score:8}]},
+  {q:"This portfolio represents what share of your total savings?",
+   opts:[{label:"Over 90%, this is almost all I have",score:2},{label:"50–90%",score:4},{label:"25–50%",score:6},{label:"Under 25%, I have many other assets",score:8}]}
+];
+
+let _rqStep = 0;
+let _rqAnswers = [];
+
+function openRiskQuestionnaire() {
+  _rqStep = 0;
+  _rqAnswers = [];
+  const modal = document.getElementById("rq-modal");
+  if (modal) modal.classList.add("open");
+  document.getElementById("rq-result").style.display = "none";
+  document.getElementById("rq-question").style.display = "";
+  document.getElementById("rq-options").style.display = "";
+  _renderRQStep();
+}
+
+function closeRiskQuestionnaire() {
+  const modal = document.getElementById("rq-modal");
+  if (modal) modal.classList.remove("open");
+  if (_rqAnswers.length === RQ_QUESTIONS.length) renderRiskProfile();
+}
+
+function _renderRQStep() {
+  const total = RQ_QUESTIONS.length;
+  const q = RQ_QUESTIONS[_rqStep];
+  document.getElementById("rq-progress").textContent = `Question ${_rqStep + 1} of ${total}`;
+  document.getElementById("rq-prog-bar").style.width = `${(_rqStep + 1) / total * 100}%`;
+  document.getElementById("rq-question").textContent = q.q;
+  document.getElementById("rq-options").innerHTML = q.opts.map(o =>
+    `<button class="rq-option" onclick="rqAnswer(${o.score})">${o.label}</button>`
+  ).join("");
+}
+
+function rqAnswer(score) {
+  _rqAnswers.push(score);
+  if (_rqAnswers.length < RQ_QUESTIONS.length) {
+    _rqStep++;
+    _renderRQStep();
+  } else {
+    const total = _rqAnswers.reduce((s, a) => s + a, 0);
+    const profileName = total <= 14 ? "Conservative" : total <= 20 ? "Balanced" : total <= 26 ? "Growth" : "Aggressive";
+    const profile = RP_PROFILES[profileName];
+    state.riskProfile = {name: profileName, rawScore: total};
+    // Show result slide
+    document.getElementById("rq-question").style.display = "none";
+    document.getElementById("rq-options").style.display = "none";
+    document.getElementById("rq-prog-bar").style.width = "100%";
+    document.getElementById("rq-progress").textContent = "Complete";
+    document.getElementById("rq-result-name").textContent = profileName;
+    document.getElementById("rq-result-score").textContent = `Score ${total} / 32 · Risk level ${profile.score}/9`;
+    renderRpBar("rq-result-bar", profile.score);
+    document.getElementById("rq-result").style.display = "";
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════════════════════════ */
+function switchScreen(name) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  const el = document.getElementById(`screen-${name}`);
+  if (el) el.classList.add("active");
+  document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active",l.dataset.screen===name));
+  state.activeScreen = name;
+  if (name==="holdings" && htabActive===3) setTimeout(renderTreemap,50);
+  if (name==="markets") initMarketsScreen();
+  if (name==="riskprofile") renderRiskProfile();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MARKETS SCREEN
+════════════════════════════════════════════════════════════════════ */
+let tvWidget = null;
+let tvScriptLoaded = false;
+let _currentMktSymbol = "AMEX:SPY";
+
+function loadTVScript(cb) {
+  if (tvScriptLoaded) { cb(); return; }
+  const s = document.createElement("script");
+  s.src = "https://s3.tradingview.com/tv.js";
+  s.onload = () => { tvScriptLoaded = true; cb(); };
+  document.head.appendChild(s);
+}
+
+function buildTVWidget(symbol) {
+  const container = document.getElementById("tv-chart");
+  container.innerHTML = "";
+  const inner = document.createElement("div");
+  inner.id = "tv-chart-inner";
+  inner.style.height = "100%";
+  container.appendChild(inner);
+  tvWidget = new TradingView.widget({
+    autosize: true,
+    symbol: symbol,
+    interval: "D",
+    timezone: "Etc/UTC",
+    theme: "light",
+    style: "1",
+    locale: "en",
+    hide_side_toolbar: false,
+    allow_symbol_change: false,
+    save_image: false,
+    container_id: "tv-chart-inner"
+  });
+}
+
+function initMarketsScreen() {
+  loadTVScript(() => buildTVWidget(_currentMktSymbol));
+}
+
+function switchMarket(btn, symbol, label) {
+  _currentMktSymbol = symbol;
+  document.querySelectorAll(".mkt-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  loadTVScript(() => buildTVWidget(symbol));
+}
+
+function showScreen(name) { switchScreen(name); }
+
+function goToEntry() {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-entry").classList.add("active");
+  document.getElementById("top-nav").style.display = "none";
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   EXPORT / IMPORT
+════════════════════════════════════════════════════════════════════ */
+function exportPortfolio() {
+  const data = JSON.stringify({version:2,isinRows:state.isinRows,cashRows:state.cashRows,bondRows:state.bondRows,reRows:state.reRows,cryptoRows:state.cryptoRows,commRows:state.commRows,debtRows:state.debtRows,holdings:state.holdings},null,2);
+  const a = document.createElement("a");
+  a.href = "data:application/json;charset=utf-8,"+encodeURIComponent(data);
+  a.download = "orion_portfolio.json";
+  a.click();
+}
+
+function importPortfolio(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const p = JSON.parse(e.target.result);
+      state.isinRows=p.isinRows||[];state.cashRows=p.cashRows||[];state.bondRows=p.bondRows||[];
+      state.reRows=p.reRows||[];state.cryptoRows=p.cryptoRows||[];state.commRows=p.commRows||[];
+      state.debtRows=p.debtRows||[];state.holdings=p.holdings||[];
+      renderISINRows();renderCashRows();renderBondRows();renderRERows();
+      renderCryptoRows();renderCommRows();renderDebtRows();
+      if(state.holdings.length) buildPortfolio();
+    } catch(err) { alert("Import failed: "+err.message); }
+  };
+  reader.readAsText(file);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════════════════════════ */
+function fmt(n) {
+  n = Math.round(n||0);
+  if (Math.abs(n)>=1e9) return (n/1e9).toFixed(1)+"B";
+  if (Math.abs(n)>=1e6) return (n/1e6).toFixed(1)+"M";
+  return n.toLocaleString();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════════════ */
+(function init() {
+  state.isinRows = [
+    {isin:"IE00B4L5Y983", quantity:900,  date:"2022-03-15", amount_paid:71000,  currency:"USD"},
+    {isin:"US0378331005", quantity:270,  date:"2021-06-10", amount_paid:38000,  currency:"USD"},
+    {isin:"US5949181045", quantity:95,   date:"2022-09-05", amount_paid:28500,  currency:"USD"},
+    {isin:"IE00BKM4GZ66", quantity:500,  date:"2023-07-12", amount_paid:20000,  currency:"USD"},
+  ];
+  state.cryptoRows = [
+    {type:"BTC", quantity:0.45, avg_buy_price:28000, exchange:"Coinbase"},
+    {type:"ETH", quantity:3.2,  avg_buy_price:1800,  exchange:"Kraken"},
+    {type:"SOL", quantity:25,   avg_buy_price:22,    exchange:"Coinbase"},
+  ];
+  state.commRows = [
+    {type:"Gold (oz)",   quantity:10, avg_buy_price:1850, current_value:0},
+    {type:"Silver (oz)", quantity:50, avg_buy_price:24,   current_value:0},
+  ];
+  renderISINRows();renderCashRows();renderBondRows();renderRERows();
+  renderCryptoRows();renderCommRows();renderDebtRows();
+})();
+</script>
+
+<footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;font-size:11px;color:var(--hint);line-height:1.7;background:var(--bg)">
+  Orion is a personal portfolio intelligence tool for informational purposes only. Nothing on this platform constitutes investment advice, a recommendation to buy or sell any security, or an offer to provide investment advisory services. Past performance is not indicative of future results. All projections, stress test outputs, and AI-generated commentary are estimates and may not reflect actual market conditions. Always consult a qualified financial adviser before making investment decisions. Market data is sourced from third parties and may be delayed or inaccurate.
+</footer>
+</body>
+</html>

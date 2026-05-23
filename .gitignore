@@ -1,4 +1,8 @@
-.streamlit/secrets.toml
 __pycache__/
 *.pyc
 .env
+.DS_Store
+.Rhistory
+.dev.vars
+node_modules/
+.wrangler/

@@ -1,6 +1,0 @@
-streamlit
-plotly
-pandas
-numpy
-requests
-supabase>=2.0
