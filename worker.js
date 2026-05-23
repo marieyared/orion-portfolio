@@ -15,16 +15,39 @@
 
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 
-// Optional: restrict to your domain once deployed publicly.
-// Change "*" to e.g. "https://your-app.netlify.app"
-const ALLOWED_ORIGIN = "*";
+// Explicit allowlist. Add new origins here when you deploy to another host.
+const ALLOWED_ORIGINS = new Set([
+  "https://marieyared.github.io",
+]);
+const LOCALHOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/;
+
+// Decide whether to accept a request based on its Origin header.
+// Returns the value to echo back in Access-Control-Allow-Origin, or null to reject.
+function resolveAllowedOrigin(reqOrigin) {
+  // file:// opens send Origin: "null" (or omit it). Allow for local-only use.
+  if (!reqOrigin || reqOrigin === "null") return "null";
+  if (ALLOWED_ORIGINS.has(reqOrigin)) return reqOrigin;
+  if (LOCALHOST_RE.test(reqOrigin)) return reqOrigin;
+  return null;
+}
 
 export default {
   async fetch(request, env) {
-    const origin = request.headers.get("Origin") || "";
+    const reqOrigin = request.headers.get("Origin") || "";
+    const allowedOrigin = resolveAllowedOrigin(reqOrigin);
+
+    // Reject unknown origins before doing anything else — this is the
+    // gate that stops a random visitor from draining the API key.
+    if (allowedOrigin === null) {
+      return new Response(
+        JSON.stringify({ error: "Origin not allowed." }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     const corsHeaders = {
-      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Vary": "Origin",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
