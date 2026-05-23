@@ -444,11 +444,10 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
         <div style="font-size:13px;font-weight:500">AI morning briefing</div>
         <div class="briefing-tag">Orion AI</div>
       </div>
-      <div id="briefing-content" class="briefing-loading">
-        <div class="ai-dot"></div>
-        <span>Generating your briefing…</span>
+      <div id="briefing-content" class="briefing-text" style="color:var(--muted);font-style:italic">
+        No briefing yet. Click below to generate one — each click sends one AI request.
       </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">↺ Refresh</button>
+      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">✨ Generate briefing</button>
     </div>
   </div>
 
@@ -587,11 +586,10 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <div style="font-size:14px;font-weight:500">AI portfolio briefing</div>
       <div class="briefing-tag">Orion AI</div>
     </div>
-    <div id="intel-briefing-content" class="briefing-loading">
-      <div class="ai-dot"></div>
-      <span>Generating your briefing…</span>
+    <div id="intel-briefing-content" class="briefing-text" style="color:var(--muted);font-style:italic">
+      No briefing yet. Click below to generate one — each click sends one AI request.
     </div>
-    <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateIntelBriefing()">↺ Refresh</button>
+    <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateIntelBriefing()">✨ Generate briefing</button>
   </div>
 
   <!-- AI Copilot -->
@@ -844,6 +842,34 @@ const state = {
   riskProfile:null
 };
 
+/* ── Local persistence (only user inputs; caches/AI text stay ephemeral) ── */
+const STORAGE_KEY = "orion.portfolio.v1";
+const PERSISTED_FIELDS = ["isinRows","cashRows","bondRows","reRows","cryptoRows","commRows","debtRows","riskProfile"];
+function savePortfolio(){
+  try {
+    const snapshot = {};
+    for (const k of PERSISTED_FIELDS) snapshot[k] = state[k];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  } catch(e) { /* quota or private mode — ignore */ }
+}
+function loadPortfolio(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    let touched = false;
+    for (const k of PERSISTED_FIELDS) {
+      if (data[k] !== undefined) { state[k] = data[k]; touched = true; }
+    }
+    return touched;
+  } catch(e) { return false; }
+}
+// Save every 2s while editing (cheap; payload is just a few hundred numbers),
+// plus on tab hide and on close — covers crashes, refreshes, and navigation.
+setInterval(savePortfolio, 2000);
+window.addEventListener("beforeunload", savePortfolio);
+window.addEventListener("visibilitychange", () => { if (document.hidden) savePortfolio(); });
+
 // Resolved from ORION_CONFIG above; Frankfurter (ECB FX) is always public.
 const ORION_API = ORION_CONFIG.ORION_API;
 const FX_API    = "https://api.frankfurter.app";
@@ -965,6 +991,25 @@ function buildPortfolioSummary() {
     return `${name} (${type}): $${fmt(h.current||0)}, ${total>0?((h.current||0)/total*100).toFixed(1):0}% of portfolio`;
   });
   return {total,paid,pnl:total-paid,netWorth:total-totalDebt,totalDebt,items,classes:computeAssetClasses()};
+}
+
+// Paint cached briefing (or the placeholder) into both briefing cards.
+// Called on screen render so navigation never triggers an AI call —
+// users explicitly click "Generate" to spend an API request.
+function paintCachedBriefing() {
+  ["briefing-content","intel-briefing-content"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (state.briefingText) {
+      el.className = "briefing-text";
+      el.removeAttribute("style");
+      el.innerHTML = state.briefingText;
+    } else {
+      el.className = "briefing-text";
+      el.setAttribute("style","color:var(--muted);font-style:italic");
+      el.innerHTML = 'No briefing yet. Click below to generate one — each click sends one AI request.';
+    }
+  });
 }
 
 async function generateBriefing() {
@@ -1803,8 +1848,9 @@ function renderCommandScreen() {
     warnEl.innerHTML = msgs.map(m=>`<div class="warn-box">⚠ ${m}</div>`).join("");
   }
 
-  // Trigger AI briefing
-  generateBriefing();
+  // Restore cached briefing if user already generated one this session;
+  // otherwise show the placeholder. Does NOT auto-call the AI.
+  paintCachedBriefing();
 }
 
 function renderIncomeSummary() {
@@ -1966,8 +2012,9 @@ function renderIntelligenceScreen() {
   }
   // Sector chart
   renderIntelSectorChart();
-  // Trigger intel briefing (may reuse command briefing)
-  setTimeout(()=>generateIntelBriefing(), 500);
+  // Restore cached briefing if user already generated one this session;
+  // otherwise show the placeholder. Does NOT auto-call the AI.
+  paintCachedBriefing();
 }
 
 function renderIntelSectorChart() {
@@ -2743,21 +2790,25 @@ function fmt(n) {
    INIT
 ════════════════════════════════════════════════════════════════════ */
 (function init() {
-  state.isinRows = [
-    {isin:"IE00B4L5Y983", quantity:900,  date:"2022-03-15", amount_paid:71000,  currency:"USD"},
-    {isin:"US0378331005", quantity:270,  date:"2021-06-10", amount_paid:38000,  currency:"USD"},
-    {isin:"US5949181045", quantity:95,   date:"2022-09-05", amount_paid:28500,  currency:"USD"},
-    {isin:"IE00BKM4GZ66", quantity:500,  date:"2023-07-12", amount_paid:20000,  currency:"USD"},
-  ];
-  state.cryptoRows = [
-    {type:"BTC", quantity:0.45, avg_buy_price:28000, exchange:"Coinbase"},
-    {type:"ETH", quantity:3.2,  avg_buy_price:1800,  exchange:"Kraken"},
-    {type:"SOL", quantity:25,   avg_buy_price:22,    exchange:"Coinbase"},
-  ];
-  state.commRows = [
-    {type:"Gold (oz)",   quantity:10, avg_buy_price:1850, current_value:0},
-    {type:"Silver (oz)", quantity:50, avg_buy_price:24,   current_value:0},
-  ];
+  // Restore the user's portfolio from localStorage if present.
+  // First-time visitors get the demo dataset so the app isn't empty.
+  if (!loadPortfolio()) {
+    state.isinRows = [
+      {isin:"IE00B4L5Y983", quantity:900,  date:"2022-03-15", amount_paid:71000,  currency:"USD"},
+      {isin:"US0378331005", quantity:270,  date:"2021-06-10", amount_paid:38000,  currency:"USD"},
+      {isin:"US5949181045", quantity:95,   date:"2022-09-05", amount_paid:28500,  currency:"USD"},
+      {isin:"IE00BKM4GZ66", quantity:500,  date:"2023-07-12", amount_paid:20000,  currency:"USD"},
+    ];
+    state.cryptoRows = [
+      {type:"BTC", quantity:0.45, avg_buy_price:28000, exchange:"Coinbase"},
+      {type:"ETH", quantity:3.2,  avg_buy_price:1800,  exchange:"Kraken"},
+      {type:"SOL", quantity:25,   avg_buy_price:22,    exchange:"Coinbase"},
+    ];
+    state.commRows = [
+      {type:"Gold (oz)",   quantity:10, avg_buy_price:1850, current_value:0},
+      {type:"Silver (oz)", quantity:50, avg_buy_price:24,   current_value:0},
+    ];
+  }
   renderISINRows();renderCashRows();renderBondRows();renderRERows();
   renderCryptoRows();renderCommRows();renderDebtRows();
 })();
