@@ -973,6 +973,15 @@ window.addEventListener("visibilitychange", () => { if (document.hidden) savePor
 
 // Resolved from ORION_CONFIG above; Frankfurter (ECB FX) is always public.
 const ORION_API = ORION_CONFIG.ORION_API;
+
+// Warm-up ping: free-tier Render sleeps after ~15 min idle and takes ~30s
+// to wake. Fire one fetch the moment the page opens so the server is warm
+// by the time the user actually does anything. Fire-and-forget — we don't
+// care about the response, just that the container starts spinning up.
+if (!ORION_CONFIG.isLocal && ORION_API) {
+  fetch(ORION_API + "/api/quote/US0378331005", { method: "GET", cache: "no-store" })
+    .catch(() => { /* expected to time out during cold start; ignore */ });
+}
 const FX_API    = "https://api.frankfurter.app";
 
 // Pull a live (or historical) Yahoo quote for an ISIN through the local proxy.
@@ -984,7 +993,9 @@ async function fetchQuote(isin, date) {
   if (cache[key]) return cache[key];
   try {
     const url = `${ORION_API}/api/quote/${encodeURIComponent(isin)}${date?`?date=${encodeURIComponent(date)}`:""}`;
-    const r = await fetch(url, {signal: AbortSignal.timeout(date?12000:8000)});
+    // 25s covers free-tier Render cold starts (~30s wake-up); 35s for the
+    // less common historical-quote path which also hits Yahoo for prior dates.
+    const r = await fetch(url, {signal: AbortSignal.timeout(date?35000:25000)});
     if (!r.ok) { state._lastQuoteError = (await r.json().catch(()=>({}))).error || `HTTP ${r.status}`; return null; }
     const data = await r.json();
     if (!data.ok) { state._lastQuoteError = data.error || "Quote unavailable"; return null; }
