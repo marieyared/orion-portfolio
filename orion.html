@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -150,16 +151,49 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .perf-col{flex:1;text-align:right}
 
 /* ── TREEMAP ── */
-#treemap-container{width:100%;height:420px;position:relative;background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden}
-.tm-rect{position:absolute;border:2px solid #fff;border-radius:4px;overflow:hidden;cursor:default;display:flex;align-items:flex-end;padding:6px;transition:.15s}
-.tm-rect:hover{filter:brightness(.92)}
-.tm-label{font-size:11px;color:#fff;line-height:1.3;font-weight:500;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 
 /* ── TABLES ── */
 .row-table{width:100%;border-collapse:collapse}
 .row-table th{font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;text-align:left;padding:0 6px 8px;font-weight:400}
 .row-table td{padding:4px 6px;vertical-align:top}
 .row-table td input,.row-table td select{padding:7px 10px}
+
+/* ── WEALTH MAP (treemap screen) ── */
+.map-toggle{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.map-toggle-btn{background:transparent;border:none;padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);cursor:pointer;border-radius:6px;transition:all .15s}
+.map-toggle-btn:hover{color:var(--text)}
+.map-toggle-btn.active{background:var(--blue);color:#fff}
+.map-canvas{position:relative;width:100%;height:560px;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.map-block{position:absolute;box-sizing:border-box;border:2px solid #fff;padding:8px 10px;overflow:hidden;cursor:default;transition:filter .15s,transform .15s;display:flex;flex-direction:column;justify-content:flex-start;color:#fff}
+.map-block.clickable{cursor:pointer}
+.map-block.clickable:hover{filter:brightness(1.08);z-index:2}
+.map-block-label{font-size:12px;font-weight:600;line-height:1.2;letter-spacing:-.01em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+.map-block-meta{font-size:11px;opacity:.88;margin-top:2px;color:#fff;font-family:'DM Mono',monospace;text-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-block.tiny .map-block-label,.map-block.tiny .map-block-meta{display:none}
+.map-block-group-label{position:absolute;top:6px;left:8px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;opacity:.95;text-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
+.map-drill-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.map-drill-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.map-drill-row:last-child{border-bottom:none}
+.map-drill-bar{flex:1;height:6px;background:var(--bg);border-radius:3px;margin:0 12px;overflow:hidden;position:relative}
+.map-drill-bar-fill{height:100%;background:var(--blue);border-radius:3px}
+
+/* ── ALLOCATION ROWS (Repositioning panel) ── */
+.alloc-row{display:grid;grid-template-columns:130px 1fr 130px 70px;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.alloc-row:last-child{border-bottom:none}
+.alloc-row-name{font-weight:500;color:var(--text);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alloc-bar{position:relative}
+.alloc-bar-track{position:relative;height:8px;background:var(--bg);border-radius:4px;overflow:visible}
+.alloc-bar-fill{position:absolute;left:0;top:0;height:100%;background:var(--blue);border-radius:4px;transition:width .3s}
+.alloc-bar-target{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px;transform:translateX(-1px)}
+.alloc-nums{font-size:12px;color:var(--text);text-align:right;white-space:nowrap}
+.alloc-gap{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:right;white-space:nowrap}
+.alloc-legend{display:flex;gap:1.25rem;font-size:11px;color:var(--muted);margin-bottom:.75rem;align-items:center}
+.alloc-legend-swatch{display:inline-block;width:14px;height:8px;border-radius:3px;background:var(--blue);margin-right:5px;vertical-align:middle}
+.alloc-legend-tick{display:inline-block;width:2px;height:12px;background:var(--text);margin-right:6px;vertical-align:middle;border-radius:1px}
+@media (max-width:640px){
+  .alloc-row{grid-template-columns:90px 1fr 90px;gap:8px}
+  .alloc-row .alloc-gap{display:none}
+}
 
 /* ── TABS ── */
 .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
@@ -258,6 +292,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   </div>
   <div class="nav-links">
     <div class="nav-link active" onclick="switchScreen('command')" data-screen="command">Command</div>
+    <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Map</div>
     <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Analytics</div>
     <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
@@ -309,12 +344,12 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <!-- CSV Import banner -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
     <div>
-      <div style="font-size:13px;font-weight:500;margin-bottom:2px">Import from broker CSV</div>
-      <div style="font-size:12px;color:var(--hint)">Upload your broker export. Orion auto-detects columns from DEGIRO, IBKR, Saxo, UBS, Swissquote, Trading 212, Schwab and more.</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px">Import from broker CSV or Excel</div>
+      <div style="font-size:12px;color:var(--hint)">Upload your broker export (CSV, XLSX, or XLS). Orion auto-detects columns from DEGIRO, IBKR, Saxo, UBS, Swissquote, Trading 212, Schwab and more.</div>
     </div>
     <label class="btn btn-outline" style="cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px">
-      ↑ Import broker CSV
-      <input type="file" accept=".csv,.txt" style="display:none" onchange="handleCSVUpload(event)">
+      ↑ Import broker CSV / Excel
+      <input type="file" accept=".csv,.txt,.xlsx,.xls" style="display:none" onchange="handleCSVUpload(event)">
     </label>
   </div>
 
@@ -496,6 +531,33 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: MAP — visual treemap of the whole portfolio                 -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-map" class="screen">
+<div class="wrap">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.25rem">
+    <div>
+      <div class="page-title" style="margin-bottom:0">Wealth Map</div>
+      <div style="font-size:12px;color:var(--hint)">Block size = USD value. Same data, two lenses.</div>
+    </div>
+    <div class="map-toggle" role="tablist">
+      <button class="map-toggle-btn active" data-lens="class" onclick="setMapLens('class')">Asset type</button>
+      <button class="map-toggle-btn" data-lens="geo" onclick="setMapLens('geo')">Geography</button>
+    </div>
+  </div>
+
+  <div id="map-insight" class="hint-box" style="margin-bottom:1rem"></div>
+  <div id="map-canvas" class="map-canvas"></div>
+  <div id="map-drill" style="margin-top:1rem"></div>
+
+  <div id="map-empty" style="display:none;padding:3rem 1rem;text-align:center;color:var(--muted);font-size:13px;line-height:1.7">
+    <div style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:.5rem">No portfolio yet</div>
+    Add holdings and build the dashboard to see your wealth map.
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- SCREEN: RISK                                                        -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <div id="screen-risk" class="screen">
@@ -592,6 +654,18 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateIntelBriefing()">✨ Generate briefing</button>
   </div>
 
+  <!-- House View briefing -->
+  <div class="briefing-card" style="margin-bottom:12px">
+    <div class="briefing-header">
+      <div style="font-size:14px;font-weight:500">House View — repositioning briefing</div>
+      <div class="briefing-tag">Orion AI · live search</div>
+    </div>
+    <div id="houseview-content" class="briefing-text" style="color:var(--muted);font-style:italic">
+      No house view yet. Generate one — uses live web search + AI (one click = one search-augmented request, costs more than a standard briefing).
+    </div>
+    <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateHouseView()">🌐 Generate House View</button>
+  </div>
+
   <!-- AI Copilot -->
   <div class="card" style="margin-bottom:12px">
     <div style="font-size:14px;font-weight:500;margin-bottom:.3rem">Copilot: ask anything</div>
@@ -627,7 +701,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <div class="tab active" onclick="switchHTab(0)">Positions</div>
     <div class="tab" onclick="switchHTab(1)">Performance</div>
     <div class="tab" onclick="switchHTab(2)">Income calendar</div>
-    <div class="tab" onclick="switchHTab(3)">Treemap</div>
   </div>
 
   <!-- Tab 0: Holdings table -->
@@ -655,11 +728,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <!-- Tab 2: Income calendar -->
   <div class="tab-panel" id="htab-2">
     <div id="income-calendar"></div>
-  </div>
-
-  <!-- Tab 3: Treemap -->
-  <div class="tab-panel" id="htab-3">
-    <div id="treemap-container"></div>
   </div>
 </div>
 </div>
@@ -731,6 +799,35 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   </div>
 
   <div id="rp-gap-msg" style="display:none"></div>
+
+  <!-- Repositioning engine: baseline allocation + bounded AI tilts -->
+  <div class="card" style="margin-top:1.25rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:.5rem">
+      <div>
+        <div class="section-label">Repositioning — current vs target</div>
+        <div style="font-size:12px;color:var(--hint);margin-top:4px">Strategic baseline for your <b id="alloc-profile-label">Balanced</b> profile. Macro tilts are capped at ±5pts and clearly marked.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="showAllocation()">↻ Reset to baseline</button>
+        <button class="btn btn-outline btn-sm" onclick="applyMacroTilts()">⚡ Apply this week's macro tilts</button>
+      </div>
+    </div>
+    <div id="tilt-reasoning" style="font-size:12px;color:var(--muted);margin-bottom:1rem;min-height:0"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:2rem">
+      <div>
+        <div class="section-label" style="margin-bottom:.75rem">By asset class</div>
+        <div id="alloc-class"></div>
+      </div>
+      <div>
+        <div class="section-label" style="margin-bottom:.75rem">By geography</div>
+        <div id="alloc-geo"></div>
+      </div>
+      <div>
+        <div class="section-label" style="margin-bottom:.75rem">By sector</div>
+        <div id="alloc-sector"></div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -772,6 +869,10 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
         <div id="csv-broker-badge"></div>
       </div>
       <button onclick="closeCSVModal()" style="border:none;background:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:0 2px">✕</button>
+    </div>
+    <div class="csv-field-row" style="margin-bottom:1.25rem">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:4px">Source label <span style="font-size:10px;color:var(--hint)">(e.g. IBKR, DEGIRO — same ISINs across sources get merged into one position)</span></div>
+      <input id="csv-source-input" type="text" class="csv-select" placeholder="Broker / source name" style="font-size:13px;padding:7px 9px">
     </div>
     <div style="font-size:13px;font-weight:500;margin-bottom:3px">Map columns <span style="font-size:11px;color:var(--hint);font-weight:400">(we've made our best guess, adjust if needed)</span></div>
     <div id="csv-mapping-ui" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem"></div>
@@ -949,9 +1050,17 @@ async function fetchFX(from, to, date) {
 
 async function toUSD(amount, fromCcy, date) {
   if (!amount) return 0;
-  fromCcy = (fromCcy||"USD").toUpperCase();
-  if (fromCcy === "USD") return amount;
-  const r = await fetchFX(fromCcy, "USD", date);
+  let ccy = (fromCcy||"USD").trim();
+  // LSE and a few other UK venues quote in pence (GBp / GBX), not pounds.
+  // Frankfurter only knows GBP, so convert pence → pounds first.
+  if (ccy === "GBp" || ccy.toUpperCase() === "GBX") {
+    amount = amount / 100;
+    ccy = "GBP";
+  } else {
+    ccy = ccy.toUpperCase();
+  }
+  if (ccy === "USD") return amount;
+  const r = await fetchFX(ccy, "USD", date);
   return r ? amount * r : amount;  // if FX fails, fall back to nominal (better than dropping the value)
 }
 
@@ -1036,6 +1145,111 @@ Write a 3-sentence CIO-style morning briefing. Be specific by naming actual hold
   state.briefingText = text || "Unable to generate briefing. Check your API connection.";
   el.className = "briefing-text";
   el.innerHTML = state.briefingText;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   HOUSE-VIEW REPOSITIONING BRIEFING
+   GGC-style memo: real look-through exposures + live web search +
+   specific repositioning views (framed for discussion with a qualified
+   adviser). Behind an explicit button — never auto-runs.
+════════════════════════════════════════════════════════════════════ */
+
+// Search-aware AI call. Concatenates every text block in the response so
+// web_search (which interleaves search + tool_result + text blocks) works.
+async function callAIWithSearch(prompt, maxTokens = 1200) {
+  try {
+    const r = await fetch(AI_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: maxTokens,
+        messages: [{ role: "user", content: prompt }],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4 }],
+      }),
+    });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || r.status); }
+    const d = await r.json();
+    // Join ALL text blocks (search responses have multiple content items).
+    const text = (d.content || [])
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("\n")
+      .trim();
+    return text || null;
+  } catch (e) {
+    console.error("AI(search) error:", e);
+    return null;
+  }
+}
+
+// Build the grounded macro/repositioning prompt from REAL computed numbers.
+function buildHouseViewPrompt() {
+  const s = buildPortfolioSummary();              // real totals + classes
+  const total = s.total || 1;
+
+  const assetClasses = Object.entries(s.classes)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${k}: ${(v / total * 100).toFixed(1)}%`)
+    .join(", ");
+
+  // Real look-through geo + sector (your computed aggregates).
+  const geo = Object.entries(state.geoAgg || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 8)
+    .map(([k, v]) => `${k}: ${v.toFixed(1)}%`).join(", ") || "n/a";
+  const sectors = Object.entries(state.sectorAgg || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 8)
+    .map(([k, v]) => `${k}: ${v.toFixed(1)}%`).join(", ") || "n/a";
+
+  const today = new Date().toLocaleDateString("en-US",
+    { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  return `You are writing a personalized institutional-style portfolio briefing (a "house view"), in the structured manner of a private asset manager's client memo. Today is ${today}.
+
+GROUND TRUTH — these are the user's ACTUAL holdings. Reason ONLY from these numbers. Do NOT invent holdings, prices, or percentages not listed here.
+- Total portfolio value: $${fmt(s.total)}
+- Asset-class distribution: ${assetClasses}
+- Geographic distribution (after ETF look-through): ${geo}
+- Sector distribution (after ETF look-through): ${sectors}
+
+IMPORTANT LIMITATIONS you MUST respect:
+- These exposure figures come from heuristic look-through, not a full factor model. Where precision is uncertain, say so. Do NOT project false precision.
+- You are NOT a licensed adviser and this user has NOT given a full financial picture (goals, horizon, tax, income, other assets). Frame everything accordingly.
+
+TASK:
+1. Use web search to establish the CURRENT macro backdrop (this week): rates, inflation, major market/geopolitical developments relevant to this specific portfolio's geography and sectors.
+2. Write a structured briefing with these sections, in plain prose (short paragraphs, minimal formatting):
+   • WHERE YOU STAND — describe their actual distribution by geography, sector, and asset class, and the one or two biggest concentrations or tensions.
+   • THE WORLD RIGHT NOW — the current macro picture, tied specifically to THEIR exposures (not generic commentary).
+   • VIEWS TO CONSIDER — specific repositioning ideas (e.g. "reduce US-tech concentration toward X"), BUT framed explicitly as views to discuss with a qualified adviser, with your reasoning shown so the reader can judge it. Never phrase as a command. Show the "why," including what would make the view wrong.
+3. End with one honest line on the biggest thing you DON'T know about their situation.
+
+Cite macro claims to the sources you find. Keep the whole thing tight and readable — this should feel like a sharp private-bank memo, not a generic market update.`;
+}
+
+async function generateHouseView() {
+  const el = document.getElementById("houseview-content");
+  if (!el) return;
+  el.className = "briefing-loading";
+  el.removeAttribute("style");
+  el.innerHTML = '<div class="ai-dot"></div><span>Researching markets &amp; building your house view…</span>';
+
+  const text = await callAIWithSearch(buildHouseViewPrompt(), 1500);
+
+  const disclaimer = `<div style="margin-top:1rem;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--hint);line-height:1.6">
+    <strong>Not investment advice.</strong> This briefing is generated by AI for informational and educational purposes, based on heuristic exposure estimates and a limited view of your finances. It is not a personal recommendation. Markets carry risk; AI-generated views may be wrong or out of date. Consult a qualified, licensed financial adviser before acting.
+  </div>`;
+
+  if (text) {
+    state.houseViewText = text;
+    // Light formatting: turn double newlines into paragraphs.
+    const html = text.split(/\n{2,}/).map(p => `<p style="margin:0 0 .75rem">${escapeHtml(p).replace(/\n/g,"<br>")}</p>`).join("");
+    el.className = "briefing-text";
+    el.innerHTML = html + disclaimer;
+  } else {
+    el.className = "briefing-text";
+    el.innerHTML = '<span style="color:var(--muted)">Unable to generate the house view. Check the AI proxy connection.</span>';
+  }
 }
 
 async function generateIntelBriefing() {
@@ -1567,6 +1781,7 @@ async function buildPortfolio() {
   renderHoldingsScreens();
   renderSimulator();
   renderIntelligenceScreen();
+  renderMapScreen();
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1623,6 +1838,167 @@ function computeAssetClasses() {
     else classes["Equities"]+=h.current||0;
   });
   return classes;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ALLOCATION ENGINE — Current vs Target + Gap
+   Two layers: (1) deterministic baselines per risk profile,
+   (2) optional bounded AI tilts off the baseline. Baseline always
+   dominates; tilts are capped to ±MAX_TILT and clearly labelled.
+════════════════════════════════════════════════════════════════════ */
+const MAX_TILT = 5; // percentage points — hard cap on any single macro tilt
+
+const BASELINE = {
+  Conservative: {
+    class:  { Equity: 35, Bonds: 45, Cash: 12, Alternatives: 8 },
+    geo:    { US: 45, Europe: 30, "Asia/EM": 10, Other: 15 },
+    sector: { Technology: 15, Healthcare: 14, Financials: 14, "Consumer Staples": 13,
+              Energy: 8, Industrials: 12, "Basic Materials": 8, Utilities: 8, Other: 8 },
+  },
+  Balanced: {
+    class:  { Equity: 60, Bonds: 25, Cash: 5, Alternatives: 10 },
+    geo:    { US: 55, Europe: 25, "Asia/EM": 12, Other: 8 },
+    sector: { Technology: 22, Healthcare: 12, Financials: 13, "Consumer Staples": 9,
+              Energy: 7, Industrials: 12, "Basic Materials": 7, "Consumer Cyclical": 10, Other: 8 },
+  },
+  Growth: {
+    class:  { Equity: 80, Bonds: 5, Cash: 3, Alternatives: 12 },
+    geo:    { US: 60, Europe: 20, "Asia/EM": 15, Other: 5 },
+    sector: { Technology: 32, Healthcare: 10, Financials: 11, "Consumer Cyclical": 12,
+              Energy: 6, Industrials: 11, "Communication Services": 10, Other: 8 },
+  },
+  Aggressive: {
+    class:  { Equity: 88, Bonds: 0, Cash: 2, Alternatives: 10 },
+    geo:    { US: 55, Europe: 15, "Asia/EM": 25, Other: 5 },
+    sector: { Technology: 38, "Consumer Cyclical": 14, "Communication Services": 12,
+              Healthcare: 9, Financials: 9, Industrials: 9, Energy: 5, Other: 4 },
+  },
+};
+
+// Map the user's actual holdings into the same buckets as the baseline.
+function currentAllocation() {
+  const c = computeAssetClasses();
+  const total = Object.values(c).reduce((s, v) => s + v, 0) || 1;
+  const cls = {
+    Equity: ((c.Equities || 0) + (c.ETFs || 0)) / total * 100,
+    Bonds: (c.Bonds || 0) / total * 100,
+    Cash: (c.Cash || 0) / total * 100,
+    Alternatives: ((c.Crypto || 0) + (c.Commodities || 0) + (c["Real Estate"] || 0)) / total * 100,
+  };
+  const EU = new Set(["GB","DE","FR","NL","IE","CH","ES","IT","SE","BE","DK","FI","NO","AT","PT","EU"]);
+  const EM = new Set(["CN","IN","BR","ZA","KR","TW","MX","ID","TR","Asia"]);
+  const geo = { US: 0, Europe: 0, "Asia/EM": 0, Other: 0 };
+  Object.entries(state.geoAgg || {}).forEach(([code, pct]) => {
+    if (code === "US") geo.US += pct;
+    else if (EU.has(code)) geo.Europe += pct;
+    else if (EM.has(code)) geo["Asia/EM"] += pct;
+    else geo.Other += pct;
+  });
+  const sector = {};
+  Object.entries(state.sectorAgg || {}).forEach(([k, v]) => { sector[k] = (sector[k] || 0) + v; });
+  return { class: cls, geo, sector };
+}
+
+// Gap = current − target, per bucket. Returns rows sorted by |gap|.
+function allocationGap(dimension, profile, tilts = {}) {
+  const target = { ...(BASELINE[profile] || BASELINE.Balanced)[dimension] };
+  Object.entries(tilts).forEach(([k, t]) => {
+    if (target[k] !== undefined) target[k] += Math.max(-MAX_TILT, Math.min(MAX_TILT, t));
+  });
+  const tsum = Object.values(target).reduce((s, v) => s + Math.max(0, v), 0) || 1;
+  Object.keys(target).forEach(k => target[k] = Math.max(0, target[k]) / tsum * 100);
+  const current = currentAllocation()[dimension] || {};
+  const keys = Array.from(new Set([...Object.keys(target), ...Object.keys(current)]));
+  return keys.map(k => ({
+    name: k,
+    current: +(current[k] || 0).toFixed(1),
+    target: +(target[k] || 0).toFixed(1),
+    gap: +((current[k] || 0) - (target[k] || 0)).toFixed(1),
+  })).sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap));
+}
+
+// Minimal SVG arc helper for the pies.
+function arc(cx, cy, r, a0, a1) {
+  const rad = d => (d-90)*Math.PI/180;
+  const x0=cx+r*Math.cos(rad(a0)), y0=cy+r*Math.sin(rad(a0));
+  const x1=cx+r*Math.cos(rad(a1)), y1=cy+r*Math.sin(rad(a1));
+  const large = a1-a0 > 180 ? 1 : 0;
+  return `M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${large} 1 ${x1},${y1} Z`;
+}
+
+function renderAllocationDimension(containerId, dimension, profile, tilts = {}) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const rows = allocationGap(dimension, profile, tilts);
+  if (!rows.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--hint)">No data yet — build the portfolio first.</div>';
+    return;
+  }
+  const body = rows.map(r => {
+    const diff = +(r.target - r.current).toFixed(1); // positive = need MORE of this bucket
+    const sign = diff > 0 ? "+" : "";
+    const diffColor = Math.abs(diff) < 2 ? "var(--hint)" : "var(--text)";
+    const tilted = tilts && tilts[r.name] ? ' <span title="includes a macro tilt" style="color:var(--blue);font-size:11px">⚡</span>' : '';
+    return `<tr>
+      <td style="padding:8px 0;font-size:13px">${escapeHtml(r.name)}${tilted}</td>
+      <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px">${r.current}%</td>
+      <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--blue)">${r.target}%</td>
+      <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:${diffColor}">${sign}${diff}%</td>
+    </tr>`;
+  }).join("");
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Bucket</th>
+        <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Now</th>
+        <th style="text-align:right;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Suggested</th>
+        <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Change</th>
+      </tr>
+    </thead>
+    <tbody>${body}</tbody>
+  </table>`;
+}
+
+function renderAllocation(profile, tilts = {}) {
+  renderAllocationDimension("alloc-class",  "class",  profile, tilts.class  || {});
+  renderAllocationDimension("alloc-geo",    "geo",    profile, tilts.geo    || {});
+  renderAllocationDimension("alloc-sector", "sector", profile, tilts.sector || {});
+}
+
+// Asks the AI for SMALL capped tilts + reasoning, grounded in live macro.
+// Each tilt is clamped to ±MAX_TILT inside allocationGap. Baseline dominates.
+async function fetchMacroTilts(profile) {
+  const prompt = `You are a tactical allocation strategist. Use web search for THIS WEEK's macro backdrop (rates, inflation, major geopolitical/market events).
+
+The user has a ${profile} strategic baseline. Propose SMALL tactical tilts (in percentage points, each between -${MAX_TILT} and +${MAX_TILT}) off that baseline, by asset class, by geography region (US/Europe/Asia-EM/Other), and by sector. Tilts must net to roughly zero within each dimension.
+
+Respond ONLY with valid JSON, no prose, no markdown:
+{"class":{"Equity":-3,"Bonds":3},"geo":{"US":-2,"Europe":2},"sector":{"Technology":-4,"Energy":4},"reasoning":"one short paragraph citing what in the news drives these tilts"}`;
+  const raw = await callAIWithSearch(prompt, 1000);
+  try {
+    const clean = (raw || "").replace(/```json|```/g, "").trim();
+    const obj = JSON.parse(clean.slice(clean.indexOf("{"), clean.lastIndexOf("}")+1));
+    return obj;
+  } catch(e) { console.error("tilt parse failed:", e); return null; }
+}
+
+// UI handler: render the baseline for the user's profile, optionally with AI tilts.
+function showAllocation() {
+  const profile = (state.riskProfile && state.riskProfile.name) || "Balanced";
+  document.getElementById("alloc-profile-label").textContent = profile;
+  document.getElementById("tilt-reasoning").textContent = "";
+  renderAllocation(profile, {});
+}
+
+async function applyMacroTilts() {
+  const profile = (state.riskProfile && state.riskProfile.name) || "Balanced";
+  const reasoningEl = document.getElementById("tilt-reasoning");
+  reasoningEl.innerHTML = '<span style="color:var(--muted)"><span class="ai-dot"></span> Fetching this week\'s macro tilts…</span>';
+  const t = await fetchMacroTilts(profile);
+  renderAllocation(profile, t || {});
+  reasoningEl.textContent = (t && t.reasoning)
+    ? "Macro tilt rationale: " + t.reasoning
+    : "Couldn't fetch tilts — showing baseline only.";
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2043,7 +2419,6 @@ function switchHTab(i) {
   document.querySelectorAll(".tab-panel[id^='htab-']").forEach((p,j)=>p.classList.toggle("active",j===i));
   document.querySelectorAll("#screen-holdings .tab").forEach((t,j)=>t.classList.toggle("active",j===i));
   htabActive = i;
-  if (i===3) setTimeout(renderTreemap, 50);
 }
 
 function renderHoldingsScreens() {
@@ -2128,58 +2503,6 @@ function renderIncomeCalendar() {
       <div class="cal-month-label">${months[m]}</div>
       ${evs.map(e=>`<div class="cal-event"><div class="cal-event-name">${e.name} <span style="font-size:11px;color:var(--hint)">${e.type}</span></div><div class="cal-event-date">${e.date}</div><div class="cal-event-amt">+$${fmt(e.amount)}</div></div>`).join("")}
     </div>`).join("");
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   TREEMAP
-════════════════════════════════════════════════════════════════════ */
-function squarify(items,x,y,w,h) {
-  if (!items.length) return [];
-  const rects=[];let remaining=[...items],cx=x,cy=y,cw=w,ch=h;
-  while(remaining.length){
-    const total=remaining.reduce((s,i)=>s+i.value,0);
-    const row=[];let rowSum=0;const isHoriz=cw>=ch;const dim=isHoriz?ch:cw;
-    for(const item of remaining){
-      row.push(item);rowSum+=item.value;
-      const aspect=row.map(it=>{const a=it.value/rowSum*dim;const b=rowSum/total*(isHoriz?cw:ch);return Math.max(a/b,b/a)||1e9;});
-      const worstNow=Math.max(...aspect);
-      if(row.length>1){const prevAspect=row.slice(0,-1).map(it=>{const ps=rowSum-item.value;const a=it.value/ps*dim;const b=ps/total*(isHoriz?cw:ch);return Math.max(a/b,b/a)||1e9;});if(Math.max(...prevAspect)<worstNow){row.pop();rowSum-=item.value;break;}}
-    }
-    remaining=remaining.filter(i=>!row.includes(i));const rowFrac=rowSum/total;
-    if(isHoriz){const rw=cw*rowFrac;let ry=cy;row.forEach(it=>{const rh=ch*(it.value/rowSum);rects.push({...it,x:cx,y:ry,w:rw,h:rh});ry+=rh;});cx+=rw;cw-=rw;}
-    else{const rh=ch*rowFrac;let rx=cx;row.forEach(it=>{const rw=cw*(it.value/rowSum);rects.push({...it,x:rx,y:cy,w:rw,h:rh});rx+=rw;});cy+=rh;ch-=rh;}
-  }
-  return rects;
-}
-
-function renderTreemap() {
-  const container = document.getElementById("treemap-container");
-  if (!container) return;
-  container.innerHTML = "";
-  const W=container.offsetWidth||860,H=420;
-  const assets=state.holdings.filter(h=>h.type!=="debt");
-  const total=assets.reduce((s,h)=>s+(h.current||0),0);
-  if(!total)return;
-  const items=[];
-  state.holdings.filter(h=>h.isin).forEach((h,i)=>{
-    const info=state.infoMap[h.isin.toUpperCase()]||{};
-    const pnl=h.current-h.paid,pnlP=h.paid>0?pnl/h.paid*100:0;
-    items.push({value:h.current,label:info.name||h.isin,sub:`${(h.current/total*100).toFixed(1)}%`,color:COLORS[i%COLORS.length],tooltip:`${info.name||h.isin}\n$${fmt(h.current)} · ${(h.current/total*100).toFixed(1)}%\nP&L: ${pnl>=0?"+":""}${pnlP.toFixed(1)}%`});
-  });
-  const altColors={real_estate:"#7F77DD",crypto:"#F59E0B",commodity:"#D85A30"};
-  state.holdings.filter(h=>!h.isin&&h.type!=="debt").forEach(h=>{
-    if(!h.current)return;
-    items.push({value:h.current,label:h.type==="real_estate"?(h.address||"Property"):h.type==="crypto"?h.crypto_type:h.commodity_type,sub:`${(h.current/total*100).toFixed(1)}%`,color:altColors[h.type]||"#888"});
-  });
-  const rects=squarify(items.filter(i=>i.value>0).sort((a,b)=>b.value-a.value),0,0,W,H);
-  rects.forEach(r=>{
-    const div=document.createElement("div");
-    div.className="tm-rect";
-    div.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;background:${r.color}`;
-    if(r.w>60&&r.h>40)div.innerHTML=`<div class="tm-label">${r.label}<br><span style="font-size:10px;opacity:.8">${r.sub}</span></div>`;
-    div.title=r.tooltip||r.label;
-    container.appendChild(div);
-  });
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2533,7 +2856,311 @@ function computeCurrentAlloc() {
   return alloc;
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   WEALTH MAP — treemap view of the whole portfolio
+   Reads state.holdings + state.geoAgg + state.infoMap (no new compute).
+   Two lenses: "class" (default) and "geo". Pure SVG/divs, no libs.
+════════════════════════════════════════════════════════════════════ */
+const MAP_CLASS_COLORS = {
+  "Equities":    "var(--blue)",
+  "ETFs":        "var(--navy)",
+  "Bonds":       "var(--teal)",
+  "Cash":        "var(--green)",
+  "Real Estate": "var(--amber)",
+  "Crypto":      "var(--purple)",
+  "Commodities": "var(--coral)",
+};
+// Region colors for the Geography lens (reuse palette).
+const MAP_REGION_COLORS = ["var(--blue)","var(--navy)","var(--teal)","var(--green)","var(--amber)","var(--purple)","var(--coral)","var(--blue-dark)"];
+
+let _mapLens = "class"; // "class" | "geo"
+
+function setMapLens(lens) {
+  _mapLens = lens;
+  document.querySelectorAll(".map-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.lens === lens));
+  renderMapScreen();
+}
+
+// Squarified treemap layout (Bruls/Huijing/van Wijk).
+// items: [{value, ...other fields}], all values must be > 0.
+// Returns each item augmented with x,y,w,h within the rectangle.
+function squarifyTreemap(items, x, y, w, h) {
+  const filtered = items.filter(it => it.value > 0);
+  if (!filtered.length || w <= 0 || h <= 0) return [];
+  const total = filtered.reduce((s, it) => s + it.value, 0);
+  if (!total) return [];
+  const area = w * h;
+  const scaled = [...filtered].sort((a, b) => b.value - a.value)
+    .map(it => ({ ...it, _area: (it.value / total) * area }));
+  const out = [];
+  _layoutSquarify(scaled, x, y, w, h, out);
+  return out;
+}
+
+function _worstRatio(row, shortest) {
+  if (!row.length) return Infinity;
+  const sum = row.reduce((s, it) => s + it._area, 0);
+  const max = Math.max(...row.map(it => it._area));
+  const min = Math.min(...row.map(it => it._area));
+  const s2 = sum * sum;
+  return Math.max((shortest * shortest * max) / s2, s2 / (shortest * shortest * min));
+}
+
+function _layoutSquarify(items, x, y, w, h, out) {
+  if (!items.length) return;
+  if (items.length === 1) { out.push({ ...items[0], x, y, w, h }); return; }
+  const shortest = Math.min(w, h);
+  let row = [items[0]];
+  let i = 1;
+  while (i < items.length) {
+    const candidate = [...row, items[i]];
+    if (_worstRatio(candidate, shortest) <= _worstRatio(row, shortest)) {
+      row = candidate; i++;
+    } else break;
+  }
+  const sum = row.reduce((s, it) => s + it._area, 0);
+  if (w >= h) {
+    const colW = sum / h;
+    let yOff = y;
+    for (const it of row) {
+      const ih = it._area / colW;
+      out.push({ ...it, x, y: yOff, w: colW, h: ih });
+      yOff += ih;
+    }
+    _layoutSquarify(items.slice(row.length), x + colW, y, w - colW, h, out);
+  } else {
+    const rowH = sum / w;
+    let xOff = x;
+    for (const it of row) {
+      const iw = it._area / rowH;
+      out.push({ ...it, x: xOff, y, w: iw, h: rowH });
+      xOff += iw;
+    }
+    _layoutSquarify(items.slice(row.length), x, y + rowH, w, h - rowH, out);
+  }
+}
+
+// Human label for any holding row.
+function _mapHoldingLabel(h) {
+  if (h.asset_type === "cash") return `${h.currency || ""} Cash`.trim();
+  if (h.type === "crypto") return h.crypto_type || "Crypto";
+  if (h.type === "commodity") return h.commodity_type || "Commodity";
+  if (h.type === "real_estate") return h.address || h.city || h.country || "Real Estate";
+  if (h.isin) {
+    const info = state.infoMap && state.infoMap[h.isin];
+    return (info && info.name) || h.ticker || h.isin;
+  }
+  return h.ticker || "—";
+}
+
+// Classify a holding into one of the buckets used by computeAssetClasses().
+function _mapHoldingClass(h) {
+  if (h.asset_type === "bond") return "Bonds";
+  if (h.asset_type === "cash") return "Cash";
+  if (h.type === "real_estate") return "Real Estate";
+  if (h.type === "crypto") return "Crypto";
+  if (h.type === "commodity") return "Commodities";
+  if (h.isin && isETF(h.isin)) return "ETFs";
+  return "Equities";
+}
+
+function _formatPctCompact(p) { return (p >= 10 ? p.toFixed(0) : p.toFixed(1)) + "%"; }
+
+// Render a list of placed blocks into the canvas as positioned divs.
+function _paintBlocks(blocks, canvas) {
+  const html = blocks.map((b, i) => {
+    const tiny = b.w < 70 || b.h < 38;
+    const meta = b._meta ? `<div class="map-block-meta">${escapeHtml(b._meta)}</div>` : "";
+    const onclick = b._onclick ? `onclick="${b._onclick}"` : "";
+    const clickable = b._onclick ? " clickable" : "";
+    const title = b._title || "";
+    return `<div class="map-block${clickable}${tiny?' tiny':''}"
+              style="left:${b.x.toFixed(2)}px;top:${b.y.toFixed(2)}px;width:${b.w.toFixed(2)}px;height:${b.h.toFixed(2)}px;background:${b._color}"
+              title="${escapeHtml(title)}" ${onclick}>
+      <div class="map-block-label">${escapeHtml(b._label||"")}</div>
+      ${meta}
+    </div>`;
+  }).join("");
+  canvas.innerHTML = html;
+}
+
+// LENS 1 — by asset class (nested: class group → holdings inside).
+function _renderMapByClass(canvas) {
+  const W = canvas.clientWidth || 800;
+  const H = canvas.clientHeight || 560;
+  // Build per-class items containing their holdings.
+  const groups = {};
+  (state.holdings || []).forEach(h => {
+    if (h.type === "debt") return;
+    const v = h.current || 0;
+    if (v <= 0) return;
+    const cls = _mapHoldingClass(h);
+    if (!groups[cls]) groups[cls] = { name: cls, value: 0, items: [] };
+    groups[cls].value += v;
+    groups[cls].items.push({
+      value: v,
+      _label: _mapHoldingLabel(h),
+      _meta: "$" + fmt(v),
+      _title: `${_mapHoldingLabel(h)} — $${fmt(v)}`,
+      _color: MAP_CLASS_COLORS[cls] || "var(--blue)",
+      _isin: h.isin || null,
+      _isETF: h.isin && isETF(h.isin),
+    });
+  });
+  const classBlocks = Object.values(groups).map(g => ({ value: g.value, _items: g.items, _name: g.name }));
+  const placed = squarifyTreemap(classBlocks, 0, 0, W, H);
+
+  // Now lay out holdings inside each class block.
+  const allBlocks = [];
+  placed.forEach(g => {
+    const inner = squarifyTreemap(g._items, g.x, g.y, g.w, g.h);
+    inner.forEach(it => {
+      const onclick = it._isETF ? `mapDrillDown('${it._isin}')` : "";
+      allBlocks.push({ ...it, _onclick: onclick });
+    });
+    // Append a group label (rendered as overlay text in top-left).
+    allBlocks.push({
+      x: g.x, y: g.y, w: 0, h: 0,
+      _groupLabel: g._name,
+      _groupW: g.w, _groupH: g.h,
+    });
+  });
+
+  // Paint the regular blocks, then overlay group labels.
+  const real = allBlocks.filter(b => !b._groupLabel);
+  _paintBlocks(real, canvas);
+  const labelHtml = allBlocks.filter(b => b._groupLabel)
+    .filter(b => b._groupW > 80 && b._groupH > 30)
+    .map(b => `<div class="map-block-group-label" style="left:${(b.x+8).toFixed(0)}px;top:${(b.y+6).toFixed(0)}px">${escapeHtml(b._groupLabel)}</div>`)
+    .join("");
+  canvas.insertAdjacentHTML("beforeend", labelHtml);
+}
+
+// LENS 2 — by geography (flat, from state.geoAgg).
+function _renderMapByGeo(canvas) {
+  const W = canvas.clientWidth || 800;
+  const H = canvas.clientHeight || 560;
+  const items = Object.entries(state.geoAgg || {})
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([code, pct], i) => ({
+      value: pct,
+      _label: `${(FLAGS[code]||"")} ${COUNTRY_NAMES[code]||code}`.trim(),
+      _meta: _formatPctCompact(pct),
+      _title: `${COUNTRY_NAMES[code]||code} — ${_formatPctCompact(pct)} (after ETF look-through)`,
+      _color: MAP_REGION_COLORS[i % MAP_REGION_COLORS.length],
+    }));
+  const placed = squarifyTreemap(items, 0, 0, W, H);
+  _paintBlocks(placed, canvas);
+}
+
+// ETF drill-down: shows top sectors + countries from state.infoMap[isin].
+function mapDrillDown(isin) {
+  const drill = document.getElementById("map-drill");
+  if (!drill) return;
+  const info = state.infoMap && state.infoMap[isin];
+  const name = (info && info.name) || isin;
+  if (!info) {
+    drill.innerHTML = `<div class="map-drill-card"><div style="font-size:13px;color:var(--muted)">No look-through data available for ${escapeHtml(name)}.</div></div>`;
+    return;
+  }
+  const sectors = (info.sectors || []).slice(0, 6);
+  const geo = (info.geo || []).slice(0, 6);
+  const maxSec = sectors.length ? Math.max(...sectors.map(s => s.weight || s.pct || 0)) : 1;
+  const maxGeo = geo.length     ? Math.max(...geo.map(g => g.weight || g.pct || 0))     : 1;
+  const secHtml = sectors.map(s => {
+    const w = s.weight || s.pct || 0;
+    return `<div class="map-drill-row">
+      <div style="min-width:130px">${escapeHtml(s.name || s.sector || "—")}</div>
+      <div class="map-drill-bar"><div class="map-drill-bar-fill" style="width:${(w/maxSec*100).toFixed(0)}%"></div></div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;min-width:55px;text-align:right">${_formatPctCompact(w)}</div>
+    </div>`;
+  }).join("") || `<div style="font-size:12px;color:var(--hint);padding:6px 0">No sector breakdown.</div>`;
+  const geoHtml = geo.map(g => {
+    const w = g.weight || g.pct || 0;
+    const code = g.country || g.code || g.name;
+    const flag = FLAGS[code] ? FLAGS[code] + " " : "";
+    return `<div class="map-drill-row">
+      <div style="min-width:130px">${flag}${escapeHtml(COUNTRY_NAMES[code] || code || "—")}</div>
+      <div class="map-drill-bar"><div class="map-drill-bar-fill" style="width:${(w/maxGeo*100).toFixed(0)}%"></div></div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;min-width:55px;text-align:right">${_formatPctCompact(w)}</div>
+    </div>`;
+  }).join("") || `<div style="font-size:12px;color:var(--hint);padding:6px 0">No geographic breakdown.</div>`;
+
+  drill.innerHTML = `<div class="map-drill-card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.75rem">
+      <div>
+        <div class="section-label">ETF look-through</div>
+        <div style="font-size:14px;font-weight:500;color:var(--text);margin-top:3px">${escapeHtml(name)}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('map-drill').innerHTML=''">Close</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+      <div>
+        <div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Sectors</div>
+        ${secHtml}
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Countries</div>
+        ${geoHtml}
+      </div>
+    </div>
+  </div>`;
+  // Scroll into view so the user sees the drill panel.
+  drill.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// One honest insight: biggest single concentration in the active lens.
+function _renderMapInsight() {
+  const el = document.getElementById("map-insight");
+  if (!el) return;
+  if (_mapLens === "class") {
+    const classes = (typeof computeAssetClasses === "function") ? computeAssetClasses() : {};
+    const total = Object.values(classes).reduce((s, v) => s + v, 0);
+    if (!total) { el.textContent = ""; return; }
+    const sorted = Object.entries(classes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    if (!sorted.length) { el.textContent = ""; return; }
+    const [name, value] = sorted[0];
+    const pct = (value / total * 100);
+    el.innerHTML = `Your largest asset class is <b>${escapeHtml(name)}</b> at <b>${pct.toFixed(1)}%</b> ($${fmt(value)}) of total portfolio value.`;
+  } else {
+    const entries = Object.entries(state.geoAgg || {}).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) { el.textContent = ""; return; }
+    const [code, pct] = entries[0];
+    el.innerHTML = `Your largest country exposure is <b>${FLAGS[code]||""} ${escapeHtml(COUNTRY_NAMES[code]||code)}</b> at <b>${pct.toFixed(1)}%</b> after ETF look-through.`;
+  }
+}
+
+function renderMapScreen() {
+  const empty = document.getElementById("map-empty");
+  const canvas = document.getElementById("map-canvas");
+  const drill = document.getElementById("map-drill");
+  const insight = document.getElementById("map-insight");
+  if (!canvas || !empty) return;
+  const hasData = (state.holdings || []).some(h => h.type !== "debt" && (h.current || 0) > 0);
+  if (!hasData) {
+    empty.style.display = "block";
+    canvas.style.display = "none";
+    if (drill) drill.innerHTML = "";
+    if (insight) insight.textContent = "";
+    return;
+  }
+  empty.style.display = "none";
+  canvas.style.display = "block";
+  if (drill) drill.innerHTML = "";
+  _renderMapInsight();
+  // Wait one frame for layout so clientWidth/clientHeight are accurate.
+  requestAnimationFrame(() => {
+    if (_mapLens === "geo") _renderMapByGeo(canvas);
+    else _renderMapByClass(canvas);
+  });
+}
+
 function renderRiskProfile() {
+  // Repositioning panel: render the deterministic baseline on every visit
+  // so users never see empty containers. AI tilts stay behind their button.
+  if (typeof showAllocation === "function") showAllocation();
+
   const {score, breakdown} = computePortfolioRiskScore();
 
   // Portfolio score card
@@ -2686,9 +3313,9 @@ function switchScreen(name) {
   if (el) el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active",l.dataset.screen===name));
   state.activeScreen = name;
-  if (name==="holdings" && htabActive===3) setTimeout(renderTreemap,50);
   if (name==="markets") initMarketsScreen();
   if (name==="riskprofile") renderRiskProfile();
+  if (name==="map") renderMapScreen();
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2777,6 +3404,262 @@ function importPortfolio(event) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   BROKER CSV / EXCEL IMPORT
+   Parses .csv / .xlsx / .xls into state.isinRows. SheetJS handles both
+   formats; the user maps columns in a modal before we commit.
+════════════════════════════════════════════════════════════════════ */
+const CSV_TARGET_FIELDS = [
+  { key: "isin",        label: "ISIN / Symbol",  required: true,  matches: ["isin","symbol","ticker","identifier","code"] },
+  { key: "quantity",    label: "Quantity",        required: true,  matches: ["quantity","qty","shares","units","position"] },
+  { key: "date",        label: "Purchase date",   required: false, matches: ["purchase date","buy date","trade date","date","acquired"] },
+  { key: "amount_paid", label: "Amount paid",     required: false, matches: ["amount paid","total cost","cost basis","cost","purchase amount","invested","paid","amount"] },
+  { key: "currency",    label: "Currency",        required: false, matches: ["currency","ccy","fx"] },
+];
+
+function autoMapColumns(headers) {
+  const lower = headers.map(h => String(h||"").toLowerCase().trim());
+  const mapping = {};
+  for (const f of CSV_TARGET_FIELDS) {
+    let best = -1;
+    for (let i = 0; i < lower.length; i++) {
+      if (f.matches.includes(lower[i])) { best = i; break; }
+    }
+    if (best < 0) {
+      for (let i = 0; i < lower.length; i++) {
+        if (lower[i] && f.matches.some(m => lower[i].includes(m))) { best = i; break; }
+      }
+    }
+    mapping[f.key] = best;
+  }
+  return mapping;
+}
+
+async function handleCSVUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = "";
+  if (typeof XLSX === "undefined") {
+    alert("Spreadsheet parser is still loading. Try again in a moment.");
+    return;
+  }
+  try {
+    const ext = file.name.toLowerCase().split(".").pop();
+    let workbook;
+    if (ext === "csv" || ext === "txt") {
+      const text = await file.text();
+      workbook = XLSX.read(text, { type: "string" });
+    } else {
+      const buf = await file.arrayBuffer();
+      workbook = XLSX.read(buf, { type: "array" });
+    }
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    if (!aoa.length) { alert("File appears to be empty."); return; }
+    let headerIdx = 0;
+    while (headerIdx < aoa.length && aoa[headerIdx].every(c => c === "" || c == null)) headerIdx++;
+    const headers = (aoa[headerIdx]||[]).map(h => String(h==null?"":h).trim());
+    const rows = aoa.slice(headerIdx+1).filter(r => r.some(c => c !== "" && c != null));
+    if (!rows.length) { alert("No data rows found."); return; }
+    state._csvImport = { fileName: file.name, headers, rows, mapping: autoMapColumns(headers) };
+    openCSVModal();
+  } catch (err) {
+    alert("Could not parse file: " + (err.message || err));
+  }
+}
+
+function openCSVModal() {
+  const imp = state._csvImport;
+  if (!imp) return;
+  document.getElementById("csv-broker-badge").innerHTML =
+    `<span style="font-size:11px;color:var(--hint)">${escapeHtml(imp.fileName)} — ${imp.rows.length} row${imp.rows.length===1?"":"s"}</span>`;
+  // Default the source label from the filename — strip extension and any trailing
+  // export/date noise — but let the user override before importing.
+  const sourceEl = document.getElementById("csv-source-input");
+  if (sourceEl) {
+    const cleaned = (imp.fileName || "")
+      .replace(/\.(csv|xlsx|xls|txt)$/i, "")
+      .replace(/[_-]+(export|holdings|portfolio|\d{4}.*)$/i, "")
+      .trim();
+    sourceEl.value = cleaned || "Import";
+  }
+  renderCSVMappingUI();
+  renderCSVPreview();
+  document.getElementById("csv-import-msg").textContent = "";
+  document.getElementById("csv-modal").classList.add("open");
+}
+
+function closeCSVModal() {
+  document.getElementById("csv-modal").classList.remove("open");
+  state._csvImport = null;
+}
+
+function renderCSVMappingUI() {
+  const imp = state._csvImport;
+  const ui = document.getElementById("csv-mapping-ui");
+  ui.innerHTML = CSV_TARGET_FIELDS.map(f => {
+    const sel = imp.mapping[f.key];
+    const options = [`<option value="-1">— Not mapped —</option>`].concat(
+      imp.headers.map((h,i) => `<option value="${i}" ${i===sel?"selected":""}>${escapeHtml(h) || ("Column "+(i+1))}</option>`)
+    ).join("");
+    return `<div class="csv-field-row">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:4px">${f.label}${f.required?' <span style="color:#c0392b">*</span>':''}</div>
+      <select class="csv-select" onchange="state._csvImport.mapping['${f.key}']=parseInt(this.value,10);renderCSVPreview()">${options}</select>
+    </div>`;
+  }).join("");
+}
+
+function renderCSVPreview() {
+  const imp = state._csvImport;
+  const preview = imp.rows.slice(0, 5);
+  document.getElementById("csv-row-count").textContent = `(showing ${preview.length} of ${imp.rows.length})`;
+  const head = CSV_TARGET_FIELDS.map(f => `<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--hint);font-weight:500;font-size:11px">${f.label}</th>`).join("");
+  const body = preview.map(r => {
+    const cells = CSV_TARGET_FIELDS.map(f => {
+      const idx = imp.mapping[f.key];
+      if (idx < 0) return `<td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--hint)">—</td>`;
+      const v = r[idx];
+      return `<td style="padding:6px 8px;border-bottom:1px solid var(--border)">${escapeHtml(v==null?"":String(v))}</td>`;
+    }).join("");
+    return `<tr>${cells}</tr>`;
+  }).join("");
+  document.getElementById("csv-preview-table").innerHTML =
+    `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+// Excel serial dates, ISO, and common DMY/MDY strings → YYYY-MM-DD.
+function normalizeImportedDate(v) {
+  if (v == null || v === "") return "";
+  if (typeof v === "number" && v > 1000 && v < 80000 && XLSX.SSF) {
+    const d = XLSX.SSF.parse_date_code(v);
+    if (d) return `${d.y}-${String(d.m).padStart(2,"0")}-${String(d.d).padStart(2,"0")}`;
+  }
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) {
+    let [, a, b, y] = m;
+    if (y.length === 2) y = (parseInt(y,10) >= 70 ? "19" : "20") + y;
+    let day = a, mon = b;
+    if (parseInt(a,10) > 12) { day = a; mon = b; }
+    else if (parseInt(b,10) > 12) { day = b; mon = a; }
+    return `${y}-${String(mon).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return "";
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MULTI-SOURCE MERGE
+   Rule: same ISIN across any source(s) → one merged position. The
+   `sources[]` array preserves the per-broker split for attribution
+   views; top-level quantity/paid are the summed numbers that exposure
+   views (sector, geo, concentration) already read. Purely additive —
+   nothing downstream needs to change.
+════════════════════════════════════════════════════════════════════ */
+function mergeBatch(acc, rows, source) {
+  for (const row of rows) {
+    const isin = (row.isin || "").trim().toUpperCase();
+    if (!isin) continue;
+    const qty  = parseFloat(row.quantity)   || 0;
+    const paid = parseFloat(row.amount_paid) || 0;
+    if (!acc[isin]) {
+      acc[isin] = { isin, currency: row.currency || "USD", date: row.date || "",
+                    quantity: 0, paid: 0, sources: [] };
+    }
+    const h = acc[isin];
+    let s = h.sources.find(x => x.label === source);
+    if (!s) { s = { label: source, quantity: 0, paid: 0 }; h.sources.push(s); }
+    s.quantity += qty;
+    s.paid     += paid;
+    h.quantity += qty;
+    h.paid     += paid;
+    if (row.date && (!h.date || row.date < h.date)) h.date = row.date;
+  }
+  return acc;
+}
+
+function finalizeMerged(acc) {
+  return Object.values(acc).map(h => ({
+    isin: h.isin,
+    quantity: h.quantity,
+    amount_paid: h.paid,
+    date: h.date,
+    currency: h.currency,
+    sources: h.sources,
+  }));
+}
+
+// Convert existing state.isinRows back into accumulator form so a fresh
+// import merges with what's already there. Rows that pre-date the sources[]
+// feature (or were entered manually) are treated as a single "Manual" source.
+function isinRowsToAcc(rows) {
+  const acc = {};
+  for (const row of rows) {
+    const isin = (row.isin || "").trim().toUpperCase();
+    if (!isin) continue;
+    const qty  = parseFloat(row.quantity)    || 0;
+    const paid = parseFloat(row.amount_paid) || 0;
+    const sources = (row.sources && row.sources.length)
+      ? row.sources.map(s => ({ ...s }))
+      : [{ label: "Manual", quantity: qty, paid: paid }];
+    acc[isin] = {
+      isin,
+      currency: row.currency || "USD",
+      date: row.date || "",
+      quantity: qty,
+      paid: paid,
+      sources,
+    };
+  }
+  return acc;
+}
+
+function doCSVImport() {
+  const imp = state._csvImport;
+  if (!imp) return;
+  const msgEl = document.getElementById("csv-import-msg");
+  if (imp.mapping.isin < 0 || imp.mapping.quantity < 0) {
+    msgEl.style.color = "#c0392b";
+    msgEl.textContent = "ISIN and Quantity columns are required.";
+    return;
+  }
+  const newRows = [];
+  let skipped = 0;
+  for (const r of imp.rows) {
+    const isin = String(r[imp.mapping.isin]==null?"":r[imp.mapping.isin]).trim().toUpperCase();
+    if (!isin) { skipped++; continue; }
+    const qtyRaw = String(r[imp.mapping.quantity]==null?"":r[imp.mapping.quantity]).replace(/[, ]/g,"");
+    const qty = parseFloat(qtyRaw);
+    if (!isFinite(qty) || qty <= 0) { skipped++; continue; }
+    const date = imp.mapping.date >= 0 ? normalizeImportedDate(r[imp.mapping.date]) : "";
+    const amtRaw = imp.mapping.amount_paid >= 0 ? String(r[imp.mapping.amount_paid]==null?"":r[imp.mapping.amount_paid]).replace(/[, ]/g,"") : "0";
+    const amt = parseFloat(amtRaw);
+    const ccy = imp.mapping.currency >= 0 ? String(r[imp.mapping.currency]==null?"":r[imp.mapping.currency]).trim().toUpperCase() : "USD";
+    newRows.push({ isin, quantity: qty, date, amount_paid: isFinite(amt)?amt:0, currency: ccy || "USD" });
+  }
+  if (!newRows.length) {
+    msgEl.style.color = "#c0392b";
+    msgEl.textContent = "No valid rows found. Check that ISIN/Quantity columns are mapped correctly.";
+    return;
+  }
+  // Merge by ISIN: existing rows go in the accumulator as their own sources,
+  // then this batch's rows are added under the user-chosen source label.
+  // Same ISIN across imports collapses into one position with a sources[] split.
+  const sourceLabel = (document.getElementById("csv-source-input")?.value || "").trim() || "Import";
+  const acc = isinRowsToAcc(state.isinRows);
+  mergeBatch(acc, newRows, sourceLabel);
+  state.isinRows = finalizeMerged(acc);
+  renderISINRows();
+  savePortfolio();
+  closeCSVModal();
+  msgEl.style.color = "";
+  // Auto-build the dashboard so the import actually reflects in totals/charts.
+  // Quotes are typically already cached from per-row detection, so this is fast.
+  buildPortfolio();
+}
+
+/* ════════════════════════════════════════════════════════════════════
    UTILS
 ════════════════════════════════════════════════════════════════════ */
 function fmt(n) {
@@ -2790,9 +3673,10 @@ function fmt(n) {
    INIT
 ════════════════════════════════════════════════════════════════════ */
 (function init() {
-  // Restore the user's portfolio from localStorage if present.
-  // First-time visitors get the demo dataset so the app isn't empty.
-  if (!loadPortfolio()) {
+  const hadSaved = loadPortfolio();
+
+  if (!hadSaved) {
+    // First-time visitor: seed the demo dataset, show the entry form as before.
     state.isinRows = [
       {isin:"IE00B4L5Y983", quantity:900,  date:"2022-03-15", amount_paid:71000,  currency:"USD"},
       {isin:"US0378331005", quantity:270,  date:"2021-06-10", amount_paid:38000,  currency:"USD"},
@@ -2809,8 +3693,23 @@ function fmt(n) {
       {type:"Silver (oz)", quantity:50, avg_buy_price:24,   current_value:0},
     ];
   }
+
+  // Always render the entry rows so the form is correct if the user navigates to it.
   renderISINRows();renderCashRows();renderBondRows();renderRERows();
   renderCryptoRows();renderCommRows();renderDebtRows();
+
+  // RETURNING USER WITH SAVED HOLDINGS → go straight to the net-worth view.
+  // We check there's at least one priceable row so we don't auto-build an empty form.
+  const hasPriceable =
+    (state.isinRows  || []).some(r => (r.isin||"").length===12 && (r.quantity||0)>0) ||
+    (state.cashRows  || []).length || (state.cryptoRows||[]).length ||
+    (state.commRows  || []).length || (state.reRows   ||[]).length ||
+    (state.bondRows  || []).length;
+
+  if (hadSaved && hasPriceable) {
+    if (typeof showScreen === "function") showScreen("command");
+    Promise.resolve().then(() => buildPortfolio());
+  }
 })();
 </script>
 
