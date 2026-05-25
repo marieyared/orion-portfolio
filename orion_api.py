@@ -33,6 +33,17 @@ FIGI_EXCH_TO_YAHOO = {
 }
 US_EXCHANGES = {"US", "UN", "UQ", "UR", "UV", "UW", "UA", "UD", "UF", "UO", "UP", "UV"}
 
+# Preferred Yahoo suffix per ISIN country code. Used to rank listings so a
+# German ISIN doesn't end up trying its illiquid Mexican secondary listing.
+# Empty string means "bare ticker" (US-style, no suffix).
+ISIN_COUNTRY_PREF = {
+    "US": "", "CA": ".TO", "GB": ".L",  "IE": ".L",  "DE": ".DE", "FR": ".PA",
+    "CH": ".SW","NL": ".AS","IT": ".MI","ES": ".MC","SE": ".ST","FI": ".HE",
+    "DK": ".CO","NO": ".OL","BE": ".BR","PT": ".LS","AT": ".VI","PL": ".WA",
+    "LU": ".DE","JP": ".T", "HK": ".HK","AU": ".AX","BR": ".SA","ZA": ".JO",
+    "TW": ".TW","KR": ".KS","IS": ".IS","NZ": ".NZ",
+}
+
 # Caches
 ISIN_CACHE: dict[str, dict] = {}
 QUOTE_CACHE: dict[str, tuple[float, dict]] = {}  # (timestamp, payload)
@@ -95,13 +106,20 @@ def lookup_isin(isin: str) -> dict | None:
     payload = response.json()
     if not payload or not payload[0].get("data"):
         return None
+    # Dedupe on (ticker, exchange) so dual-listed names like SAP — quoted as
+    # "SAP" on both Swiss (SW) and Xetra (GR) — keep both entries. The earlier
+    # ticker-only dedup silently dropped the domestic listing whenever an
+    # alternate venue happened to come first in OpenFIGI's response.
     seen = set()
     listings = []
     for item in payload[0]["data"]:
         ticker = item.get("ticker", "")
         exch = item.get("exchCode", "")
-        if ticker and ticker not in seen:
-            seen.add(ticker)
+        if not ticker:
+            continue
+        key = (ticker, exch)
+        if key not in seen:
+            seen.add(key)
             listings.append({"ticker": ticker, "exch": exch})
     first = payload[0]["data"][0]
     result = {
@@ -123,16 +141,21 @@ def lookup_isin(isin: str) -> dict | None:
 # ── Yahoo helpers ──────────────────────────────────────────────────────────
 
 def pick_yahoo_symbols(instrument: dict) -> list[str]:
-    """Return Yahoo symbols ordered by likely-to-work for this ISIN."""
-    out: list[str] = []
+    """Return Yahoo symbols ordered by likely-to-work for this ISIN.
+
+    First builds all candidates from OpenFIGI listings, then sorts so the
+    suffix that matches the ISIN's country of issue (e.g. .DE for German
+    ISINs) is tried first. Prevents German/UK ISINs from getting routed
+    to illiquid Mexican secondary listings.
+    """
+    out: list[tuple[int, str]] = []  # (priority, symbol)
     seen: set[str] = set()
+    # listings is already (ticker, exch)-deduped by lookup_isin, with the
+    # primary entry first. No need to prepend or re-filter here.
     listings = list(instrument.get("listings") or [])
-    primary_ticker = instrument.get("ticker") or ""
-    primary_exch = instrument.get("exchange") or ""
-    if primary_ticker:
-        listings = [{"ticker": primary_ticker, "exch": primary_exch}] + [
-            l for l in listings if l.get("ticker") != primary_ticker
-        ]
+    isin = instrument.get("isin") or ""
+    country = isin[:2].upper() if len(isin) >= 2 else ""
+    preferred_suffix = ISIN_COUNTRY_PREF.get(country)  # None if unknown country
     for l in listings:
         ticker = (l.get("ticker") or "").strip()
         exch = (l.get("exch") or "").strip()
@@ -140,14 +163,26 @@ def pick_yahoo_symbols(instrument: dict) -> list[str]:
             continue
         if exch in US_EXCHANGES:
             symbol = ticker
+            suffix = ""
         elif exch in FIGI_EXCH_TO_YAHOO:
-            symbol = f"{ticker}{FIGI_EXCH_TO_YAHOO[exch]}"
+            suffix = FIGI_EXCH_TO_YAHOO[exch]
+            symbol = f"{ticker}{suffix}"
         else:
             continue
-        if symbol not in seen:
-            seen.add(symbol)
-            out.append(symbol)
-    return out
+        if symbol in seen:
+            continue
+        seen.add(symbol)
+        # Lower priority = tried earlier. Exact country match wins.
+        if preferred_suffix is not None and suffix == preferred_suffix:
+            prio = 0
+        elif suffix == "":
+            # US/bare ticker is a strong fallback for any ISIN (ADRs etc.)
+            prio = 1
+        else:
+            prio = 2
+        out.append((prio, symbol))
+    out.sort(key=lambda x: x[0])
+    return [sym for _, sym in out]
 
 
 def fetch_yahoo_chart(symbol: str, target_date: str | None = None) -> dict | None:
