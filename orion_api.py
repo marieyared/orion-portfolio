@@ -19,6 +19,7 @@ PORT = int(os.getenv("PORT") or os.getenv("ORION_API_PORT") or "8787")
 OPENFIGI_URL = "https://api.openfigi.com/v3/mapping"
 YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
 YAHOO_QS_URL = "https://query1.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
+FRANKFURTER_URL = "https://api.frankfurter.dev/v1"
 
 ISIN_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")
 
@@ -48,7 +49,9 @@ ISIN_COUNTRY_PREF = {
 ISIN_CACHE: dict[str, dict] = {}
 QUOTE_CACHE: dict[str, tuple[float, dict]] = {}  # (timestamp, payload)
 PROFILE_CACHE: dict[str, dict] = {}
-LIVE_TTL_SECONDS = 60  # current-price freshness
+FX_CACHE: dict[str, tuple[float, dict]] = {}  # (timestamp, payload)
+LIVE_TTL_SECONDS = 60   # current-price freshness
+FX_TTL_SECONDS = 3600   # ECB rates publish once per business day
 
 YAHOO_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
@@ -346,6 +349,43 @@ def build_quote_payload(isin: str, target_date: str | None) -> dict:
             "name": instrument.get("name", ""), "isin": isin}
 
 
+# ── FX rates ───────────────────────────────────────────────────────────────
+
+CCY_RE = re.compile(r"^[A-Z]{3}$")
+
+
+def fetch_fx_rate(from_ccy: str, to_ccy: str, target_date: str | None) -> dict:
+    """ECB reference rates via Frankfurter. Cached so a busy dashboard doesn't
+    hammer the upstream — and so a transient Frankfurter outage doesn't blank
+    out every user's portfolio at once."""
+    from_ccy = (from_ccy or "").upper()
+    to_ccy = (to_ccy or "").upper()
+    if not CCY_RE.match(from_ccy) or not CCY_RE.match(to_ccy):
+        return {"ok": False, "status": 400, "error": "Currency must be a 3-letter ISO code."}
+    if from_ccy == to_ccy:
+        return {"ok": True, "rate": 1.0, "date": target_date or "today"}
+    cache_key = f"{from_ccy}-{to_ccy}-{target_date or 'live'}"
+    cached = FX_CACHE.get(cache_key)
+    if cached:
+        ts, payload = cached
+        # Historical rates are immutable — cache forever. Live rates expire.
+        if target_date or time.time() - ts < FX_TTL_SECONDS:
+            return payload
+    url = f"{FRANKFURTER_URL}/{target_date or 'latest'}?from={from_ccy}&to={to_ccy}"
+    try:
+        r = requests.get(url, timeout=8)
+        r.raise_for_status()
+        data = r.json()
+    except requests.RequestException as exc:
+        return {"ok": False, "status": 502, "error": f"FX upstream failed: {exc}"}
+    rate = (data.get("rates") or {}).get(to_ccy)
+    if not isinstance(rate, (int, float)):
+        return {"ok": False, "status": 502, "error": f"No rate for {to_ccy} in upstream response."}
+    payload = {"ok": True, "rate": float(rate), "date": data.get("date") or (target_date or "")}
+    FX_CACHE[cache_key] = (time.time(), payload)
+    return payload
+
+
 # ── HTTP layer ─────────────────────────────────────────────────────────────
 
 class OrionAPIHandler(BaseHTTPRequestHandler):
@@ -392,6 +432,17 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                 self._send_json(404, {"ok": False, "error": "ISIN not found."})
                 return
             self._send_json(200, {"ok": True, "instrument": instrument})
+            return
+
+        if path.startswith("/api/fx/"):
+            parts = path.split("/")
+            if len(parts) != 5 or not parts[3] or not parts[4]:
+                self._send_json(400, {"ok": False, "error": "Use /api/fx/{from}/{to}"})
+                return
+            target_date = (query.get("date") or [None])[0]
+            payload = fetch_fx_rate(parts[3], parts[4], target_date)
+            self._send_json(payload.get("status", 200) if payload.get("ok") else payload.get("status", 502),
+                            {k: v for k, v in payload.items() if k != "status"})
             return
 
         if path.startswith("/api/quote/"):

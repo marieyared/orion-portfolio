@@ -936,7 +936,7 @@ const COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4
 ════════════════════════════════════════════════════════════════════ */
 const state = {
   isinRows:[],cashRows:[],bondRows:[],reRows:[],cryptoRows:[],commRows:[],debtRows:[],
-  holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},infoMap:{},geoAgg:{},sectorAgg:{},
+  holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},fxFailures:new Set(),infoMap:{},geoAgg:{},sectorAgg:{},
   simGame:null,activeScreen:'command',
   healthScore:0,healthSubs:{},
   briefingText:'',intelBriefingText:'',
@@ -982,7 +982,8 @@ if (!ORION_CONFIG.isLocal && ORION_API) {
   fetch(ORION_API + "/api/quote/US0378331005", { method: "GET", cache: "no-store" })
     .catch(() => { /* expected to time out during cold start; ignore */ });
 }
-const FX_API    = "https://api.frankfurter.app";
+// FX is proxied through our backend so we (a) survive upstream domain/CORS
+// changes without redeploying the frontend, and (b) cache rates server-side.
 
 // Pull a live (or historical) Yahoo quote for an ISIN through the local proxy.
 async function fetchQuote(isin, date) {
@@ -1041,22 +1042,24 @@ async function fetchMetalPrices() {
   } catch(e) { return {}; }
 }
 
-// ECB FX rate via Frankfurter. `date` optional (YYYY-MM-DD).
+// ECB FX rate, proxied through ORION_API. `date` optional (YYYY-MM-DD).
+// On failure we record the source currency in state.fxFailures so the UI can
+// flag affected rows instead of silently showing local-currency-as-dollars.
 async function fetchFX(from, to, date) {
   from = (from||"USD").toUpperCase(); to = (to||"USD").toUpperCase();
   if (from === to) return 1;
   const key = `${from}-${to}-${date||'latest'}`;
   if (state.fxCache[key] != null) return state.fxCache[key];
   try {
-    const url = `${FX_API}/${date||"latest"}?from=${from}&to=${to}`;
-    const r = await fetch(url, {signal: AbortSignal.timeout(7000)});
-    if (!r.ok) return null;
+    const url = `${ORION_API}/api/fx/${encodeURIComponent(from)}/${encodeURIComponent(to)}${date?`?date=${encodeURIComponent(date)}`:""}`;
+    const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    if (!r.ok) { state.fxFailures.add(from); return null; }
     const data = await r.json();
-    const rate = data && data.rates && data.rates[to];
-    if (typeof rate === "number") { state.fxCache[key] = rate; return rate; }
-    // Frankfurter falls back to nearest available date; cache that too.
-    return null;
-  } catch(e) { return null; }
+    if (!data.ok || typeof data.rate !== "number") { state.fxFailures.add(from); return null; }
+    state.fxCache[key] = data.rate;
+    state.fxFailures.delete(from);
+    return data.rate;
+  } catch(e) { state.fxFailures.add(from); return null; }
 }
 
 async function toUSD(amount, fromCcy, date) {
@@ -1426,7 +1429,16 @@ async function rowComputedPreview(row) {
   const localValue = qty * quote.price;
   if (!qty) return `<span class="mono">${quote.currency} ${fmt2(quote.price)}</span> per share`;
   const usd = await toUSD(localValue, quote.currency);
-  return `→ ${qty} × ${quote.currency} ${fmt2(quote.price)} = <b style="color:#15803d">$${fmt2(usd)}</b> today`;
+  // Normalize the same way toUSD does, then check if THAT currency failed.
+  // GBp/GBX → GBP because pence-to-pounds is just scaling, the real FX leg
+  // is GBP→USD and that's what gets recorded as a failure.
+  const raw = (quote.currency||"USD");
+  let checkCcy = (raw === "GBp" || raw.toUpperCase() === "GBX") ? "GBP" : raw.toUpperCase();
+  if (checkCcy !== "USD" && state.fxFailures.has(checkCcy)) {
+    // `usd` is the nominal local amount in pounds/euros/etc when FX fails.
+    return `→ ${qty} × ${raw} ${fmt2(quote.price)} = <b style="color:#b45309">${checkCcy} ${fmt2(usd)}</b> <span style="color:#b45309;font-size:11px">⚠ FX rate unavailable</span>`;
+  }
+  return `→ ${qty} × ${raw} ${fmt2(quote.price)} = <b style="color:#15803d">$${fmt2(usd)}</b> today`;
 }
 
 // Re-render only the detection badge + preview for one row (no full table re-render → keeps focus).
