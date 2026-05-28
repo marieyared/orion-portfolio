@@ -1498,6 +1498,36 @@ function normalizeFXCurrency(ccy) {
   return raw.toUpperCase();
 }
 
+// Yahoo uses two different sector vocabularies — snake_case for ETF
+// sector_weights ("consumer_cyclical", "basic_materials"), and display
+// labels for stock info.sector ("Consumer Cyclical", "Basic Materials").
+// Both end up in state.sectorAgg, so without canonicalising them you get
+// "Consumer Cyclical 8% / Consumer Discretionary 12%" — same sector, two
+// rows. This helper maps either form to one canonical display label.
+function normalizeSectorLabel(raw) {
+  if (!raw) return "—";
+  const key = String(raw).toLowerCase().replace(/\s+/g, "_").replace(/-/g, "_");
+  const map = {
+    realestate: "Real Estate", real_estate: "Real Estate",
+    consumer_cyclical: "Consumer Discretionary",
+    consumer_discretionary: "Consumer Discretionary",
+    consumer_defensive: "Consumer Staples",
+    consumer_staples: "Consumer Staples",
+    basic_materials: "Materials",
+    materials: "Materials",
+    technology: "Technology",
+    communication_services: "Communication",
+    communication: "Communication",
+    financial_services: "Financials",
+    financials: "Financials",
+    utilities: "Utilities",
+    industrials: "Industrials",
+    energy: "Energy",
+    healthcare: "Healthcare", health_care: "Healthcare",
+  };
+  return map[key] || raw;
+}
+
 // Render AI-generated text safely. The model is untrusted input — a
 // prompt-injected response could include <script> or other HTML, so every
 // AI text path goes through here instead of straight to innerHTML.
@@ -1707,7 +1737,7 @@ async function getHoldingInfo(isin, assetType) {
         // Yahoo returns [{realestate: {raw: 0.03}}, ...]
         Object.entries(obj).forEach(([k,v])=>{
           const w = (v && typeof v === "object" ? v.raw : v) || 0;
-          const label = ({realestate:"Real Estate",consumer_cyclical:"Consumer Discretionary",basic_materials:"Materials",consumer_defensive:"Consumer Staples",technology:"Technology",communication_services:"Communication",financial_services:"Financials",utilities:"Utilities",industrials:"Industrials",energy:"Energy",healthcare:"Healthcare"})[k] || k;
+          const label = normalizeSectorLabel(k);
           sectors[label] = (sectors[label]||0) + w*100;
         });
       });
@@ -1719,7 +1749,8 @@ async function getHoldingInfo(isin, assetType) {
   // Individual equities: Yahoo sector + country
   const country = (quote && quote.country) || "";
   const code = YH_COUNTRY_TO_CODE[country] || countryFromISIN(isin);
-  const sector = (quote && quote.sector) || "—";
+  const rawSector = (quote && quote.sector) || "";
+  const sector = rawSector ? normalizeSectorLabel(rawSector) : "—";
   return {name, geo:{[code]:100}, sectors:{[sector]:100}};
 }
 

@@ -302,7 +302,14 @@ def fetch_yahoo_profile(symbol: str) -> dict | None:
             "fund_category": info.get("category") or "",
             "sector_weights": sector_weights,
         }
-        PROFILE_CACHE[symbol] = profile
+        # Only cache when we actually got something back from Yahoo. If the
+        # info call was rate-limited or otherwise empty (sector + quote_type +
+        # long_name + sector_weights all blank), don't poison the cache — let
+        # the next request retry. Otherwise the dashboard ends up with an
+        # "—" bucket holding every stock that hit a rate-limit on first fetch.
+        useful = bool(sector or quote_type or long_name or sector_weights)
+        if useful:
+            PROFILE_CACHE[symbol] = profile
         return profile
     except Exception:
         return None
