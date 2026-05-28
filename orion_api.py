@@ -415,6 +415,39 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                                   "yfinance": getattr(yf, "__version__", "unknown")})
             return
 
+        # One-off diagnostic: why is funds_data.sector_weightings empty on Render?
+        if path.startswith("/api/yf-debug/"):
+            symbol = path.rsplit("/", 1)[-1]
+            out = {"symbol": symbol}
+            try:
+                t = yf.Ticker(symbol)
+                out["has_funds_data_attr"] = hasattr(t, "funds_data")
+                try:
+                    fd = t.funds_data
+                    out["funds_data_type"] = type(fd).__name__
+                except Exception as e:
+                    out["funds_data_error"] = f"{type(e).__name__}: {e}"
+                    fd = None
+                if fd is not None:
+                    try:
+                        sw = fd.sector_weightings
+                        out["sector_weightings_type"] = type(sw).__name__
+                        out["sector_weightings_repr"] = repr(sw)[:500]
+                    except Exception as e:
+                        out["sector_weightings_error"] = f"{type(e).__name__}: {e}"
+                # Also probe ticker.info
+                try:
+                    info = t.info or {}
+                    out["info_quoteType"] = info.get("quoteType")
+                    out["info_category"] = info.get("category")
+                    out["info_has_sectorWeightings_key"] = "sectorWeightings" in info
+                except Exception as e:
+                    out["info_error"] = f"{type(e).__name__}: {e}"
+            except Exception as e:
+                out["top_error"] = f"{type(e).__name__}: {e}"
+            self._send_json(200, out)
+            return
+
         if path.startswith("/api/isin/"):
             isin = normalize_isin(path.rsplit("/", 1)[-1])
             if not is_valid_isin(isin):
