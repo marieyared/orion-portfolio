@@ -411,7 +411,8 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         query = parse_qs(parsed.query)
 
         if path == "/health":
-            self._send_json(200, {"ok": True, "service": "orion-api", "version": "2.0"})
+            self._send_json(200, {"ok": True, "service": "orion-api", "version": "2.0",
+                                  "yfinance": getattr(yf, "__version__", "unknown")})
             return
 
         if path.startswith("/api/isin/"):
