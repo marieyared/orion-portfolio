@@ -498,26 +498,41 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/fmp-probe":
-            # One-off diagnostic for why FMP fallback isn't populating sectors.
+            # FMP retired the /v3/profile/{symbol} endpoint on 2025-08-31.
+            # Probe the post-migration endpoints to find which one works for
+            # this account's tier.
             out = {"fmp_key_set": bool(FMP_API_KEY)}
             if FMP_API_KEY:
-                try:
-                    r = requests.get(f"{FMP_PROFILE_URL}/AAPL",
-                                     params={"apikey": FMP_API_KEY}, timeout=8)
-                    out["http_status"] = r.status_code
+                candidates = [
+                    ("stable_profile_query",  "https://financialmodelingprep.com/stable/profile",        {"symbol": "AAPL", "apikey": FMP_API_KEY}),
+                    ("stable_profile_path",   "https://financialmodelingprep.com/stable/profile/AAPL",   {"apikey": FMP_API_KEY}),
+                    ("v4_company_profile",    "https://financialmodelingprep.com/api/v4/company-profile","{symbol_in_query}"),
+                    ("v3_company_profile",    "https://financialmodelingprep.com/api/v3/company-profile/AAPL", {"apikey": FMP_API_KEY}),
+                    ("legacy_v3_profile",     "https://financialmodelingprep.com/api/v3/profile/AAPL",   {"apikey": FMP_API_KEY}),
+                ]
+                results = []
+                for label, url, params in candidates:
+                    if params == "{symbol_in_query}":
+                        params = {"symbol": "AAPL", "apikey": FMP_API_KEY}
+                    item = {"label": label, "url": url}
                     try:
-                        data = r.json()
-                        out["response_type"] = type(data).__name__
-                        if isinstance(data, list) and data:
-                            out["sample_sector"] = (data[0] or {}).get("sector", "")
-                        elif isinstance(data, dict):
-                            out["response_keys"] = list(data.keys())[:5]
-                            out["error_message"] = data.get("Error Message") or data.get("message")
+                        r = requests.get(url, params=params, timeout=6)
+                        item["status"] = r.status_code
+                        body = r.text[:300]
+                        item["body_preview"] = body
+                        try:
+                            data = r.json()
+                            if isinstance(data, list) and data:
+                                item["sample_sector"] = (data[0] or {}).get("sector", "")
+                                item["sample_keys"] = list((data[0] or {}).keys())[:8]
+                            elif isinstance(data, dict):
+                                item["dict_keys"] = list(data.keys())[:5]
+                        except Exception:
+                            pass
                     except Exception as e:
-                        out["json_parse_error"] = f"{type(e).__name__}: {e}"
-                        out["body_preview"] = r.text[:200]
-                except Exception as e:
-                    out["request_error"] = f"{type(e).__name__}: {e}"
+                        item["error"] = f"{type(e).__name__}: {e}"
+                    results.append(item)
+                out["candidates"] = results
             self._send_json(200, out)
             return
 
