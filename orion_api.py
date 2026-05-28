@@ -50,8 +50,15 @@ ISIN_CACHE: dict[str, dict] = {}
 QUOTE_CACHE: dict[str, tuple[float, dict]] = {}  # (timestamp, payload)
 PROFILE_CACHE: dict[str, dict] = {}
 FX_CACHE: dict[str, tuple[float, dict]] = {}  # (timestamp, payload)
-LIVE_TTL_SECONDS = 60   # current-price freshness
-FX_TTL_SECONDS = 3600   # ECB rates publish once per business day
+# ETF sector weights are cached *separately* from the price quote: Yahoo's
+# funds_data endpoint rate-limits Render's shared IPs aggressively, so we
+# can't afford to discard a successful fetch every 60s. Sector mixes also
+# drift on a timescale of weeks, not minutes — a day is fine. Empty / failed
+# fetches do NOT poison this cache: only positive results land here.
+ETF_SECTOR_CACHE: dict[str, tuple[float, list]] = {}  # symbol -> (ts, weights)
+LIVE_TTL_SECONDS = 60       # current-price freshness
+FX_TTL_SECONDS = 3600       # ECB rates publish once per business day
+ETF_SECTOR_TTL = 24 * 3600  # ETF sector weights: cache full day
 
 YAHOO_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
@@ -264,7 +271,11 @@ def fetch_yahoo_profile(symbol: str) -> dict | None:
         industry = info.get("industry") or ""
         country = info.get("country") or ""
         long_name = info.get("longName") or info.get("shortName") or ""
-        # ETF look-through if available
+        # ETF look-through if available. The Yahoo funds_data endpoint gets
+        # rate-limited from Render's IPs much more often than the chart
+        # endpoint, so we keep a 24h cache of *successful* fetches per
+        # symbol and fall back to it whenever the live call fails or is
+        # blocked. Empty/error results do NOT overwrite a good cache.
         sector_weights = []
         try:
             funds_data = getattr(ticker, "funds_data", None)
@@ -273,6 +284,12 @@ def fetch_yahoo_profile(symbol: str) -> dict | None:
                 sector_weights = _coerce_sector_weights(sw)
         except Exception:
             pass
+        if sector_weights:
+            ETF_SECTOR_CACHE[symbol] = (time.time(), sector_weights)
+        else:
+            cached = ETF_SECTOR_CACHE.get(symbol)
+            if cached and time.time() - cached[0] < ETF_SECTOR_TTL:
+                sector_weights = cached[1]
         profile = {
             "symbol": symbol,
             "long_name": long_name,
@@ -304,6 +321,15 @@ def build_quote_payload(isin: str, target_date: str | None) -> dict:
     if not target_date and cache_key in QUOTE_CACHE:
         ts, payload = QUOTE_CACHE[cache_key]
         if time.time() - ts < LIVE_TTL_SECONDS:
+            # The price-cache entry may have been written during a rate-limit
+            # window when sector_weights came back empty. If we now have a
+            # better cached sector list for this symbol, overlay it before
+            # returning so the dashboard isn't stuck on stale empties.
+            sym = payload.get("symbol")
+            if sym and not payload.get("sector_weights"):
+                cached_sw = ETF_SECTOR_CACHE.get(sym)
+                if cached_sw and time.time() - cached_sw[0] < ETF_SECTOR_TTL:
+                    payload = {**payload, "sector_weights": cached_sw[1]}
             return payload
     last_err = "Yahoo did not return a price."
     for symbol in candidates:
@@ -413,39 +439,6 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
         if path == "/health":
             self._send_json(200, {"ok": True, "service": "orion-api", "version": "2.0",
                                   "yfinance": getattr(yf, "__version__", "unknown")})
-            return
-
-        # One-off diagnostic: why is funds_data.sector_weightings empty on Render?
-        if path.startswith("/api/yf-debug/"):
-            symbol = path.rsplit("/", 1)[-1]
-            out = {"symbol": symbol}
-            try:
-                t = yf.Ticker(symbol)
-                out["has_funds_data_attr"] = hasattr(t, "funds_data")
-                try:
-                    fd = t.funds_data
-                    out["funds_data_type"] = type(fd).__name__
-                except Exception as e:
-                    out["funds_data_error"] = f"{type(e).__name__}: {e}"
-                    fd = None
-                if fd is not None:
-                    try:
-                        sw = fd.sector_weightings
-                        out["sector_weightings_type"] = type(sw).__name__
-                        out["sector_weightings_repr"] = repr(sw)[:500]
-                    except Exception as e:
-                        out["sector_weightings_error"] = f"{type(e).__name__}: {e}"
-                # Also probe ticker.info
-                try:
-                    info = t.info or {}
-                    out["info_quoteType"] = info.get("quoteType")
-                    out["info_category"] = info.get("category")
-                    out["info_has_sectorWeightings_key"] = "sectorWeightings" in info
-                except Exception as e:
-                    out["info_error"] = f"{type(e).__name__}: {e}"
-            except Exception as e:
-                out["top_error"] = f"{type(e).__name__}: {e}"
-            self._send_json(200, out)
             return
 
         if path.startswith("/api/isin/"):
