@@ -169,6 +169,9 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .map-block.clickable:hover{filter:brightness(1.08);z-index:2}
 .map-block-label{font-size:12px;font-weight:600;line-height:1.2;letter-spacing:-.01em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.18)}
 .map-block-meta{font-size:11px;opacity:.88;margin-top:2px;color:#fff;font-family:'DM Mono',monospace;text-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-block.small{padding:4px 6px}
+.map-block.small .map-block-label{font-size:10px;font-weight:500}
+.map-block.small .map-block-meta{display:none}
 .map-block.tiny .map-block-label,.map-block.tiny .map-block-meta{display:none}
 .map-block-group-label{position:absolute;top:6px;left:8px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;opacity:.95;text-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
 .map-drill-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
@@ -295,6 +298,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Map</div>
     <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Analytics</div>
     <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
+    <div class="nav-link" onclick="switchScreen('rebalance')" data-screen="rebalance">Rebalance</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
     <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Intelligence</div>
     <div class="nav-link" onclick="switchScreen('holdings')" data-screen="holdings">Holdings</div>
@@ -451,6 +455,17 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <div style="font-size:12px;color:var(--hint)" id="cmd-timestamp"></div>
     </div>
     <div id="warnings-area"></div>
+  </div>
+
+  <!-- Risk-profile onboarding nudge: visible only when state.riskProfile is null. -->
+  <div id="rq-banner" class="card" style="display:none;background:linear-gradient(135deg,#f7fbff 0%,#fff 100%);border:1px solid var(--blue);margin-bottom:1.25rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px">One step left — set your investor profile</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">A 4-question survey calibrates the Risk and Rebalance screens to your horizon, goal, and drawdown tolerance. Takes 30 seconds.</div>
+      </div>
+      <button class="btn btn-dark btn-sm" onclick="openRiskQuestionnaire()">Take the questionnaire →</button>
+    </div>
   </div>
 
   <!-- KPI strip -->
@@ -754,6 +769,51 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <!-- ══════════════════════════════════════════════════════════════════
      SCREEN: RISK PROFILE
 ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-rebalance" class="screen">
+<div class="wrap">
+  <div class="page-title">Rebalance</div>
+  <div class="page-sub">Compare your current asset-class mix against your profile target. Class level only.</div>
+
+  <!-- Shown when state.riskProfile is null. -->
+  <div id="rebal-empty" class="card" style="display:none;text-align:center;padding:2rem 1.5rem">
+    <div style="font-size:14px;font-weight:500;margin-bottom:6px">Complete your investor profile first</div>
+    <div style="font-size:12px;color:var(--muted);max-width:420px;margin:0 auto 1rem">Rebalance targets come from your questionnaire answers — horizon, goal, drawdown tolerance, share of savings. Until you complete it there's no target to compare against.</div>
+    <button class="btn btn-dark btn-sm" onclick="openRiskQuestionnaire()">Take the questionnaire →</button>
+  </div>
+
+  <!-- Shown when profile is set. -->
+  <div id="rebal-body" style="display:none">
+    <div style="font-size:11px;color:var(--hint);margin-bottom:.6rem;line-height:1.5">
+      Targets are derived from your questionnaire answers only and do not constitute financial advice.
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-label">Asset-class rebalance</div>
+          <div id="rebal-meta" style="font-size:12px;color:var(--muted);margin-top:3px"></div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="openRiskQuestionnaire()">Retake questionnaire →</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse" id="rebal-table">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Asset class</th>
+              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Current %</th>
+              <th style="text-align:right;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Target %</th>
+              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Gap</th>
+              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Action</th>
+              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="rebal-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 <div id="screen-riskprofile" class="screen">
 <div class="wrap">
   <div class="page-title">Risk Profile</div>
@@ -946,12 +1006,23 @@ const state = {
 /* ── Local persistence (only user inputs; caches/AI text stay ephemeral) ── */
 const STORAGE_KEY = "orion.portfolio.v1";
 const PERSISTED_FIELDS = ["isinRows","cashRows","bondRows","reRows","cryptoRows","commRows","debtRows","riskProfile"];
+let _lastSavedJson = "";
+let _saveTimer = null;
 function savePortfolio(){
   try {
     const snapshot = {};
     for (const k of PERSISTED_FIELDS) snapshot[k] = state[k];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    const json = JSON.stringify(snapshot);
+    if (json === _lastSavedJson) return;   // no-op when nothing changed
+    localStorage.setItem(STORAGE_KEY, json);
+    _lastSavedJson = json;
   } catch(e) { /* quota or private mode — ignore */ }
+}
+// Coalesced save: schedule one save 500ms after the last mutation. Cheaper
+// than polling and avoids stale writes when the user is mid-edit.
+function markDirty() {
+  if (_saveTimer) return;
+  _saveTimer = setTimeout(() => { _saveTimer = null; savePortfolio(); }, 500);
 }
 function loadPortfolio(){
   try {
@@ -962,12 +1033,13 @@ function loadPortfolio(){
     for (const k of PERSISTED_FIELDS) {
       if (data[k] !== undefined) { state[k] = data[k]; touched = true; }
     }
+    _lastSavedJson = raw;  // skip the next save if nothing changes
     return touched;
   } catch(e) { return false; }
 }
-// Save every 2s while editing (cheap; payload is just a few hundred numbers),
-// plus on tab hide and on close — covers crashes, refreshes, and navigation.
-setInterval(savePortfolio, 2000);
+// Safety net for stray mutations (e.g. inline oninput handlers that bypass
+// markDirty). Runs once every 10s and is a no-op when state is unchanged.
+setInterval(savePortfolio, 10000);
 window.addEventListener("beforeunload", savePortfolio);
 window.addEventListener("visibilitychange", () => { if (document.hidden) savePortfolio(); });
 
@@ -1002,6 +1074,7 @@ async function fetchQuote(isin, date) {
     if (!data.ok) { state._lastQuoteError = data.error || "Quote unavailable"; return null; }
     cache[key] = data;
     state._lastQuoteError = null;
+    pruneCaches();
     return data;
   } catch(e) {
     state._lastQuoteError = ORION_CONFIG.isLocal
@@ -1058,21 +1131,18 @@ async function fetchFX(from, to, date) {
     if (!data.ok || typeof data.rate !== "number") { state.fxFailures.add(from); return null; }
     state.fxCache[key] = data.rate;
     state.fxFailures.delete(from);
+    pruneCaches();
     return data.rate;
   } catch(e) { state.fxFailures.add(from); return null; }
 }
 
 async function toUSD(amount, fromCcy, date) {
   if (!amount) return 0;
-  let ccy = (fromCcy||"USD").trim();
-  // LSE and a few other UK venues quote in pence (GBp / GBX), not pounds.
-  // Frankfurter only knows GBP, so convert pence → pounds first.
-  if (ccy === "GBp" || ccy.toUpperCase() === "GBX") {
-    amount = amount / 100;
-    ccy = "GBP";
-  } else {
-    ccy = ccy.toUpperCase();
-  }
+  const raw = (fromCcy||"USD").trim();
+  // Pence → pounds before FX. normalizeFXCurrency handles the code mapping;
+  // the amount scaling is specific to this call site so it stays here.
+  if (raw === "GBp" || raw.toUpperCase() === "GBX") amount = amount / 100;
+  const ccy = normalizeFXCurrency(raw);
   if (ccy === "USD") return amount;
   const r = await fetchFX(ccy, "USD", date);
   return r ? amount * r : amount;  // if FX fails, fall back to nominal (better than dropping the value)
@@ -1110,7 +1180,7 @@ function buildPortfolioSummary() {
   const items = assets.map(h=>{
     const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
     const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||h.type||"Unknown";
-    const type = h.asset_type==="bond"?"Bond":h.asset_type==="cash"?"Cash":h.type==="real_estate"?"Real Estate":h.type==="crypto"?"Crypto":h.type==="commodity"?"Commodity":(h.isin&&isETF(h.isin))?"ETF":"Equity";
+    const type = holdingClass(h);
     return `${name} (${type}): $${fmt(h.current||0)}, ${total>0?((h.current||0)/total*100).toFixed(1):0}% of portfolio`;
   });
   return {total,paid,pnl:total-paid,netWorth:total-totalDebt,totalDebt,items,classes:computeAssetClasses()};
@@ -1126,7 +1196,7 @@ function paintCachedBriefing() {
     if (state.briefingText) {
       el.className = "briefing-text";
       el.removeAttribute("style");
-      el.innerHTML = state.briefingText;
+      el.innerHTML = aiTextToHtml(state.briefingText);
     } else {
       el.className = "briefing-text";
       el.setAttribute("style","color:var(--muted);font-style:italic");
@@ -1139,26 +1209,20 @@ async function generateBriefing() {
   const el = document.getElementById("briefing-content");
   if (!el) return;
   el.className = "briefing-loading";
-  el.innerHTML = '<div class="ai-dot"></div><span>Generating your briefing…</span>';
   const s = buildPortfolioSummary();
-  const today = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const prompt = `You are a senior portfolio manager writing a morning briefing memo. Today is ${today}.
-
-Portfolio summary:
-- Total value: $${fmt(s.total)}
-- Net worth (after debts): $${fmt(s.netWorth)}
-- P&L since purchase: ${s.pnl>=0?'+':''}$${fmt(s.pnl)} (${s.pnl>=0?'+':''}${s.paid>0?(s.pnl/s.paid*100).toFixed(1):0}%)
-- Asset classes: ${Object.entries(s.classes).filter(([,v])=>v>0).map(([k,v])=>`${k} ${(v/s.total*100).toFixed(0)}%`).join(', ')}
-
-Holdings:
-${s.items.join('\n')}
-
-Write a 3-sentence CIO-style morning briefing. Be specific by naming actual holdings and dollar amounts. Identify the biggest active bet, the key risk, and one concrete observation. Plain text, no bullet points, no markdown.`;
-
-  const text = await callAI(prompt, 400);
+  const stop = progressiveStatus(
+    (html) => { el.innerHTML = html; },
+    [
+      { at: 0,     html: _aiDotStatus("Generating your briefing…") },
+      { at: 6000,  html: _aiDotStatus("Analyzing your holdings…") },
+      { at: 12000, html: _aiDotStatus("Composing the memo…") },
+    ]
+  );
+  const text = await callAI(PROMPTS.morningBriefing(s), 400);
+  stop();
   state.briefingText = text || "Unable to generate briefing. Check your API connection.";
   el.className = "briefing-text";
-  el.innerHTML = state.briefingText;
+  el.innerHTML = aiTextToHtml(state.briefingText);
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -1197,28 +1261,75 @@ async function callAIWithSearch(prompt, maxTokens = 1200) {
   }
 }
 
-// Build the grounded macro/repositioning prompt from REAL computed numbers.
-function buildHouseViewPrompt() {
-  const s = buildPortfolioSummary();              // real totals + classes
-  const total = s.total || 1;
+/* ════════════════════════════════════════════════════════════════════
+   AI PROMPTS — every prompt sent to the model lives here so you can
+   iterate on wording without hunting through 3,000 lines, and so the
+   exact data we ship to the model is auditable from one place.
+════════════════════════════════════════════════════════════════════ */
+const PROMPTS = {
+  // Shared helpers used by multiple prompts.
+  _today() {
+    return new Date().toLocaleDateString("en-US",
+      { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  },
+  _assetMix(s) {
+    return Object.entries(s.classes)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => `${k} ${(v / s.total * 100).toFixed(0)}%`)
+      .join(", ");
+  },
 
-  const assetClasses = Object.entries(s.classes)
-    .filter(([, v]) => v > 0)
-    .map(([k, v]) => `${k}: ${(v / total * 100).toFixed(1)}%`)
-    .join(", ");
+  morningBriefing(s) {
+    return `You are a senior portfolio manager writing a morning briefing memo. Today is ${PROMPTS._today()}.
 
-  // Real look-through geo + sector (your computed aggregates).
-  const geo = Object.entries(state.geoAgg || {})
-    .sort((a, b) => b[1] - a[1]).slice(0, 8)
-    .map(([k, v]) => `${k}: ${v.toFixed(1)}%`).join(", ") || "n/a";
-  const sectors = Object.entries(state.sectorAgg || {})
-    .sort((a, b) => b[1] - a[1]).slice(0, 8)
-    .map(([k, v]) => `${k}: ${v.toFixed(1)}%`).join(", ") || "n/a";
+Portfolio summary:
+- Total value: $${fmt(s.total)}
+- Net worth (after debts): $${fmt(s.netWorth)}
+- P&L since purchase: ${s.pnl>=0?'+':''}$${fmt(s.pnl)} (${s.pnl>=0?'+':''}${s.paid>0?(s.pnl/s.paid*100).toFixed(1):0}%)
+- Asset classes: ${PROMPTS._assetMix(s)}
 
-  const today = new Date().toLocaleDateString("en-US",
-    { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+Holdings:
+${s.items.join('\n')}
 
-  return `You are writing a personalized institutional-style portfolio briefing (a "house view"), in the structured manner of a private asset manager's client memo. Today is ${today}.
+Write a 3-sentence CIO-style morning briefing. Be specific by naming actual holdings and dollar amounts. Identify the biggest active bet, the key risk, and one concrete observation. Plain text, no bullet points, no markdown.`;
+  },
+
+  intelBriefing(s) {
+    return `You are a senior portfolio manager writing a detailed morning briefing. Today is ${PROMPTS._today()}.
+
+Portfolio: $${fmt(s.total)} total, $${fmt(s.netWorth)} net worth.
+Holdings: ${s.items.join('; ')}
+Asset mix: ${PROMPTS._assetMix(s)}
+
+Write 4-5 sentences of CIO-style portfolio commentary. Cover: (1) biggest active bet and whether it's paying off, (2) key macro risk to this portfolio right now, (3) one defensive observation, (4) one opportunity. Name specific holdings and dollar amounts. Professional tone, plain text, no markdown.`;
+  },
+
+  copilot(s, q) {
+    return `You are Orion, an intelligent portfolio advisor. Answer this question about the user's portfolio concisely and specifically.
+
+Portfolio: $${fmt(s.total)} total value.
+Holdings: ${s.items.join('; ')}
+Asset mix: ${PROMPTS._assetMix(s)}
+
+Question: ${q}
+
+Answer in 2-4 sentences. Be specific, reference actual holdings and numbers where relevant. Plain text, no markdown.`;
+  },
+
+  houseView(s) {
+    const total = s.total || 1;
+    const assetClasses = Object.entries(s.classes)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => `${k}: ${(v / total * 100).toFixed(1)}%`)
+      .join(", ");
+    const geo = Object.entries(state.geoAgg || {})
+      .sort((a, b) => b[1] - a[1]).slice(0, 8)
+      .map(([k, v]) => `${k}: ${v.toFixed(1)}%`).join(", ") || "n/a";
+    const sectors = Object.entries(state.sectorAgg || {})
+      .sort((a, b) => b[1] - a[1]).slice(0, 8)
+      .map(([k, v]) => `${k}: ${v.toFixed(1)}%`).join(", ") || "n/a";
+
+    return `You are writing a personalized institutional-style portfolio briefing (a "house view"), in the structured manner of a private asset manager's client memo. Today is ${PROMPTS._today()}.
 
 GROUND TRUTH — these are the user's ACTUAL holdings. Reason ONLY from these numbers. Do NOT invent holdings, prices, or percentages not listed here.
 - Total portfolio value: $${fmt(s.total)}
@@ -1239,16 +1350,34 @@ TASK:
 3. End with one honest line on the biggest thing you DON'T know about their situation.
 
 Cite macro claims to the sources you find. Keep the whole thing tight and readable — this should feel like a sharp private-bank memo, not a generic market update.`;
-}
+  },
+
+  macroTilts(profile) {
+    return `You are a tactical allocation strategist. Use web search for THIS WEEK's macro backdrop (rates, inflation, major geopolitical/market events).
+
+The user has a ${profile} strategic baseline. Propose SMALL tactical tilts (in percentage points, each between -${MAX_TILT} and +${MAX_TILT}) off that baseline, by asset class, by geography region (US/Europe/Asia-EM/Other), and by sector. Tilts must net to roughly zero within each dimension.
+
+Respond ONLY with valid JSON, no prose, no markdown:
+{"class":{"Equity":-3,"Bonds":3},"geo":{"US":-2,"Europe":2},"sector":{"Technology":-4,"Energy":4},"reasoning":"one short paragraph citing what in the news drives these tilts"}`;
+  },
+};
 
 async function generateHouseView() {
   const el = document.getElementById("houseview-content");
   if (!el) return;
   el.className = "briefing-loading";
   el.removeAttribute("style");
-  el.innerHTML = '<div class="ai-dot"></div><span>Researching markets &amp; building your house view…</span>';
-
-  const text = await callAIWithSearch(buildHouseViewPrompt(), 1500);
+  const stop = progressiveStatus(
+    (html) => { el.innerHTML = html; },
+    [
+      { at: 0,     html: _aiDotStatus("Researching markets & building your house view…") },
+      { at: 6000,  html: _aiDotStatus("Searching for this week's macro context…") },
+      { at: 15000, html: _aiDotStatus("Cross-referencing with your exposures…") },
+      { at: 25000, html: _aiDotStatus("Drafting the briefing…") },
+    ]
+  );
+  const text = await callAIWithSearch(PROMPTS.houseView(buildPortfolioSummary()), 1500);
+  stop();
 
   const disclaimer = `<div style="margin-top:1rem;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-size:11px;color:var(--hint);line-height:1.6">
     <strong>Not investment advice.</strong> This briefing is generated by AI for informational and educational purposes, based on heuristic exposure estimates and a limited view of your finances. It is not a personal recommendation. Markets carry risk; AI-generated views may be wrong or out of date. Consult a qualified, licensed financial adviser before acting.
@@ -1256,10 +1385,8 @@ async function generateHouseView() {
 
   if (text) {
     state.houseViewText = text;
-    // Light formatting: turn double newlines into paragraphs.
-    const html = text.split(/\n{2,}/).map(p => `<p style="margin:0 0 .75rem">${escapeHtml(p).replace(/\n/g,"<br>")}</p>`).join("");
     el.className = "briefing-text";
-    el.innerHTML = html + disclaimer;
+    el.innerHTML = aiTextToHtml(text) + disclaimer;
   } else {
     el.className = "briefing-text";
     el.innerHTML = '<span style="color:var(--muted)">Unable to generate the house view. Check the AI proxy connection.</span>';
@@ -1270,27 +1397,26 @@ async function generateIntelBriefing() {
   const el = document.getElementById("intel-briefing-content");
   if (!el) return;
   el.className = "briefing-loading";
-  el.innerHTML = '<div class="ai-dot"></div><span>Generating your briefing…</span>';
   if (state.briefingText) {
     el.className = "briefing-text";
-    el.innerHTML = state.briefingText;
+    el.innerHTML = aiTextToHtml(state.briefingText);
     return;
   }
   const s = buildPortfolioSummary();
-  const today = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const prompt = `You are a senior portfolio manager writing a detailed morning briefing. Today is ${today}.
-
-Portfolio: $${fmt(s.total)} total, $${fmt(s.netWorth)} net worth.
-Holdings: ${s.items.join('; ')}
-Asset mix: ${Object.entries(s.classes).filter(([,v])=>v>0).map(([k,v])=>`${k} ${(v/s.total*100).toFixed(0)}%`).join(', ')}
-
-Write 4-5 sentences of CIO-style portfolio commentary. Cover: (1) biggest active bet and whether it's paying off, (2) key macro risk to this portfolio right now, (3) one defensive observation, (4) one opportunity. Name specific holdings and dollar amounts. Professional tone, plain text, no markdown.`;
-
-  const text = await callAI(prompt, 600);
+  const stop = progressiveStatus(
+    (html) => { el.innerHTML = html; },
+    [
+      { at: 0,     html: _aiDotStatus("Generating your briefing…") },
+      { at: 6000,  html: _aiDotStatus("Analyzing your holdings…") },
+      { at: 12000, html: _aiDotStatus("Composing the memo…") },
+    ]
+  );
+  const text = await callAI(PROMPTS.intelBriefing(s), 600);
+  stop();
   state.briefingText = text || "Unable to generate briefing. Check your API connection.";
   state.intelBriefingText = state.briefingText;
   el.className = "briefing-text";
-  el.innerHTML = state.briefingText;
+  el.innerHTML = aiTextToHtml(state.briefingText);
 }
 
 async function askCopilot() {
@@ -1299,20 +1425,19 @@ async function askCopilot() {
   const q = input.value.trim();
   if (!q) return;
   resp.className = "copilot-resp visible";
-  resp.innerHTML = '<div class="briefing-loading"><div class="ai-dot"></div><span>Thinking…</span></div>';
   const s = buildPortfolioSummary();
-  const prompt = `You are Orion, an intelligent portfolio advisor. Answer this question about the user's portfolio concisely and specifically.
-
-Portfolio: $${fmt(s.total)} total value.
-Holdings: ${s.items.join('; ')}
-Asset mix: ${Object.entries(s.classes).filter(([,v])=>v>0).map(([k,v])=>`${k} ${(v/s.total*100).toFixed(0)}%`).join(', ')}
-
-Question: ${q}
-
-Answer in 2-4 sentences. Be specific, reference actual holdings and numbers where relevant. Plain text, no markdown.`;
-
-  const text = await callAI(prompt, 500);
-  resp.innerHTML = text || "Unable to get a response. Check your API connection.";
+  const stop = progressiveStatus(
+    (html) => { resp.innerHTML = `<div class="briefing-loading">${html}</div>`; },
+    [
+      { at: 0,    html: _aiDotStatus("Thinking…") },
+      { at: 5000, html: _aiDotStatus("Cross-referencing your holdings…") },
+      { at: 10000, html: _aiDotStatus("Composing the answer…") },
+    ]
+  );
+  const text = await callAI(PROMPTS.copilot(s, q), 500);
+  stop();
+  resp.innerHTML = text ? aiTextToHtml(text)
+    : '<span style="color:var(--muted)">Unable to get a response. Check your API connection.</span>';
   input.value = "";
 }
 
@@ -1377,6 +1502,59 @@ function countryFromISIN(isin) {
   return COUNTRY_NAMES[code] ? code : "Other";
 }
 
+// Keep the in-memory caches from growing unbounded in long-lived sessions
+// (pinned tabs, heavy editors). Plain-object caches with insertion-order
+// keys — first-in-first-out is close enough to LRU for these access patterns
+// (recent ISINs are also the ones being edited).
+const _CACHE_LIMITS = {
+  quote: 200, purchaseQuote: 200, isin: 200, fx: 100,
+};
+function _capCache(obj, max) {
+  const ks = Object.keys(obj);
+  if (ks.length <= max) return;
+  const drop = ks.length - max;
+  for (let i = 0; i < drop; i++) delete obj[ks[i]];
+}
+function pruneCaches() {
+  _capCache(state.quoteCache,         _CACHE_LIMITS.quote);
+  _capCache(state.purchaseQuoteCache, _CACHE_LIMITS.purchaseQuote);
+  _capCache(state.isinCache,          _CACHE_LIMITS.isin);
+  _capCache(state.fxCache,            _CACHE_LIMITS.fx);
+}
+
+// Bucket a holding into the seven asset classes used across the app.
+// Matches the order used by computeAssetClasses (most-specific first).
+function holdingClass(h) {
+  if (h.asset_type === "bond")   return "Bond";
+  if (h.asset_type === "cash")   return "Cash";
+  if (h.type === "real_estate")  return "Real Estate";
+  if (h.type === "crypto")       return "Crypto";
+  if (h.type === "commodity")    return "Commodity";
+  if (h.isin && isETF(h.isin))   return "ETF";
+  return "Equity";
+}
+
+// LSE and a few other UK venues quote in pence (GBp/GBX). Frankfurter only
+// knows GBP, so we collapse pence to pounds for FX lookups. Returns the
+// canonical 3-letter ISO code (uppercased) the FX layer expects.
+function normalizeFXCurrency(ccy) {
+  const raw = (ccy || "USD");
+  if (raw === "GBp" || raw.toUpperCase() === "GBX") return "GBP";
+  return raw.toUpperCase();
+}
+
+// Render AI-generated text safely. The model is untrusted input — a
+// prompt-injected response could include <script> or other HTML, so every
+// AI text path goes through here instead of straight to innerHTML.
+// Splits on double-newline to make paragraphs and converts single newlines
+// to <br>, matching the house-view rendering that already did this.
+function aiTextToHtml(text) {
+  if (!text) return "";
+  return String(text).split(/\n{2,}/)
+    .map(p => `<p style="margin:0 0 .75rem">${escapeHtml(p).replace(/\n/g,"<br>")}</p>`)
+    .join("");
+}
+
 function escapeHtml(s) {
   return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
 }
@@ -1419,6 +1597,27 @@ function setDetectStatus(elId, html) {
 // Two-decimal formatter for prices.
 function fmt2(n){ const v=Number(n)||0; return v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
+// Stage status messages for slow async paths so the user sees "warming up..."
+// / "almost there..." instead of one spinner that looks frozen for 20s+.
+// Stages format: [{at: ms-from-start, html: '...'}, ...]; first is painted
+// immediately, the rest are scheduled. Returns a cancel fn — always call it
+// when the work completes so late stages don't overwrite the real result.
+function progressiveStatus(setFn, stages) {
+  if (!stages.length) return () => {};
+  setFn(stages[0].html);
+  const timers = [];
+  for (let i = 1; i < stages.length; i++) {
+    timers.push(setTimeout(() => setFn(stages[i].html), stages[i].at));
+  }
+  return () => timers.forEach(clearTimeout);
+}
+function _isinSpinner(msg) {
+  return `<div style="margin-top:5px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px"><div class="spinner" style="width:10px;height:10px;border-width:1.5px"></div>${escapeHtml(msg)}</div>`;
+}
+function _aiDotStatus(msg) {
+  return `<div class="ai-dot"></div><span>${escapeHtml(msg)}</span>`;
+}
+
 // Compute "x shares × live_price → $USD current value" preview for a given row.
 async function rowComputedPreview(row) {
   const isin = (row.isin||"").trim().toUpperCase();
@@ -1429,13 +1628,10 @@ async function rowComputedPreview(row) {
   const localValue = qty * quote.price;
   if (!qty) return `<span class="mono">${quote.currency} ${fmt2(quote.price)}</span> per share`;
   const usd = await toUSD(localValue, quote.currency);
-  // Normalize the same way toUSD does, then check if THAT currency failed.
-  // GBp/GBX → GBP because pence-to-pounds is just scaling, the real FX leg
-  // is GBP→USD and that's what gets recorded as a failure.
-  const raw = (quote.currency||"USD");
-  let checkCcy = (raw === "GBp" || raw.toUpperCase() === "GBX") ? "GBP" : raw.toUpperCase();
+  const raw = (quote.currency || "USD");
+  const checkCcy = normalizeFXCurrency(raw);
   if (checkCcy !== "USD" && state.fxFailures.has(checkCcy)) {
-    // `usd` is the nominal local amount in pounds/euros/etc when FX fails.
+    // `usd` is the nominal local amount (pence already collapsed to pounds).
     return `→ ${qty} × ${raw} ${fmt2(quote.price)} = <b style="color:#b45309">${checkCcy} ${fmt2(usd)}</b> <span style="color:#b45309;font-size:11px">⚠ FX rate unavailable</span>`;
   }
   return `→ ${qty} × ${raw} ${fmt2(quote.price)} = <b style="color:#15803d">$${fmt2(usd)}</b> today`;
@@ -1450,16 +1646,47 @@ async function refreshRowPreview(idx, listKey) {
   setDetectStatus(elId, detectBadgeHTML(row.isin, listKey==="bondRows"?"bond":"stock_etf", {previewLine: preview}));
 }
 
-async function detectIsinRow(idx, listKey, kind) {
+// Debounce + stale-response guard for per-row ISIN detection. The on-input
+// path used to fire a network call on every keystroke and apply whichever
+// response landed last; now we wait 300ms after the last edit, and each
+// schedule carries a generation counter so responses for outdated inputs
+// are dropped before they paint.
+const _detectTimers = new Map();   // "listKey:idx" -> timeoutId
+const _detectGen    = new Map();   // "listKey:idx" -> latest generation
+function detectIsinRow(idx, listKey, kind) {
+  const key = `${listKey}:${idx}`;
+  const gen = (_detectGen.get(key) || 0) + 1;
+  _detectGen.set(key, gen);
+  if (_detectTimers.has(key)) clearTimeout(_detectTimers.get(key));
+  _detectTimers.set(key, setTimeout(() => {
+    _detectTimers.delete(key);
+    _detectIsinRowImpl(idx, listKey, kind, key, gen);
+  }, 300));
+}
+
+async function _detectIsinRowImpl(idx, listKey, kind, key, gen) {
   const row = state[listKey] && state[listKey][idx];
   if (!row) return;
   const elId = `isin-detect-${listKey}-${idx}`;
   const isin = (row.isin||"").trim().toUpperCase();
   if (isin.length < 12) { setDetectStatus(elId, ""); return; }
-  // Fast path: cached quote
-  if (state.quoteCache[`${isin}|live`]) { refreshRowPreview(idx, listKey); return; }
-  setDetectStatus(elId, '<div style="margin-top:5px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px"><div class="spinner" style="width:10px;height:10px;border-width:1.5px"></div>Looking up & fetching live price…</div>');
+  // Fast path: cached quote (still respect generation in case row was retyped).
+  if (state.quoteCache[`${isin}|live`]) {
+    if (_detectGen.get(key) === gen) refreshRowPreview(idx, listKey);
+    return;
+  }
+  const stopProgress = progressiveStatus(
+    (html) => setDetectStatus(elId, html),
+    [
+      { at: 0,     html: _isinSpinner("Looking up & fetching live price…") },
+      { at: 5000,  html: _isinSpinner("Pricing API is warming up (free-tier servers can take ~30s on first request)…") },
+      { at: 15000, html: _isinSpinner("Almost there — container starting up…") },
+    ]
+  );
   const quote = await fetchQuote(isin);
+  stopProgress();
+  // Drop the response if a newer keystroke superseded this one.
+  if (_detectGen.get(key) !== gen) return;
   // Mirror into legacy isinCache so other readers still work.
   if (quote) state.isinCache[isin] = {name:quote.name, type:(quote.asset_class==="etf"?"ETF":quote.asset_class==="bond"?"Bond":"Equity"), ticker:quote.symbol, exchange:quote.exchange, listings:[]};
   const current = state[listKey] && state[listKey][idx];
@@ -1571,7 +1798,7 @@ function renderISINRows() {
     if ((row.isin||"").length === 12 && !state.quoteCache[row.isin.toUpperCase()]) detectIsinRow(i,'isinRows','stock_etf');
   });
 }
-function addIsinRow(){state.isinRows.push({isin:"",quantity:0,date:"",amount_paid:0,currency:"USD"});renderISINRows();}
+function addIsinRow(){state.isinRows.push({isin:"",quantity:0,date:"",amount_paid:0,currency:"USD"});renderISINRows();markDirty();}
 
 function renderCashRows() {
   const tbody = document.getElementById("cash-tbody");
@@ -1585,7 +1812,7 @@ function renderCashRows() {
     tbody.appendChild(tr);
   });
 }
-function addCashRow(){state.cashRows.push({currency:"USD",amount:0});renderCashRows();}
+function addCashRow(){state.cashRows.push({currency:"USD",amount:0});renderCashRows();markDirty();}
 
 function renderBondRows() {
   const el = document.getElementById("bond-list");
@@ -1616,7 +1843,7 @@ function renderBondRows() {
     if ((row.isin||"").length === 12 && !state.isinCache[row.isin.toUpperCase()]) detectIsinRow(i,'bondRows','bond');
   });
 }
-function addBondRow(){state.bondRows.push({isin:"",coupon:3,maturity:"",face_value:1000,quantity:1,current_price:100,purchase_price:100});renderBondRows();}
+function addBondRow(){state.bondRows.push({isin:"",coupon:3,maturity:"",face_value:1000,quantity:1,current_price:100,purchase_price:100});renderBondRows();markDirty();}
 
 function renderRERows() {
   const el = document.getElementById("re-list");
@@ -1630,8 +1857,8 @@ function renderRERows() {
         <button class="btn-danger" onclick="state.reRows.splice(${i},1);renderRERows()">✕ Remove</button>
       </div>
       <div class="grid-2" style="margin-bottom:8px">
-        <div><label>Address</label><input type="text" placeholder="Street address" value="${row.address||''}" oninput="state.reRows[${i}].address=this.value"></div>
-        <div><label>City</label><input type="text" placeholder="City" value="${row.city||''}" oninput="state.reRows[${i}].city=this.value"></div>
+        <div><label>Address</label><input type="text" placeholder="Street address" value="${escapeHtml(row.address||'')}" oninput="state.reRows[${i}].address=this.value"></div>
+        <div><label>City</label><input type="text" placeholder="City" value="${escapeHtml(row.city||'')}" oninput="state.reRows[${i}].city=this.value"></div>
       </div>
       <div class="grid-2" style="margin-bottom:8px">
         <div><label>Country</label><select onchange="state.reRows[${i}].country=this.value">${WORLD_COUNTRIES_SIMPLE.map(c=>`<option value="${c}" ${c===row.country?"selected":""}>${c}</option>`).join("")}</select></div>
@@ -1645,7 +1872,7 @@ function renderRERows() {
     el.appendChild(div);
   });
 }
-function addRERow(){state.reRows.push({address:"",city:"",country:"United States",type:"Primary residence",value:0,purchase_price:0,mortgage:0});renderRERows();}
+function addRERow(){state.reRows.push({address:"",city:"",country:"United States",type:"Primary residence",value:0,purchase_price:0,mortgage:0});renderRERows();markDirty();}
 
 function renderCryptoRows() {
   const tbody = document.getElementById("crypto-tbody");
@@ -1662,7 +1889,7 @@ function renderCryptoRows() {
     tbody.appendChild(tr);
   });
 }
-function addCryptoRow(){state.cryptoRows.push({type:"BTC",quantity:0,avg_buy_price:0,exchange:"Coinbase"});renderCryptoRows();}
+function addCryptoRow(){state.cryptoRows.push({type:"BTC",quantity:0,avg_buy_price:0,exchange:"Coinbase"});renderCryptoRows();markDirty();}
 
 const COMM_AUTO_METALS = ["Gold (oz)","Silver (oz)","Platinum (oz)","Palladium (oz)"];
 function renderCommRows() {
@@ -1683,7 +1910,7 @@ function renderCommRows() {
     tbody.appendChild(tr);
   });
 }
-function addCommRow(){state.commRows.push({type:"Gold (oz)",quantity:0,avg_buy_price:0,current_value:0});renderCommRows();}
+function addCommRow(){state.commRows.push({type:"Gold (oz)",quantity:0,avg_buy_price:0,current_value:0});renderCommRows();markDirty();}
 
 function renderDebtRows() {
   const tbody = document.getElementById("debt-tbody");
@@ -1694,12 +1921,12 @@ function renderDebtRows() {
       <td><select onchange="state.debtRows[${i}].type=this.value">${DEBT_TYPES.map(d=>`<option value="${d}" ${d===row.type?"selected":""}>${d}</option>`).join("")}</select></td>
       <td><input type="number" min="0" step="1000" value="${row.amount||0}" oninput="state.debtRows[${i}].amount=parseFloat(this.value)||0"></td>
       <td><input type="number" min="0" max="50" step=".25" value="${row.interest_rate||3.5}" oninput="state.debtRows[${i}].interest_rate=parseFloat(this.value)||0"></td>
-      <td><input type="text" value="${row.description||''}" placeholder="e.g. Primary home mortgage" oninput="state.debtRows[${i}].description=this.value"></td>
+      <td><input type="text" value="${escapeHtml(row.description||'')}" placeholder="e.g. Primary home mortgage" oninput="state.debtRows[${i}].description=this.value"></td>
       <td><button class="btn-danger" onclick="state.debtRows.splice(${i},1);renderDebtRows()">✕</button></td>`;
     tbody.appendChild(tr);
   });
 }
-function addDebtRow(){state.debtRows.push({type:"Mortgage",amount:0,interest_rate:3.5,description:""});renderDebtRows();}
+function addDebtRow(){state.debtRows.push({type:"Mortgage",amount:0,interest_rate:3.5,description:""});renderDebtRows();markDirty();}
 
 /* ════════════════════════════════════════════════════════════════════
    BUILD PORTFOLIO
@@ -1991,13 +2218,7 @@ function renderAllocation(profile, tilts = {}) {
 // Asks the AI for SMALL capped tilts + reasoning, grounded in live macro.
 // Each tilt is clamped to ±MAX_TILT inside allocationGap. Baseline dominates.
 async function fetchMacroTilts(profile) {
-  const prompt = `You are a tactical allocation strategist. Use web search for THIS WEEK's macro backdrop (rates, inflation, major geopolitical/market events).
-
-The user has a ${profile} strategic baseline. Propose SMALL tactical tilts (in percentage points, each between -${MAX_TILT} and +${MAX_TILT}) off that baseline, by asset class, by geography region (US/Europe/Asia-EM/Other), and by sector. Tilts must net to roughly zero within each dimension.
-
-Respond ONLY with valid JSON, no prose, no markdown:
-{"class":{"Equity":-3,"Bonds":3},"geo":{"US":-2,"Europe":2},"sector":{"Technology":-4,"Energy":4},"reasoning":"one short paragraph citing what in the news drives these tilts"}`;
-  const raw = await callAIWithSearch(prompt, 1000);
+  const raw = await callAIWithSearch(PROMPTS.macroTilts(profile), 1000);
   try {
     const clean = (raw || "").replace(/```json|```/g, "").trim();
     const obj = JSON.parse(clean.slice(clean.indexOf("{"), clean.lastIndexOf("}")+1));
@@ -2390,7 +2611,7 @@ function renderConcentration() {
     const pct = total>0?(h.current||0)/total*100:0;
     const barColor = pct>20?"#dc2626":pct>10?"#EF9F27":"#378ADD";
     return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px">
-      <div style="width:160px;white-space:normal;overflow-wrap:break-word;word-break:break-word;color:var(--text);line-height:1.3">${name}</div>
+      <div style="width:160px;white-space:normal;overflow-wrap:break-word;word-break:break-word;color:var(--text);line-height:1.3">${escapeHtml(name)}</div>
       <div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px"></div></div>
       <div style="width:48px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${barColor}">${pct.toFixed(1)}%</div>
       <div style="width:80px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">$${fmt(h.current||0)}</div>
@@ -2407,7 +2628,9 @@ function renderIntelligenceScreen() {
   const sugEl = document.getElementById("copilot-suggestions");
   if (sugEl) {
     const suggestions = ["What is my effective bond duration?","How correlated are my crypto and tech?","What's my biggest single risk?","How would 1970s stagflation affect me?","What's my USD exposure?"];
-    sugEl.innerHTML = suggestions.map(s=>`<button class="btn btn-outline btn-sm" onclick="document.getElementById('copilot-input').value='${s}';askCopilot()">${s}</button>`).join("");
+    // JSON.stringify quotes the JS literal correctly (apostrophes etc.);
+    // escapeHtml protects the resulting attribute value from breaking out.
+    sugEl.innerHTML = suggestions.map(s=>`<button class="btn btn-outline btn-sm" onclick="document.getElementById('copilot-input').value=${escapeHtml(JSON.stringify(s))};askCopilot()">${escapeHtml(s)}</button>`).join("");
   }
   // Sector chart
   renderIntelSectorChart();
@@ -2460,10 +2683,10 @@ function renderHoldingsTable() {
     const pnlP = paid>0?pnl/paid*100:0;
     const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
     const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||h.type;
-    const type = h.asset_type==="bond"?"Bond":h.asset_type==="cash"?"Cash":h.type==="real_estate"?"Real Estate":h.type==="crypto"?"Crypto":h.type==="commodity"?"Commodity":(h.isin&&isETF(h.isin))?"ETF":"Equity";
+    const type = holdingClass(h);
     const pc = total>0?cur/total*100:0;
     return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:10px">${name}</td>
+      <td style="padding:10px">${escapeHtml(name)}</td>
       <td style="padding:10px;text-align:right;color:var(--muted)">${type}</td>
       <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">${pc.toFixed(1)}%</td>
       <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">$${fmt(paid)}</td>
@@ -2486,10 +2709,10 @@ function renderPerformance() {
     const pnlP = paid>0?pnl/paid*100:0;
     const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
     const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||"Unknown";
-    const type = h.asset_type==="bond"?"Bond":h.asset_type==="cash"?"Cash":h.type==="real_estate"?"Real Estate":h.type==="crypto"?"Crypto":h.type==="commodity"?"Commodity":(h.isin&&isETF(h.isin))?"ETF":"Equity";
+    const type = holdingClass(h);
     const sub = h.ticker ? `${type} · ${h.ticker}${h.live_currency&&h.live_price?` · ${h.live_currency} ${fmt2(h.live_price)}`:""}` : `${type}${h.isin?" · "+h.isin:""}`;
     return `<div class="perf-row">
-      <div class="perf-name"><div class="name">${name}</div><div class="meta">${sub}</div></div>
+      <div class="perf-name"><div class="name">${escapeHtml(name)}</div><div class="meta">${escapeHtml(sub)}</div></div>
       <div class="perf-col"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">Invested</div><div class="mono" style="font-size:13px">$${fmt(paid)}</div></div>
       <div class="perf-col"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">Current</div><div class="mono" style="font-size:13px">$${fmt(cur)}</div></div>
       <div class="perf-col"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em">P&L</div><div class="mono" style="font-size:13px;color:${pnl>=0?"#15803d":"var(--red)"}">${pnl>=0?"+":"-"}$${fmt(Math.abs(pnl))}<span style="font-size:11px;margin-left:4px">(${pnlP>=0?"+":""}${pnlP.toFixed(1)}%)</span></div></div>
@@ -2524,7 +2747,7 @@ function renderIncomeCalendar() {
   el.innerHTML = Object.entries(byMonth).sort(([a],[b])=>a-b).map(([m,evs])=>`
     <div class="cal-month">
       <div class="cal-month-label">${months[m]}</div>
-      ${evs.map(e=>`<div class="cal-event"><div class="cal-event-name">${e.name} <span style="font-size:11px;color:var(--hint)">${e.type}</span></div><div class="cal-event-date">${e.date}</div><div class="cal-event-amt">+$${fmt(e.amount)}</div></div>`).join("")}
+      ${evs.map(e=>`<div class="cal-event"><div class="cal-event-name">${escapeHtml(e.name)} <span style="font-size:11px;color:var(--hint)">${escapeHtml(e.type)}</span></div><div class="cal-event-date">${escapeHtml(e.date)}</div><div class="cal-event-amt">+$${fmt(e.amount)}</div></div>`).join("")}
     </div>`).join("");
 }
 
@@ -2992,12 +3215,15 @@ function _formatPctCompact(p) { return (p >= 10 ? p.toFixed(0) : p.toFixed(1)) +
 // Render a list of placed blocks into the canvas as positioned divs.
 function _paintBlocks(blocks, canvas) {
   const html = blocks.map((b, i) => {
-    const tiny = b.w < 70 || b.h < 38;
+    // Three tiers: tiny = no text (hover only), small = label only, normal = label + $.
+    const tiny  = b.w < 40 || b.h < 20;
+    const small = !tiny && (b.w < 90 || b.h < 38);
+    const sizeCls = tiny ? " tiny" : (small ? " small" : "");
     const meta = b._meta ? `<div class="map-block-meta">${escapeHtml(b._meta)}</div>` : "";
     const onclick = b._onclick ? `onclick="${b._onclick}"` : "";
     const clickable = b._onclick ? " clickable" : "";
     const title = b._title || "";
-    return `<div class="map-block${clickable}${tiny?' tiny':''}"
+    return `<div class="map-block${clickable}${sizeCls}"
               style="left:${b.x.toFixed(2)}px;top:${b.y.toFixed(2)}px;width:${b.w.toFixed(2)}px;height:${b.h.toFixed(2)}px;background:${b._color}"
               title="${escapeHtml(title)}" ${onclick}>
       <div class="map-block-label">${escapeHtml(b._label||"")}</div>
@@ -3033,30 +3259,28 @@ function _renderMapByClass(canvas) {
   const classBlocks = Object.values(groups).map(g => ({ value: g.value, _items: g.items, _name: g.name }));
   const placed = squarifyTreemap(classBlocks, 0, 0, W, H);
 
-  // Now lay out holdings inside each class block.
+  // Reserve a thin strip at the top of each class group for its label so
+  // the label doesn't overlap the first holding's name.
+  const HEADER_H = 22;
   const allBlocks = [];
+  const headers = [];
   placed.forEach(g => {
-    const inner = squarifyTreemap(g._items, g.x, g.y, g.w, g.h);
+    const useHeader = g.h > HEADER_H + 28 && g.w > 80;
+    const innerY = useHeader ? g.y + HEADER_H : g.y;
+    const innerH = useHeader ? g.h - HEADER_H : g.h;
+    const inner = squarifyTreemap(g._items, g.x, innerY, g.w, innerH);
     inner.forEach(it => {
       const onclick = it._isETF ? `mapDrillDown('${it._isin}')` : "";
       allBlocks.push({ ...it, _onclick: onclick });
     });
-    // Append a group label (rendered as overlay text in top-left).
-    allBlocks.push({
-      x: g.x, y: g.y, w: 0, h: 0,
-      _groupLabel: g._name,
-      _groupW: g.w, _groupH: g.h,
-    });
+    if (useHeader) headers.push({ x: g.x, y: g.y, name: g._name });
   });
 
-  // Paint the regular blocks, then overlay group labels.
-  const real = allBlocks.filter(b => !b._groupLabel);
-  _paintBlocks(real, canvas);
-  const labelHtml = allBlocks.filter(b => b._groupLabel)
-    .filter(b => b._groupW > 80 && b._groupH > 30)
-    .map(b => `<div class="map-block-group-label" style="left:${(b.x+8).toFixed(0)}px;top:${(b.y+6).toFixed(0)}px">${escapeHtml(b._groupLabel)}</div>`)
+  _paintBlocks(allBlocks, canvas);
+  const headerHtml = headers
+    .map(b => `<div class="map-block-group-label" style="left:${(b.x+8).toFixed(0)}px;top:${(b.y+6).toFixed(0)}px">${escapeHtml(b.name)}</div>`)
     .join("");
-  canvas.insertAdjacentHTML("beforeend", labelHtml);
+  canvas.insertAdjacentHTML("beforeend", headerHtml);
 }
 
 // LENS 2 — by geography (flat, from state.geoAgg).
@@ -3292,6 +3516,10 @@ function closeRiskQuestionnaire() {
   const modal = document.getElementById("rq-modal");
   if (modal) modal.classList.remove("open");
   if (_rqAnswers.length === RQ_QUESTIONS.length) renderRiskProfile();
+  // Refresh derived UI in case the user is staring at the Command banner or
+  // the Rebalance screen when they finish the questionnaire.
+  updateRqBanner();
+  if (state.activeScreen === "rebalance") renderRebalanceScreen();
 }
 
 function _renderRQStep() {
@@ -3338,7 +3566,67 @@ function switchScreen(name) {
   state.activeScreen = name;
   if (name==="markets") initMarketsScreen();
   if (name==="riskprofile") renderRiskProfile();
+  if (name==="rebalance") renderRebalanceScreen();
   if (name==="map") renderMapScreen();
+  if (name==="command") updateRqBanner();
+}
+
+// Onboarding nudge on the Command screen — visible only when the user hasn't
+// completed the risk questionnaire yet.
+function updateRqBanner() {
+  const el = document.getElementById("rq-banner");
+  if (!el) return;
+  el.style.display = state.riskProfile ? "none" : "block";
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   REBALANCE SCREEN
+   Asset-class delta vs the user's profile target. Reuses allocationGap()
+   for the "class" dimension; no per-holding suggestions, no AI calls.
+════════════════════════════════════════════════════════════════════ */
+function renderRebalanceScreen() {
+  const empty = document.getElementById("rebal-empty");
+  const body  = document.getElementById("rebal-body");
+  if (!empty || !body) return;
+
+  if (!state.riskProfile) {
+    empty.style.display = "";
+    body.style.display  = "none";
+    return;
+  }
+  empty.style.display = "none";
+  body.style.display  = "";
+
+  const profileName = state.riskProfile.name;
+  const rows = allocationGap("class", profileName, {});
+  const total = (state.holdings || [])
+    .filter(h => h.type !== "debt")
+    .reduce((s, h) => s + (h.current || 0), 0);
+
+  const metaEl = document.getElementById("rebal-meta");
+  if (metaEl) metaEl.textContent = total > 0
+    ? `Target: ${profileName} profile · Portfolio: $${fmt(total)}`
+    : `Target: ${profileName} profile · Add holdings to see dollar amounts.`;
+
+  const ON_TARGET = 2;  // ±% within which we don't suggest a trade
+  const tbody = document.getElementById("rebal-tbody");
+  tbody.innerHTML = rows.map(r => {
+    const gap   = r.gap;                 // current − target
+    const abs   = Math.abs(gap);
+    const onTgt = abs <= ON_TARGET;
+    const action  = onTgt ? "On target" : (gap > 0 ? "Sell" : "Buy");
+    const amount  = onTgt ? "" : "$" + fmt((abs / 100) * total);
+    const gapColor    = onTgt ? "var(--hint)" : (gap > 0 ? "#dc2626" : "#15803d");
+    const actionColor = onTgt ? "var(--hint)" : (gap > 0 ? "#dc2626" : "#15803d");
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 0;font-size:13px">${escapeHtml(r.name)}</td>
+      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px">${r.current.toFixed(1)}%</td>
+      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--blue)">${r.target.toFixed(1)}%</td>
+      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:${gapColor}">${gap > 0 ? "+" : ""}${gap.toFixed(1)}%</td>
+      <td style="padding:10px 0;text-align:right;font-size:12px;font-weight:500;color:${actionColor};text-transform:uppercase;letter-spacing:.06em">${action}</td>
+      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${amount}</td>
+    </tr>`;
+  }).join("");
 }
 
 /* ════════════════════════════════════════════════════════════════════
