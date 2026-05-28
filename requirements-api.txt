@@ -1,2 +1,7 @@
 requests>=2.31
-yfinance>=0.2.40
+# yfinance 0.2.40 (the previous floor) returned empty sector_weightings for
+# every ETF tested — Yahoo's response shape evolved and the older library
+# couldn't parse it. 1.3.0 reads sector_weightings correctly for SPY, VTI,
+# QQQ, VNQ, CSPX.L, SWDA.L, EMIM.L, SMEA.L, EQQQ.L. (GLD returns empty by
+# design — gold has no equity sectors.)
+yfinance>=1.3.0,<2.0

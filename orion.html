@@ -167,10 +167,10 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .map-block{position:absolute;box-sizing:border-box;border:2px solid #fff;padding:8px 10px;overflow:hidden;cursor:default;transition:filter .15s,transform .15s;display:flex;flex-direction:column;justify-content:flex-start;color:#fff}
 .map-block.clickable{cursor:pointer}
 .map-block.clickable:hover{filter:brightness(1.08);z-index:2}
-.map-block-label{font-size:12px;font-weight:600;line-height:1.2;letter-spacing:-.01em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+.map-block-label{font-size:12px;font-weight:600;line-height:1.2;letter-spacing:-.01em;color:#fff;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.18);overflow-wrap:break-word;word-break:break-word;hyphens:auto}
 .map-block-meta{font-size:11px;opacity:.88;margin-top:2px;color:#fff;font-family:'DM Mono',monospace;text-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .map-block.small{padding:4px 6px}
-.map-block.small .map-block-label{font-size:10px;font-weight:500}
+.map-block.small .map-block-label{font-size:10px;font-weight:500;line-height:1.15}
 .map-block.small .map-block-meta{display:none}
 .map-block.tiny .map-block-label,.map-block.tiny .map-block-meta{display:none}
 .map-block-group-label{position:absolute;top:6px;left:8px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;opacity:.95;text-shadow:0 1px 2px rgba(0,0,0,.25);pointer-events:none}
@@ -298,7 +298,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Map</div>
     <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Analytics</div>
     <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
-    <div class="nav-link" onclick="switchScreen('rebalance')" data-screen="rebalance">Rebalance</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
     <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Intelligence</div>
     <div class="nav-link" onclick="switchScreen('holdings')" data-screen="holdings">Holdings</div>
@@ -769,51 +768,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <!-- ══════════════════════════════════════════════════════════════════
      SCREEN: RISK PROFILE
 ══════════════════════════════════════════════════════════════════ -->
-<div id="screen-rebalance" class="screen">
-<div class="wrap">
-  <div class="page-title">Rebalance</div>
-  <div class="page-sub">Compare your current asset-class mix against your profile target. Class level only.</div>
-
-  <!-- Shown when state.riskProfile is null. -->
-  <div id="rebal-empty" class="card" style="display:none;text-align:center;padding:2rem 1.5rem">
-    <div style="font-size:14px;font-weight:500;margin-bottom:6px">Complete your investor profile first</div>
-    <div style="font-size:12px;color:var(--muted);max-width:420px;margin:0 auto 1rem">Rebalance targets come from your questionnaire answers — horizon, goal, drawdown tolerance, share of savings. Until you complete it there's no target to compare against.</div>
-    <button class="btn btn-dark btn-sm" onclick="openRiskQuestionnaire()">Take the questionnaire →</button>
-  </div>
-
-  <!-- Shown when profile is set. -->
-  <div id="rebal-body" style="display:none">
-    <div style="font-size:11px;color:var(--hint);margin-bottom:.6rem;line-height:1.5">
-      Targets are derived from your questionnaire answers only and do not constitute financial advice.
-    </div>
-    <div class="card">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:8px">
-        <div>
-          <div class="section-label">Asset-class rebalance</div>
-          <div id="rebal-meta" style="font-size:12px;color:var(--muted);margin-top:3px"></div>
-        </div>
-        <button class="btn btn-outline btn-sm" onclick="openRiskQuestionnaire()">Retake questionnaire →</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse" id="rebal-table">
-          <thead>
-            <tr style="border-bottom:1px solid var(--border)">
-              <th style="text-align:left;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Asset class</th>
-              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Current %</th>
-              <th style="text-align:right;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Target %</th>
-              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Gap</th>
-              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Action</th>
-              <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 8px">Amount</th>
-            </tr>
-          </thead>
-          <tbody id="rebal-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
 <div id="screen-riskprofile" class="screen">
 <div class="wrap">
   <div class="page-title">Risk Profile</div>
@@ -875,7 +829,8 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <div id="tilt-reasoning" style="font-size:12px;color:var(--muted);margin-bottom:1rem;min-height:0"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:2rem">
       <div>
-        <div class="section-label" style="margin-bottom:.75rem">By asset class</div>
+        <div class="section-label" style="margin-bottom:.3rem">By asset class</div>
+        <div style="font-size:11px;color:var(--hint);margin-bottom:.6rem;line-height:1.5">Targets are derived from your questionnaire answers only and do not constitute financial advice.</div>
         <div id="alloc-class"></div>
       </div>
       <div>
@@ -2176,7 +2131,11 @@ function arc(cx, cy, r, a0, a1) {
   return `M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${large} 1 ${x1},${y1} Z`;
 }
 
-function renderAllocationDimension(containerId, dimension, profile, tilts = {}) {
+// `withActions` (truthy only for the class dimension) appends two columns:
+// Action (Buy/Sell/On target) and Amount ($, derived from gap × portfolio).
+// Geo and sector tables stay 4-column — actionable rebalancing only makes
+// sense at the asset-class level.
+function renderAllocationDimension(containerId, dimension, profile, tilts = {}, withActions = false) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const rows = allocationGap(dimension, profile, tilts);
@@ -2184,25 +2143,42 @@ function renderAllocationDimension(containerId, dimension, profile, tilts = {}) 
     el.innerHTML = '<div style="font-size:12px;color:var(--hint)">No data yet — build the portfolio first.</div>';
     return;
   }
+  const ON_TARGET = 2;
+  const total = withActions ? (state.holdings || [])
+    .filter(h => h.type !== "debt")
+    .reduce((s, h) => s + (h.current || 0), 0) : 0;
   const body = rows.map(r => {
     const diff = +(r.target - r.current).toFixed(1); // positive = need MORE of this bucket
     const sign = diff > 0 ? "+" : "";
     const diffColor = Math.abs(diff) < 2 ? "var(--hint)" : "var(--text)";
     const tilted = tilts && tilts[r.name] ? ' <span title="includes a macro tilt" style="color:var(--blue);font-size:11px">⚡</span>' : '';
+    let actionCells = "";
+    if (withActions) {
+      const gap = r.gap, abs = Math.abs(gap), onTgt = abs <= ON_TARGET;
+      const action  = onTgt ? "On target" : (gap > 0 ? "Sell" : "Buy");
+      const amount  = (onTgt || total <= 0) ? "" : "$" + fmt((abs / 100) * total);
+      const aColor  = onTgt ? "var(--hint)" : (gap > 0 ? "#dc2626" : "#15803d");
+      actionCells = `
+      <td style="padding:8px 0;text-align:right;font-size:12px;font-weight:500;color:${aColor};text-transform:uppercase;letter-spacing:.06em">${action}</td>
+      <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${amount}</td>`;
+    }
     return `<tr>
       <td style="padding:8px 0;font-size:13px">${escapeHtml(r.name)}${tilted}</td>
       <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px">${r.current}%</td>
       <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--blue)">${r.target}%</td>
-      <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:${diffColor}">${sign}${diff}%</td>
+      <td style="padding:8px 0;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:${diffColor}">${sign}${diff}%</td>${actionCells}
     </tr>`;
   }).join("");
+  const extraHeaders = withActions ? `
+        <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Action</th>
+        <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Amount</th>` : "";
   el.innerHTML = `<table style="width:100%;border-collapse:collapse">
     <thead>
       <tr style="border-bottom:1px solid var(--border)">
         <th style="text-align:left;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Bucket</th>
         <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Now</th>
-        <th style="text-align:right;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Suggested</th>
-        <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Change</th>
+        <th style="text-align:right;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Target</th>
+        <th style="text-align:right;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:500;padding:0 0 6px">Change</th>${extraHeaders}
       </tr>
     </thead>
     <tbody>${body}</tbody>
@@ -2210,7 +2186,10 @@ function renderAllocationDimension(containerId, dimension, profile, tilts = {}) 
 }
 
 function renderAllocation(profile, tilts = {}) {
-  renderAllocationDimension("alloc-class",  "class",  profile, tilts.class  || {});
+  // Class is the actionable dimension — show Action + Amount $.
+  // Geo and sector stay 4-column (current/target/change) — re-allocating
+  // across geos/sectors at the basket level isn't a meaningful single trade.
+  renderAllocationDimension("alloc-class",  "class",  profile, tilts.class  || {}, true);
   renderAllocationDimension("alloc-geo",    "geo",    profile, tilts.geo    || {});
   renderAllocationDimension("alloc-sector", "sector", profile, tilts.sector || {});
 }
@@ -3516,10 +3495,9 @@ function closeRiskQuestionnaire() {
   const modal = document.getElementById("rq-modal");
   if (modal) modal.classList.remove("open");
   if (_rqAnswers.length === RQ_QUESTIONS.length) renderRiskProfile();
-  // Refresh derived UI in case the user is staring at the Command banner or
-  // the Rebalance screen when they finish the questionnaire.
+  // Refresh derived UI in case the user is staring at the Command banner
+  // when they finish the questionnaire.
   updateRqBanner();
-  if (state.activeScreen === "rebalance") renderRebalanceScreen();
 }
 
 function _renderRQStep() {
@@ -3566,7 +3544,6 @@ function switchScreen(name) {
   state.activeScreen = name;
   if (name==="markets") initMarketsScreen();
   if (name==="riskprofile") renderRiskProfile();
-  if (name==="rebalance") renderRebalanceScreen();
   if (name==="map") renderMapScreen();
   if (name==="command") updateRqBanner();
 }
@@ -3579,55 +3556,6 @@ function updateRqBanner() {
   el.style.display = state.riskProfile ? "none" : "block";
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   REBALANCE SCREEN
-   Asset-class delta vs the user's profile target. Reuses allocationGap()
-   for the "class" dimension; no per-holding suggestions, no AI calls.
-════════════════════════════════════════════════════════════════════ */
-function renderRebalanceScreen() {
-  const empty = document.getElementById("rebal-empty");
-  const body  = document.getElementById("rebal-body");
-  if (!empty || !body) return;
-
-  if (!state.riskProfile) {
-    empty.style.display = "";
-    body.style.display  = "none";
-    return;
-  }
-  empty.style.display = "none";
-  body.style.display  = "";
-
-  const profileName = state.riskProfile.name;
-  const rows = allocationGap("class", profileName, {});
-  const total = (state.holdings || [])
-    .filter(h => h.type !== "debt")
-    .reduce((s, h) => s + (h.current || 0), 0);
-
-  const metaEl = document.getElementById("rebal-meta");
-  if (metaEl) metaEl.textContent = total > 0
-    ? `Target: ${profileName} profile · Portfolio: $${fmt(total)}`
-    : `Target: ${profileName} profile · Add holdings to see dollar amounts.`;
-
-  const ON_TARGET = 2;  // ±% within which we don't suggest a trade
-  const tbody = document.getElementById("rebal-tbody");
-  tbody.innerHTML = rows.map(r => {
-    const gap   = r.gap;                 // current − target
-    const abs   = Math.abs(gap);
-    const onTgt = abs <= ON_TARGET;
-    const action  = onTgt ? "On target" : (gap > 0 ? "Sell" : "Buy");
-    const amount  = onTgt ? "" : "$" + fmt((abs / 100) * total);
-    const gapColor    = onTgt ? "var(--hint)" : (gap > 0 ? "#dc2626" : "#15803d");
-    const actionColor = onTgt ? "var(--hint)" : (gap > 0 ? "#dc2626" : "#15803d");
-    return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:10px 0;font-size:13px">${escapeHtml(r.name)}</td>
-      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px">${r.current.toFixed(1)}%</td>
-      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--blue)">${r.target.toFixed(1)}%</td>
-      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:${gapColor}">${gap > 0 ? "+" : ""}${gap.toFixed(1)}%</td>
-      <td style="padding:10px 0;text-align:right;font-size:12px;font-weight:500;color:${actionColor};text-transform:uppercase;letter-spacing:.06em">${action}</td>
-      <td style="padding:10px 0;text-align:right;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)">${amount}</td>
-    </tr>`;
-  }).join("");
-}
 
 /* ════════════════════════════════════════════════════════════════════
    MARKETS SCREEN
