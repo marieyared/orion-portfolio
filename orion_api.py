@@ -21,6 +21,14 @@ YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
 YAHOO_QS_URL = "https://query1.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
 FRANKFURTER_URL = "https://api.frankfurter.dev/v1"
 
+# Financial Modeling Prep is used as a fallback for sector/industry/country
+# whenever Yahoo's quoteSummary endpoint is rate-limited (which is most of
+# the time on Render's shared IPs). Free tier is 250 req/day; with the 24h
+# PROFILE_CACHE that's plenty for a personal portfolio. No key set → fallback
+# is silently skipped.
+FMP_API_KEY = os.getenv("FMP_API_KEY", "").strip()
+FMP_PROFILE_URL = "https://financialmodelingprep.com/api/v3/profile"
+
 ISIN_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")
 
 # OpenFIGI exchCode → Yahoo Finance ticker suffix (None = US, no suffix).
@@ -256,6 +264,34 @@ def _coerce_sector_weights(raw) -> list:
     return []
 
 
+def fetch_fmp_profile(symbol: str) -> dict | None:
+    """Sector / industry / country fallback via Financial Modeling Prep.
+    Returns a dict of the fields FMP knows about, or None if no API key is
+    configured or the upstream call fails."""
+    if not FMP_API_KEY or not symbol:
+        return None
+    try:
+        r = requests.get(
+            f"{FMP_PROFILE_URL}/{symbol}",
+            params={"apikey": FMP_API_KEY},
+            timeout=6,
+        )
+        if not r.ok:
+            return None
+        data = r.json()
+        if not isinstance(data, list) or not data:
+            return None
+        item = data[0] or {}
+        return {
+            "sector":    item.get("sector") or "",
+            "industry":  item.get("industry") or "",
+            "country":   item.get("country") or "",
+            "long_name": item.get("companyName") or "",
+        }
+    except (requests.RequestException, ValueError):
+        return None
+
+
 def fetch_yahoo_profile(symbol: str) -> dict | None:
     if symbol in PROFILE_CACHE:
         return PROFILE_CACHE[symbol]
@@ -271,6 +307,17 @@ def fetch_yahoo_profile(symbol: str) -> dict | None:
         industry = info.get("industry") or ""
         country = info.get("country") or ""
         long_name = info.get("longName") or info.get("shortName") or ""
+        # If Yahoo gave us nothing (rate-limited on Render's IPs), try FMP for
+        # the metadata fields. FMP doesn't know about quote_type — we leave
+        # that empty; downstream ETF detection falls back to OpenFIGI type +
+        # name patterns when quote_type is missing.
+        if not sector:
+            fmp = fetch_fmp_profile(symbol)
+            if fmp:
+                sector    = sector    or fmp["sector"]
+                industry  = industry  or fmp["industry"]
+                country   = country   or fmp["country"]
+                long_name = long_name or fmp["long_name"]
         # ETF look-through if available. The Yahoo funds_data endpoint gets
         # rate-limited from Render's IPs much more often than the chart
         # endpoint, so we keep a 24h cache of *successful* fetches per
