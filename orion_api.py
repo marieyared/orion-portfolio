@@ -27,7 +27,9 @@ FRANKFURTER_URL = "https://api.frankfurter.dev/v1"
 # PROFILE_CACHE that's plenty for a personal portfolio. No key set → fallback
 # is silently skipped.
 FMP_API_KEY = os.getenv("FMP_API_KEY", "").strip()
-FMP_PROFILE_URL = "https://financialmodelingprep.com/api/v3/profile"
+# /api/v3/profile was retired 2025-08-31. New endpoint takes `symbol` as a
+# query param, not a path segment.
+FMP_PROFILE_URL = "https://financialmodelingprep.com/stable/profile"
 
 ISIN_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")
 
@@ -272,8 +274,8 @@ def fetch_fmp_profile(symbol: str) -> dict | None:
         return None
     try:
         r = requests.get(
-            f"{FMP_PROFILE_URL}/{symbol}",
-            params={"apikey": FMP_API_KEY},
+            FMP_PROFILE_URL,
+            params={"symbol": symbol, "apikey": FMP_API_KEY},
             timeout=6,
         )
         if not r.ok:
@@ -495,45 +497,6 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
                                   "yfinance": getattr(yf, "__version__", "unknown"),
                                   "fmp_key_set": bool(FMP_API_KEY),
                                   "fmp_key_len": len(FMP_API_KEY)})
-            return
-
-        if path == "/api/fmp-probe":
-            # FMP retired the /v3/profile/{symbol} endpoint on 2025-08-31.
-            # Probe the post-migration endpoints to find which one works for
-            # this account's tier.
-            out = {"fmp_key_set": bool(FMP_API_KEY)}
-            if FMP_API_KEY:
-                candidates = [
-                    ("stable_profile_query",  "https://financialmodelingprep.com/stable/profile",        {"symbol": "AAPL", "apikey": FMP_API_KEY}),
-                    ("stable_profile_path",   "https://financialmodelingprep.com/stable/profile/AAPL",   {"apikey": FMP_API_KEY}),
-                    ("v4_company_profile",    "https://financialmodelingprep.com/api/v4/company-profile","{symbol_in_query}"),
-                    ("v3_company_profile",    "https://financialmodelingprep.com/api/v3/company-profile/AAPL", {"apikey": FMP_API_KEY}),
-                    ("legacy_v3_profile",     "https://financialmodelingprep.com/api/v3/profile/AAPL",   {"apikey": FMP_API_KEY}),
-                ]
-                results = []
-                for label, url, params in candidates:
-                    if params == "{symbol_in_query}":
-                        params = {"symbol": "AAPL", "apikey": FMP_API_KEY}
-                    item = {"label": label, "url": url}
-                    try:
-                        r = requests.get(url, params=params, timeout=6)
-                        item["status"] = r.status_code
-                        body = r.text[:300]
-                        item["body_preview"] = body
-                        try:
-                            data = r.json()
-                            if isinstance(data, list) and data:
-                                item["sample_sector"] = (data[0] or {}).get("sector", "")
-                                item["sample_keys"] = list((data[0] or {}).keys())[:8]
-                            elif isinstance(data, dict):
-                                item["dict_keys"] = list(data.keys())[:5]
-                        except Exception:
-                            pass
-                    except Exception as e:
-                        item["error"] = f"{type(e).__name__}: {e}"
-                    results.append(item)
-                out["candidates"] = results
-            self._send_json(200, out)
             return
 
         if path.startswith("/api/isin/"):
