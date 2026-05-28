@@ -492,7 +492,33 @@ class OrionAPIHandler(BaseHTTPRequestHandler):
 
         if path == "/health":
             self._send_json(200, {"ok": True, "service": "orion-api", "version": "2.0",
-                                  "yfinance": getattr(yf, "__version__", "unknown")})
+                                  "yfinance": getattr(yf, "__version__", "unknown"),
+                                  "fmp_key_set": bool(FMP_API_KEY),
+                                  "fmp_key_len": len(FMP_API_KEY)})
+            return
+
+        if path == "/api/fmp-probe":
+            # One-off diagnostic for why FMP fallback isn't populating sectors.
+            out = {"fmp_key_set": bool(FMP_API_KEY)}
+            if FMP_API_KEY:
+                try:
+                    r = requests.get(f"{FMP_PROFILE_URL}/AAPL",
+                                     params={"apikey": FMP_API_KEY}, timeout=8)
+                    out["http_status"] = r.status_code
+                    try:
+                        data = r.json()
+                        out["response_type"] = type(data).__name__
+                        if isinstance(data, list) and data:
+                            out["sample_sector"] = (data[0] or {}).get("sector", "")
+                        elif isinstance(data, dict):
+                            out["response_keys"] = list(data.keys())[:5]
+                            out["error_message"] = data.get("Error Message") or data.get("message")
+                    except Exception as e:
+                        out["json_parse_error"] = f"{type(e).__name__}: {e}"
+                        out["body_preview"] = r.text[:200]
+                except Exception as e:
+                    out["request_error"] = f"{type(e).__name__}: {e}"
+            self._send_json(200, out)
             return
 
         if path.startswith("/api/isin/"):
