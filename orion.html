@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orion · Portfolio Intelligence Platform</title>
+<title>Orion · Know what breaks your portfolio</title>
+<meta name="description" content="Orion is a portfolio risk early-warning system. It stress-tests your holdings against every crisis that matters and tells you, in dollars, what to fix first.">
+<meta property="og:title" content="Orion · Know what breaks your portfolio">
+<meta property="og:description" content="Connect your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Orion · Know what breaks your portfolio">
+<meta name="twitter:description" content="A portfolio risk early-warning system — see what breaks your portfolio before it breaks it.">
+<meta name="theme-color" content="#4F46E5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -69,9 +77,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .btn-danger:hover{background:#fef2f2}
 .btn-blue{background:var(--blue);color:#fff}
 .btn-blue:hover{opacity:.88}
-.mkt-btn{padding:7px 16px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:400;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s}
-.mkt-btn:hover{color:var(--text);border-color:#aaa}
-.mkt-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
 .csv-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center}
 .csv-modal-overlay.open{display:flex}
 .csv-modal-box{background:#fff;border-radius:16px;width:min(700px,96vw);max-height:88vh;overflow-y:auto;padding:1.75rem;box-shadow:0 24px 80px rgba(0,0,0,.25)}
@@ -295,13 +300,12 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   </div>
   <div class="nav-links">
     <div class="nav-link active" onclick="switchScreen('command')" data-screen="command">Command</div>
-    <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Map</div>
     <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Analytics</div>
-    <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
-    <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Intelligence</div>
+    <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
+    <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Risk Warning</div>
+    <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Map</div>
     <div class="nav-link" onclick="switchScreen('holdings')" data-screen="holdings">Holdings</div>
-    <div class="nav-link" onclick="switchScreen('markets')" data-screen="markets">Markets</div>
   </div>
   <div class="nav-right">
     <button class="btn btn-outline btn-sm" onclick="exportPortfolio()">↓ Export</button>
@@ -318,17 +322,17 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <div class="entry-hero">
     <div class="entry-eyebrow">
       <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="3" cy="7" r="1.5" fill="#4F46E5"/><circle cx="7" cy="4" r="1.5" fill="#4F46E5"/><circle cx="11" cy="7" r="1.5" fill="#4F46E5"/><circle cx="7" cy="10" r="1" fill="#4F46E5" opacity=".5"/></svg>
-      <span>Portfolio Intelligence</span>
+      <span>Risk early-warning system</span>
     </div>
-    <div class="entry-headline">Your wealth,<br><em>intelligently</em> understood.</div>
-    <div class="entry-subline">Enter your holdings once. Orion builds a full-spectrum intelligence layer with live prices, AI briefings, risk analysis, and crisis simulations.</div>
+    <div class="entry-headline">Know what <em>breaks</em> your portfolio<br>— before it breaks it.</div>
+    <div class="entry-subline">Connect your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.</div>
   </div>
 
   <div class="grid-3" style="margin-bottom:1.75rem">
     <div class="feature-card">
       <div class="feature-kicker">AI Intelligence</div>
-      <div class="feature-title">Morning briefing</div>
-      <div class="feature-copy">A CIO-style narrative every session, written about your actual holdings and current macro context.</div>
+      <div class="feature-title">Weekly risk warning</div>
+      <div class="feature-copy">Orion flags the single biggest threat building in your portfolio this week — in dollars — and the one move that cuts it most.</div>
     </div>
     <div class="feature-card">
       <div class="feature-kicker">Risk Engine</div>
@@ -433,7 +437,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <hr class="divider">
 
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <button class="btn btn-dark" style="min-width:260px" onclick="buildPortfolio()">◎ Build Orion dashboard →</button>
+    <button class="btn btn-dark" style="min-width:260px" onclick="buildPortfolio()">◎ Stress-test my portfolio →</button>
     <label class="btn btn-outline" style="cursor:pointer">
       ↑ Import JSON
       <input type="file" accept=".json" style="display:none" onchange="importPortfolio(event)">
@@ -450,7 +454,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <div class="wrap">
   <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem">
     <div>
-      <div class="page-title" style="margin-bottom:0">Command</div>
+      <div class="page-title" style="margin-bottom:0">What breaks you first</div>
       <div style="font-size:12px;color:var(--hint)" id="cmd-timestamp"></div>
     </div>
     <div id="warnings-area"></div>
@@ -467,8 +471,27 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     </div>
   </div>
 
-  <!-- KPI strip -->
+  <!-- Risk reframe: the app opens on "what breaks you first," not net worth. -->
+  <div class="grid-2" style="margin-bottom:12px">
+    <!-- What breaks my portfolio -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.1rem">What breaks my portfolio?</div>
+      <div style="font-size:11px;color:var(--hint);margin-bottom:.9rem">Top single-factor shocks ranked by $ impact</div>
+      <div id="breaks-list"></div>
+    </div>
+
+    <!-- Factor exposure -->
+    <div class="card">
+      <div style="font-size:13px;font-weight:500;margin-bottom:.1rem">Factor exposure</div>
+      <div style="font-size:11px;color:var(--hint);margin-bottom:.9rem">Portfolio sensitivity to macro drivers</div>
+      <div id="factor-bars"></div>
+    </div>
+  </div>
+
+  <!-- KPI strip (demoted below the risk lead) -->
   <div class="kpi-grid" id="kpi-strip"></div>
+  <!-- One-line data-confidence summary: "9 of 12 positions live · 2 fallback · 1 manual" -->
+  <div id="kpi-confidence" style="font-size:11px;color:var(--muted);margin:-4px 0 12px 4px;font-family:'DM Mono',monospace"></div>
 
   <!-- Row 1: Health score + AI briefing -->
   <div class="grid-2" style="margin-bottom:12px">
@@ -490,30 +513,13 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <!-- AI Briefing -->
     <div class="briefing-card">
       <div class="briefing-header">
-        <div style="font-size:13px;font-weight:500">AI morning briefing</div>
+        <div style="font-size:13px;font-weight:500">This week's risk warning</div>
         <div class="briefing-tag">Orion AI</div>
       </div>
       <div id="briefing-content" class="briefing-text" style="color:var(--muted);font-style:italic">
-        No briefing yet. Click below to generate one — each click sends one AI request.
+        No warning yet. Click below to generate one — each click sends one AI request.
       </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">✨ Generate briefing</button>
-    </div>
-  </div>
-
-  <!-- Row 2: What breaks me + Factor exposure -->
-  <div class="grid-2" style="margin-bottom:12px">
-    <!-- What breaks my portfolio -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:500;margin-bottom:.1rem">What breaks my portfolio?</div>
-      <div style="font-size:11px;color:var(--hint);margin-bottom:.9rem">Top single-factor shocks ranked by $ impact</div>
-      <div id="breaks-list"></div>
-    </div>
-
-    <!-- Factor exposure -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:500;margin-bottom:.1rem">Factor exposure</div>
-      <div style="font-size:11px;color:var(--hint);margin-bottom:.9rem">Portfolio sensitivity to macro drivers</div>
-      <div id="factor-bars"></div>
+      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">✨ Generate risk warning</button>
     </div>
   </div>
 
@@ -653,13 +659,13 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <div id="screen-intelligence" class="screen">
 <div class="wrap">
-  <div class="page-title">Intelligence</div>
-  <div class="page-sub">AI-powered analysis of your portfolio. Ask anything about your holdings, risk, or macro context.</div>
+  <div class="page-title">Your weekly risk warning</div>
+  <div class="page-sub">Orion's read on the biggest threat building in your portfolio right now — and the one move that cuts it most. Ask anything about your risk, exposure, or macro context.</div>
 
   <!-- Full briefing -->
   <div class="briefing-card" style="margin-bottom:12px">
     <div class="briefing-header">
-      <div style="font-size:14px;font-weight:500">AI portfolio briefing</div>
+      <div style="font-size:14px;font-weight:500">This week's risk warning</div>
       <div class="briefing-tag">Orion AI</div>
     </div>
     <div id="intel-briefing-content" class="briefing-text" style="color:var(--muted);font-style:italic">
@@ -746,25 +752,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 </div>
 </div>
 
-<div id="screen-markets" class="screen">
-<div class="wrap">
-  <div class="page-title">Markets</div>
-  <div class="page-sub">Live charts. Click any index to explore.</div>
-
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-    <button class="mkt-btn active" onclick="switchMarket(this,'AMEX:SPY','S&P 500')">S&P 500</button>
-    <button class="mkt-btn" onclick="switchMarket(this,'NASDAQ:QQQ','NASDAQ 100')">NASDAQ 100</button>
-    <button class="mkt-btn" onclick="switchMarket(this,'AMEX:URTH','MSCI World')">MSCI World</button>
-    <button class="mkt-btn" onclick="switchMarket(this,'AMEX:EEM','MSCI EM')">MSCI EM</button>
-    <button class="mkt-btn" onclick="switchMarket(this,'AMEX:GLD','Gold')">Gold</button>
-  </div>
-
-  <div class="card" style="padding:0;overflow:hidden;border-radius:14px">
-    <div id="tv-chart" style="height:520px"></div>
-  </div>
-</div>
-</div>
-
 <!-- ══════════════════════════════════════════════════════════════════
      SCREEN: RISK PROFILE
 ══════════════════════════════════════════════════════════════════ -->
@@ -843,6 +830,18 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       </div>
     </div>
   </div>
+
+  <!-- Findings panel (Expansion B) — rule-based checks over holdings + profile -->
+  <div class="card" style="margin-top:1.25rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:.25rem">
+      <div>
+        <div class="section-label">Findings</div>
+        <div style="font-size:12px;color:var(--hint);margin-top:4px">Deterministic checks computed from your holdings and investor profile. Every finding is auditable; tax/estate items still need a qualified professional.</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openRiskQuestionnaire()">Update profile →</button>
+    </div>
+    <div id="findings-body" style="margin-top:1rem"></div>
+  </div>
 </div>
 </div>
 
@@ -867,8 +866,29 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:.5rem">Your profile</div>
       <div id="rq-result-name" style="font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:.25rem"></div>
       <div id="rq-result-score" style="font-family:'DM Mono',monospace;font-size:15px;color:var(--muted);margin-bottom:1.25rem"></div>
-      <div id="rq-result-bar" class="rp-bar-row" style="justify-content:center;margin-bottom:1.5rem"></div>
-      <button class="btn btn-dark" style="width:100%;justify-content:center" onclick="closeRiskQuestionnaire()">View my profile →</button>
+      <div id="rq-result-bar" class="rp-bar-row" style="justify-content:center;margin-bottom:1.25rem"></div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">A few optional questions about your tax, goal and constraints sharpen the AI review and unlock personalized checks (estate, FX, ceilings).</div>
+      <button class="btn btn-dark" style="width:100%;justify-content:center;margin-bottom:.6rem" onclick="startProfilePart()">Personalize my review (≈2 min) →</button>
+      <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center" onclick="closeRiskQuestionnaire()">Skip — just the risk score</button>
+    </div>
+
+    <!-- Part 2 · investor-profile intake (Expansion A). Writes state.investorProfile. -->
+    <div id="pq-panel" style="display:none">
+      <div id="pq-question" style="font-size:17px;font-weight:600;letter-spacing:-.01em;line-height:1.4;margin-bottom:1.25rem;color:var(--text)"></div>
+      <div id="pq-input" style="display:flex;flex-direction:column;gap:10px;margin-bottom:1rem"></div>
+      <div id="pq-nav" style="display:flex;gap:8px;align-items:center;margin-bottom:1.25rem"></div>
+      <div id="pq-meter" style="border-top:1px solid var(--border);padding-top:.9rem"></div>
+      <div style="text-align:center;margin-top:.9rem">
+        <button onclick="pqFinishEarly()" style="border:none;background:none;cursor:pointer;font-size:12px;color:var(--muted);text-decoration:underline;font-family:'DM Sans',sans-serif">Skip — I'll do this later</button>
+      </div>
+    </div>
+
+    <!-- Part 2 completion slide -->
+    <div id="pq-done" style="display:none;text-align:center;padding:.5rem 0 .25rem">
+      <div style="font-size:34px;margin-bottom:.5rem">✓</div>
+      <div style="font-size:20px;font-weight:600;letter-spacing:-.01em;margin-bottom:.4rem">Profile saved</div>
+      <div id="pq-done-sub" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.5rem"></div>
+      <button class="btn btn-dark" style="width:100%;justify-content:center" onclick="closeRiskQuestionnaire()">Done →</button>
     </div>
   </div>
 </div>
@@ -951,21 +971,63 @@ const COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4
 ════════════════════════════════════════════════════════════════════ */
 const state = {
   isinRows:[],cashRows:[],bondRows:[],reRows:[],cryptoRows:[],commRows:[],debtRows:[],
-  holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},fxFailures:new Set(),infoMap:{},geoAgg:{},sectorAgg:{},
+  holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},fxMeta:{},fxFailures:new Set(),infoMap:{},geoAgg:{},sectorAgg:{},
   simGame:null,activeScreen:'command',
   healthScore:0,healthSubs:{},
   briefingText:'',intelBriefingText:'',
-  riskProfile:null
+  riskProfile:null,
+  // Per-holding manual overrides keyed by stable id. Survives auto-refetch
+  // and persists via the v2 schema. Each value: {price?,priceCurrency?,
+  // fxRate?,fxFrom?,value?,ts}. Trust layer (v2 only).
+  manualOverrides:{},
+  // Investor-profile intake (Expansion A). Distinct from riskProfile (the
+  // 4-question risk score). Carries the personal/tax context the review runs
+  // on. Every field nullable; null means "unknown" — never assume a default
+  // that changes advice. Persisted via the v2 schema like riskProfile.
+  investorProfile:{
+    // — Tax & residency (drives estate-situs, withholding, FX) —
+    taxCitizenship:null,              // e.g. "US" | "LB" | "FR" — ISO-2
+    isUSPerson:null,                  // bool — US citizen or green-card / substantial-presence
+    taxResidence:null,                // ISO-2 country where the owner is tax-resident
+    spendingCurrency:null,            // "USD" | "EUR" | "CHF" … the wallet that ultimately matters
+    eventualBeneficiaryCountry:null,  // where the book is heading (FX transmission)
+    // — Mandate (drives the goal/structure tension) —
+    returnObjective:null,             // "preserve" | "income" | "balanced_growth" | "beat_benchmark"
+    benchmark:null,                   // "SPX" | "ACWI" | null — only when objective is beat/match
+    benchmarkMode:null,               // "beat" | "match"
+    maxDrawdownPct:null,              // explicit number, e.g. 20
+    horizonYears:null,                // integer; can mirror risk-Q1 but stored explicitly
+    // — Liquidity / income context —
+    annualIncomeUSD:null,             // stable income outside the portfolio
+    liquidityNeed:null,               // "none" | "occasional" | "regular_withdrawals"
+    nearTermCashNeedUSD:null,         // money needed within ~2 yrs → cash buffer floor
+    // — Hard constraints (the engine must respect these) —
+    convictionHolds:[],               // tickers/ISINs the user will NOT sell, e.g. ["NVDA"]
+    ceilings:{                        // self-imposed caps, percent of book
+      aiTechPct:null,                 // e.g. 30
+      singleNamePct:null,             // e.g. 5
+      usSitusUSD:null                 // e.g. 60000 — the user's own line
+    },
+    exclusions:[],                    // sectors/themes to avoid (ESG, tobacco, etc.)
+    // — Account context —
+    custodian:null,                   // free text — "UBS (CH)"
+    accountTaxType:null,              // "taxable" | "tax_deferred" | "tax_exempt"
+    completedAt:null                  // ISO date; gate re-prompts on staleness
+  }
 };
 
 /* ── Local persistence (only user inputs; caches/AI text stay ephemeral) ── */
-const STORAGE_KEY = "orion.portfolio.v1";
-const PERSISTED_FIELDS = ["isinRows","cashRows","bondRows","reRows","cryptoRows","commRows","debtRows","riskProfile"];
+// v2 adds `manualOverrides` to the snapshot. v1 (orion.html) saves are
+// read once and migrated forward; we never write back to v1 so the
+// stable file's storage stays a clean fallback.
+const STORAGE_KEY    = "orion.portfolio.v2";
+const STORAGE_KEY_V1 = "orion.portfolio.v1";
+const PERSISTED_FIELDS = ["isinRows","cashRows","bondRows","reRows","cryptoRows","commRows","debtRows","riskProfile","manualOverrides","investorProfile"];
 let _lastSavedJson = "";
 let _saveTimer = null;
 function savePortfolio(){
   try {
-    const snapshot = {};
+    const snapshot = {version: 2};
     for (const k of PERSISTED_FIELDS) snapshot[k] = state[k];
     const json = JSON.stringify(snapshot);
     if (json === _lastSavedJson) return;   // no-op when nothing changed
@@ -981,14 +1043,26 @@ function markDirty() {
 }
 function loadPortfolio(){
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
+    // Prefer v2; fall back to v1 (one-way migration — next save writes v2).
+    let raw = localStorage.getItem(STORAGE_KEY);
+    let fromV1 = false;
+    if (!raw) {
+      raw = localStorage.getItem(STORAGE_KEY_V1);
+      if (!raw) return false;
+      fromV1 = true;
+    }
     const data = JSON.parse(raw);
     let touched = false;
     for (const k of PERSISTED_FIELDS) {
       if (data[k] !== undefined) { state[k] = data[k]; touched = true; }
     }
-    _lastSavedJson = raw;  // skip the next save if nothing changes
+    // Defensive default — old v1 snapshots don't carry overrides.
+    if (!state.manualOverrides || typeof state.manualOverrides !== "object") {
+      state.manualOverrides = {};
+    }
+    // From-v1 path: force a save on next markDirty by NOT priming
+    // _lastSavedJson, so the migrated snapshot gets written to v2 soon.
+    if (!fromV1) _lastSavedJson = raw;
     return touched;
   } catch(e) { return false; }
 }
@@ -1078,17 +1152,34 @@ async function fetchFX(from, to, date) {
   if (from === to) return 1;
   const key = `${from}-${to}-${date||'latest'}`;
   if (state.fxCache[key] != null) return state.fxCache[key];
-  try {
-    const url = `${ORION_API}/api/fx/${encodeURIComponent(from)}/${encodeURIComponent(to)}${date?`?date=${encodeURIComponent(date)}`:""}`;
-    const r = await fetch(url, {signal: AbortSignal.timeout(8000)});
-    if (!r.ok) { state.fxFailures.add(from); return null; }
-    const data = await r.json();
-    if (!data.ok || typeof data.rate !== "number") { state.fxFailures.add(from); return null; }
-    state.fxCache[key] = data.rate;
-    state.fxFailures.delete(from);
-    pruneCaches();
-    return data.rate;
-  } catch(e) { state.fxFailures.add(from); return null; }
+  const url = `${ORION_API}/api/fx/${encodeURIComponent(from)}/${encodeURIComponent(to)}${date?`?date=${encodeURIComponent(date)}`:""}`;
+  // Two attempts with a 1s gap. Single-shot 8s was too tight on Render
+  // cold starts and transient Frankfurter hiccups, forcing users to
+  // delete+repaste the ISIN to manually retrigger the call.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await fetch(url, {signal: AbortSignal.timeout(15000)});
+      if (r.ok) {
+        const data = await r.json();
+        if (data.ok && typeof data.rate === "number") {
+          state.fxCache[key] = data.rate;
+          // Capture provenance for the trust layer — fetched_at lets us
+          // show "as of <time>" without round-tripping the backend.
+          state.fxMeta[key] = {
+            source: data.fx_source || "ECB/Frankfurter",
+            date: data.date || "",
+            fetched_at: Date.now()
+          };
+          state.fxFailures.delete(from);
+          pruneCaches();
+          return data.rate;
+        }
+      }
+    } catch(e) {}
+    if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
+  }
+  state.fxFailures.add(from);
+  return null;
 }
 
 async function toUSD(amount, fromCcy, date) {
@@ -1138,7 +1229,14 @@ function buildPortfolioSummary() {
     const type = holdingClass(h);
     return `${name} (${type}): $${fmt(h.current||0)}, ${total>0?((h.current||0)/total*100).toFixed(1):0}% of portfolio`;
   });
-  return {total,paid,pnl:total-paid,netWorth:total-totalDebt,totalDebt,items,classes:computeAssetClasses()};
+  // Pull the ranked shock list straight from the risk engine so the briefing
+  // narrates real numbers (top risk + $ impact), never hardcoded copy.
+  const breaks = computeBreaks().map(b => ({
+    name: b.name,
+    impact: Math.round(b.impact),
+    pct: total>0 ? +(b.impact/total*100).toFixed(1) : 0,
+  }));
+  return {total,paid,pnl:total-paid,netWorth:total-totalDebt,totalDebt,items,breaks,classes:computeAssetClasses(),bondDuration:computeEffectiveDuration()};
 }
 
 // Paint cached briefing (or the placeholder) into both briefing cards.
@@ -1155,7 +1253,7 @@ function paintCachedBriefing() {
     } else {
       el.className = "briefing-text";
       el.setAttribute("style","color:var(--muted);font-style:italic");
-      el.innerHTML = 'No briefing yet. Click below to generate one — each click sends one AI request.';
+      el.innerHTML = 'No warning yet. Click below to generate one — each click sends one AI request.';
     }
   });
 }
@@ -1233,20 +1331,76 @@ const PROMPTS = {
       .map(([k, v]) => `${k} ${(v / s.total * 100).toFixed(0)}%`)
       .join(", ");
   },
+  // The risk engine's ranked shock list, formatted for the warning briefing.
+  // These are GROUND TRUTH dollar losses — the model narrates them, never invents.
+  _breaksBlock(s) {
+    if (!s.breaks || !s.breaks.length) return "RISK ENGINE: not enough holdings to rank shocks.";
+    return s.breaks.slice(0, 4)
+      .map((b, i) => `${i + 1}. ${b.name}: ${b.impact < 0 ? "-" : "+"}$${fmt(Math.abs(b.impact))} (${b.pct}% of portfolio)`)
+      .join("\n");
+  },
+  // Duration line — empty string when we have nothing real to report, so
+  // callers can splice it in unconditionally without padding the prompt.
+  _bondDurationLine(s) {
+    const bd = s.bondDuration;
+    if (!bd || bd.duration == null) return "";
+    const cov = (bd.coverage * 100).toFixed(0);
+    return `\n- Effective bond duration: ${bd.duration.toFixed(2)} years (provenance: ${bd.provenance}, coverage: ${cov}% of bond value). When you cite this figure, state explicitly whether it is COMPUTED (from direct-bond cash flows) or ESTIMATED (from a fund-level table), and flag the figure if coverage is below 70%.`;
+  },
+
+  // Render the investor profile as a compact context block. Emits ONLY known
+  // fields so the model is never told a default that would change advice. In
+  // this app investorProfile is always an object (fields nullable), so we
+  // treat an all-empty profile the same as "none provided".
+  _profileBlock(p) {
+    const L = [];
+    if (p) {
+      if (p.isUSPerson === false)        L.push("Non-US person (NRA) for US tax — US estate-situs rules apply.");
+      if (p.taxResidence)                L.push(`Tax-resident: ${p.taxResidence}.`);
+      if (p.spendingCurrency)            L.push(`Spends in: ${p.spendingCurrency}.`);
+      if (p.returnObjective)             L.push(`Stated goal: ${p.returnObjective}` +
+                                           (p.benchmark ? ` (${p.benchmarkMode || "beat"} ${p.benchmark})` : "") + ".");
+      if (p.maxDrawdownPct != null)      L.push(`Max drawdown tolerance: ${p.maxDrawdownPct}%.`);
+      if (p.horizonYears != null)        L.push(`Time horizon: ~${p.horizonYears} years.`);
+      if (p.convictionHolds?.length)     L.push(`NEVER suggest selling: ${p.convictionHolds.join(", ")}.`);
+      if (p.ceilings?.aiTechPct != null) L.push(`Self-imposed AI/tech ceiling: ${p.ceilings.aiTechPct}%.`);
+      if (p.annualIncomeUSD != null)     L.push(`Stable outside income: ~$${fmt(p.annualIncomeUSD)}/yr.`);
+    }
+    if (!L.length) return "\nINVESTOR CONTEXT: none provided — keep all advice general and say so.";
+    return "\nINVESTOR CONTEXT (ground truth — reason from this, respect every constraint):\n- " + L.join("\n- ");
+  },
+
+  // The "what we still don't know" limitation, listing ONLY context actually
+  // missing from the profile (so we don't claim ignorance of facts we have).
+  _limitationsContext(p) {
+    const missing = [];
+    if (!p || p.returnObjective == null)                      missing.push("goal");
+    if (!p || p.horizonYears == null)                         missing.push("time horizon");
+    if (!p || (p.taxResidence == null && p.isUSPerson == null)) missing.push("tax residency");
+    if (!p || p.annualIncomeUSD == null)                      missing.push("income outside this portfolio");
+    missing.push("assets & liabilities held elsewhere");     // never captured by this app
+    return `You are NOT a licensed adviser. The user still hasn't provided: ${missing.join(", ")}. Don't assume these — frame advice accordingly.`;
+  },
 
   morningBriefing(s) {
-    return `You are a senior portfolio manager writing a morning briefing memo. Today is ${PROMPTS._today()}.
+    const top = (s.breaks && s.breaks[0]) || null;
+    const topUSD = top ? `${top.impact < 0 ? "-" : ""}$${fmt(Math.abs(top.impact))}` : null;
+    return `You are a portfolio risk officer writing a WARNING briefing — not a status update. Today is ${PROMPTS._today()}.
 
-Portfolio summary:
+Your job: tell the investor the single biggest threat to THIS portfolio right now, in dollars, and the one move that reduces it most. Do NOT open with net worth, daily performance, or "good morning." Open with the risk.
+
+RISK ENGINE OUTPUT — the user's actual single-shock losses, ranked by dollar impact (GROUND TRUTH; never invent or round away these numbers):
+${PROMPTS._breaksBlock(s)}
+
+Portfolio context (for naming the trade — not the lede):
 - Total value: $${fmt(s.total)}
-- Net worth (after debts): $${fmt(s.netWorth)}
-- P&L since purchase: ${s.pnl>=0?'+':''}$${fmt(s.pnl)} (${s.pnl>=0?'+':''}${s.paid>0?(s.pnl/s.paid*100).toFixed(1):0}%)
-- Asset classes: ${PROMPTS._assetMix(s)}
+- Asset classes: ${PROMPTS._assetMix(s)}${PROMPTS._bondDurationLine(s)}
+- Largest positions: ${s.items.slice(0,5).join('; ')}
 
-Holdings:
-${s.items.join('\n')}
-
-Write a 3-sentence CIO-style morning briefing. Be specific by naming actual holdings and dollar amounts. Identify the biggest active bet, the key risk, and one concrete observation. Plain text, no bullet points, no markdown.`;
+Write exactly 3 sentences, plain text, no markdown, no bullet points:
+1. The emerging risk — name the #1 shock above and the exact dollar loss it would inflict${topUSD?` (≈ ${topUSD})`:''}, and what in the portfolio drives it.
+2. Why it matters now — anchor it to a concrete concentration or exposure, naming the specific holdings or asset class responsible.
+3. The one action that cuts this risk most — specific and concrete (e.g. trim a named exposure toward a more defensive one), framed as a view to weigh with a qualified adviser, not a command.`;
   },
 
   intelBriefing(s) {
@@ -1254,7 +1408,7 @@ Write a 3-sentence CIO-style morning briefing. Be specific by naming actual hold
 
 Portfolio: $${fmt(s.total)} total, $${fmt(s.netWorth)} net worth.
 Holdings: ${s.items.join('; ')}
-Asset mix: ${PROMPTS._assetMix(s)}
+Asset mix: ${PROMPTS._assetMix(s)}${PROMPTS._bondDurationLine(s)}
 
 Write 4-5 sentences of CIO-style portfolio commentary. Cover: (1) biggest active bet and whether it's paying off, (2) key macro risk to this portfolio right now, (3) one defensive observation, (4) one opportunity. Name specific holdings and dollar amounts. Professional tone, plain text, no markdown.`;
   },
@@ -1264,7 +1418,7 @@ Write 4-5 sentences of CIO-style portfolio commentary. Cover: (1) biggest active
 
 Portfolio: $${fmt(s.total)} total value.
 Holdings: ${s.items.join('; ')}
-Asset mix: ${PROMPTS._assetMix(s)}
+Asset mix: ${PROMPTS._assetMix(s)}${PROMPTS._bondDurationLine(s)}
 
 Question: ${q}
 
@@ -1288,13 +1442,15 @@ Answer in 2-4 sentences. Be specific, reference actual holdings and numbers wher
 
 GROUND TRUTH — these are the user's ACTUAL holdings. Reason ONLY from these numbers. Do NOT invent holdings, prices, or percentages not listed here.
 - Total portfolio value: $${fmt(s.total)}
-- Asset-class distribution: ${assetClasses}
+- Asset-class distribution: ${assetClasses}${PROMPTS._bondDurationLine(s)}
 - Geographic distribution (after ETF look-through): ${geo}
 - Sector distribution (after ETF look-through): ${sectors}
+${PROMPTS._profileBlock(state.investorProfile)}
+${findingsForPrompt(runFindings(state))}
 
 IMPORTANT LIMITATIONS you MUST respect:
 - These exposure figures come from heuristic look-through, not a full factor model. Where precision is uncertain, say so. Do NOT project false precision.
-- You are NOT a licensed adviser and this user has NOT given a full financial picture (goals, horizon, tax, income, other assets). Frame everything accordingly.
+- ${PROMPTS._limitationsContext(state.investorProfile)}
 
 TASK:
 1. Use web search to establish the CURRENT macro backdrop (this week): rates, inflation, major market/geopolitical developments relevant to this specific portfolio's geography and sectors.
@@ -1302,7 +1458,15 @@ TASK:
    • WHERE YOU STAND — describe their actual distribution by geography, sector, and asset class, and the one or two biggest concentrations or tensions.
    • THE WORLD RIGHT NOW — the current macro picture, tied specifically to THEIR exposures (not generic commentary).
    • VIEWS TO CONSIDER — specific repositioning ideas (e.g. "reduce US-tech concentration toward X"), BUT framed explicitly as views to discuss with a qualified adviser, with your reasoning shown so the reader can judge it. Never phrase as a command. Show the "why," including what would make the view wrong.
-3. End with one honest line on the biggest thing you DON'T know about their situation.
+
+WRITING STANCE:
+- Open with a 3-sentence executive summary: what's right, the core tension, the avoidable cost.
+- Name specific holdings and dollar amounts. Sequence actions by risk-adjusted impact.
+- State trade-offs plainly — no free lunch. If trimming X raises return AND worst-case drawdown, say so.
+- Respect every hard constraint in INVESTOR CONTEXT (never suggest selling conviction holds).
+- The DETERMINISTIC FINDINGS above are computed in code — treat them as ground truth, weave them in, and do NOT recompute their numbers.
+- For findings flagged "user's call," present the choice and hold them to picking — don't pick for them.
+- End with the single biggest thing you still don't know about their situation.
 
 Cite macro claims to the sources you find. Keep the whole thing tight and readable — this should feel like a sharp private-bank memo, not a generic market update.`;
   },
@@ -1316,6 +1480,346 @@ Respond ONLY with valid JSON, no prose, no markdown:
 {"class":{"Equity":-3,"Bonds":3},"geo":{"US":-2,"Europe":2},"sector":{"Technology":-4,"Energy":4},"reasoning":"one short paragraph citing what in the news drives these tilts"}`;
   },
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   FINDINGS ENGINE  (Expansion B)
+   Deterministic rules over holdings + investor profile. Each rule is a PURE
+   function (holdings, ctx) => Finding[]; rules never touch the network and
+   return [] when they lack inputs. Anything that is a *rule* lives here so
+   it's always correct and auditable; anything that is *judgement* stays in
+   the prompt. Wired to this app's REAL data shapes:
+     • holdingClass(h) → "Equity"|"ETF"|"Bond"|"Cash"|"Crypto"|"Commodity"|"Real Estate"
+     • state.geoAgg keyed by ISO-2 code ("US"), values in % (0..100)
+     • state.sectorAgg keyed by sector name ("Technology"), values in %
+     • computeAssetClasses() → {Equities,ETFs,Bonds,Cash,"Real Estate",Crypto,Commodities}
+     • currentAllocation().class → {Equity,Bonds,Cash,Alternatives} (matches BASELINE)
+     • holdings carry h.isin / h.ticker / h.asset_type; names live in state.infoMap
+
+   @typedef {Object} Finding
+   @property {string}  id            stable slug, e.g. "us_situs_estate"
+   @property {string}  title         one line, human-readable
+   @property {"high"|"medium"|"low"|"info"} severity
+   @property {string}  body          1–3 sentences of plain explanation
+   @property {number=} valueUSD      the dollar amount the finding is about
+   @property {number=} costUSD       estimated $ cost/exposure (ranking + memo)
+   @property {Object[]} evidence     [{label, value}] — auditable inputs
+   @property {string=} action        concrete suggested move
+   @property {boolean} userDecision  true = it's the user's call, don't decide for them
+   @property {string=} disclaimer    rule-specific caveat
+════════════════════════════════════════════════════════════════════ */
+
+// ── Detection helpers (conservative classifiers) ───────────────────────────
+// US-situs = US-listed individual securities + US-domiciled funds. Irish (IE) /
+// Luxembourg (LU) UCITS are NOT US-situs. When unsure, mark UNKNOWN — never
+// silently assume. These flag for review; they do not give the legal answer.
+function domicileOf(h) {
+  const isin = (h.isin || "").toUpperCase();
+  if (h.manualDomicile) return h.manualDomicile;            // user override wins
+  if (isin.startsWith("US")) return "US";
+  if (isin.startsWith("IE") || isin.startsWith("LU")) return "UCITS";
+  if (isin.length === 12) return isin.slice(0, 2);          // other ISO-2 prefix
+  return "UNKNOWN";
+}
+function isUSSitus(h) {
+  const cls = holdingClass(h);                              // app's real classifier
+  const d = domicileOf(h);
+  if (cls === "Equity") return d === "US";                  // US-listed single stock
+  if (cls === "ETF")    return d === "US";                  // US-domiciled fund
+  if (h.type === "crypto" && h.isin) return d === "US";     // US-domiciled spot ETF
+  return false;                                             // cash, RE, bonds, commodities → out of scope
+}
+function pctOf(valueUSD, total) { return total ? (valueUSD / total * 100) : 0; }
+
+// Holdings carry no .name (it lives in infoMap); resolve display name + symbol.
+function _fName(h) {
+  if (h.isin) { const info = state.infoMap[h.isin.toUpperCase()] || {}; return info.name || h.ticker || h.isin; }
+  if (h.type === "real_estate") return h.address || h.city || "Real estate";
+  if (h.type === "crypto")      return h.crypto_type || "Crypto";
+  if (h.type === "commodity")   return h.commodity_type || "Commodity";
+  return h.isin || "Holding";
+}
+function _fSymbol(h) {
+  return String(h.ticker || (h.type === "crypto" ? h.crypto_type : "") || h.isin || "");
+}
+
+// ── Rule 1 · US-situs estate exposure (high) ───────────────────────────────
+function f_usSitusEstate(holdings, ctx) {
+  const p = ctx.profile;
+  if (!p || p.isUSPerson !== false) return [];              // only for confirmed non-US persons
+  const situs = holdings.filter(isUSSitus);
+  const exposed = situs.reduce((a, h) => a + (h.current || 0), 0);
+  const line = p.ceilings?.usSitusUSD ?? 60000;            // statutory NRA exemption (assumption)
+  if (exposed <= line) return [];
+  const over = exposed - line;
+  const estTax = Math.round(over * 0.40);                  // top marginal band (assumption)
+  const keep = new Set((p.convictionHolds || []).map(s => s.toUpperCase()));
+  const reWrap = situs.filter(h => !keep.has(_fSymbol(h).toUpperCase()) && !keep.has(_fName(h).toUpperCase()));
+  return [{
+    id: "us_situs_estate", severity: "high", userDecision: false,
+    title: `US-situs assets $${fmt(exposed)} — $${fmt(over)} over the $${fmt(line)} line`,
+    body: `As a non-US person, US-situs assets above $${fmt(line)} can face US estate tax up to 40%. ` +
+          `Re-wrapping US-listed names into UCITS ETFs removes situs while keeping the exposure.`,
+    valueUSD: exposed, costUSD: estTax,
+    evidence: situs.map(h => ({ label: _fName(h), value: `$${fmt(h.current || 0)} (${domicileOf(h)})` })),
+    action: reWrap.length
+      ? `Convert ${reWrap.map(_fSymbol).filter(Boolean).join(", ") || reWrap.map(_fName).join(", ")} into UCITS S&P/Nasdaq wrappers; ` +
+        `keeps ${[...keep].join(", ") || "core holds"} untouched and drops situs below the line.`
+      : `Re-wrap US-listed exposure into UCITS equivalents to drop situs below the line.`,
+    disclaimer: "General NRA rules; no US treaty assumed. Confirm with cross-border tax counsel before acting."
+  }];
+}
+
+// ── Rule 2 · Wrapper / dividend-withholding drag (medium) ──────────────────
+function f_wrapperWithholding(holdings, ctx) {
+  const p = ctx.profile;
+  if (!p || p.isUSPerson !== false) return [];
+  const usFunds = holdings.filter(h => holdingClass(h) === "ETF" && domicileOf(h) === "US");
+  if (!usFunds.length) return [];
+  const v = usFunds.reduce((a, h) => a + (h.current || 0), 0);
+  return [{
+    id: "wrapper_withholding", severity: "medium", userDecision: false,
+    title: `$${fmt(v)} in US-domiciled funds — 30% dividend withholding vs 15% via UCITS`,
+    body: "US-domiciled funds withhold US dividends at 30% for many non-US holders; an Irish UCITS equivalent typically reduces this to 15% and removes US estate situs.",
+    valueUSD: v,
+    evidence: usFunds.map(h => ({ label: _fName(h), value: `$${fmt(h.current || 0)}` })),
+    action: "Prefer the Irish-domiciled UCITS share class of the same index for future buys and re-wraps.",
+    disclaimer: "Withholding depends on the holder's treaty position; confirm specifics."
+  }];
+}
+
+// ── Rule 3 · Single-risk-engine concentration (medium) ─────────────────────
+// Diversification by ticker count is not diversification by risk factor.
+function f_factorConcentration(holdings, ctx) {
+  const usLargeCap = ctx.geoAgg?.["US"] || 0;              // geoAgg already a % (ISO-2 keyed)
+  const tech = (ctx.sectorAgg?.["Technology"] || 0) + (ctx.sectorAgg?.["Communication Services"] || 0);
+  const findings = [];
+  if (usLargeCap >= 40) findings.push({
+    id: "factor_us_engine", severity: "medium", userDecision: false,
+    title: `~${usLargeCap.toFixed(0)}% of the book rides one US large-cap engine`,
+    body: "S&P, Nasdaq, income-overlay funds and US single names mostly draw on the same ~30 mega-caps. A US tech drawdown hits most of them at once, regardless of ticker count.",
+    valueUSD: Math.round(usLargeCap / 100 * ctx.total),
+    evidence: [{ label: "US (look-through)", value: `${usLargeCap.toFixed(0)}%` },
+               { label: "Tech + Comms", value: `${tech.toFixed(0)}%` }],
+    action: "Treat ticker-count diversification as cosmetic here; diversify by risk factor (size, geography, style), not by adding more US mega-cap lines."
+  });
+  return findings;
+}
+
+// ── Rule 4 · Self-imposed ceiling breach (info) ────────────────────────────
+function f_ceilingBreach(holdings, ctx) {
+  const cap = ctx.profile?.ceilings?.aiTechPct;
+  if (cap == null) return [];
+  const tech = (ctx.sectorAgg?.["Technology"] || 0) + (ctx.sectorAgg?.["Communication Services"] || 0);
+  if (tech < cap - 2) return [];                            // comfortably under → no finding
+  return [{
+    id: "ceiling_ai_tech", severity: "info", userDecision: false,
+    title: `AI/tech ~${tech.toFixed(0)}% is at your ${cap}% ceiling`,
+    body: "You have essentially no room to add AI/tech under your own rule. Adding would require trimming elsewhere first — this is the rule working as intended.",
+    valueUSD: Math.round(tech / 100 * ctx.total),
+    evidence: [{ label: "Tech + Comms (look-through)", value: `${tech.toFixed(0)}%` },
+               { label: "Your ceiling", value: `${cap}%` }],
+    action: "Park new AI ideas on a watchlist; only add after trimming an existing tech line."
+  }];
+}
+
+// ── Rule 5 · Product redundancy (medium / low) ─────────────────────────────
+function f_redundancy(holdings, ctx) {
+  const out = [];
+  // Acc + Dist of the same index: normalize the name and group.
+  const keyOf = n => (n || "").replace(/\b(acc|dist|distributing|accumulating)\b/ig, "")
+                              .replace(/\s+/g, " ").trim().toLowerCase();
+  const groups = {};
+  holdings.forEach(h => { const k = keyOf(_fName(h)); if (k) (groups[k] ||= []).push(h); });
+  Object.values(groups).forEach(g => {
+    if (g.length > 1 && /s&p|msci|nasdaq|index/i.test(_fName(g[0]))) {
+      const v = g.reduce((a, h) => a + (h.current || 0), 0);
+      out.push({
+        id: "redundant_index_" + keyOf(_fName(g[0])).slice(0, 12).replace(/\s/g, "_"),
+        severity: "medium", userDecision: false, valueUSD: v,
+        title: `Duplicate index exposure: ${g.map(_fName).join(" + ")}`,
+        body: "You hold two share classes of the same index doing the same job. If the goal is growth, the distributing class pays taxable income you may not want.",
+        evidence: g.map(h => ({ label: _fName(h), value: `$${fmt(h.current || 0)}` })),
+        action: "Consolidate into the accumulating share class unless you specifically need the distributions."
+      });
+    }
+  });
+  // Income / covered-call product vs a growth mandate.
+  if (ctx.profile?.returnObjective && /growth|beat/.test(ctx.profile.returnObjective)) {
+    holdings.filter(h => /equity premium income|covered call|buywrite|qyld|jepi|jepq/i.test(_fName(h)))
+      .forEach(h => out.push({
+        id: "income_in_growth_" + _fSymbol(h).toLowerCase(), severity: "low", userDecision: true,
+        title: `${_fName(h)} caps upside in a growth mandate`, valueUSD: h.current || 0,
+        body: "A covered-call income product trades away upside for yield — the opposite of a pure-growth objective.",
+        evidence: [{ label: _fName(h), value: `$${fmt(h.current || 0)}` }],
+        action: "Decide deliberately: keep as a volatility dampener, or swap for plain growth exposure."
+      }));
+  }
+  return out;
+}
+
+// ── Rule 6 · Drift vs decision (info / medium) ─────────────────────────────
+// Compare current asset-class weights to the risk-profile baseline weights.
+// Uses currentAllocation() so both sides share the {Equity,Bonds,Cash,Alternatives} buckets.
+function f_drift(holdings, ctx) {
+  if (!ctx.baseline || !ctx.alloc) return [];
+  const out = [];
+  Object.entries(ctx.alloc.class).forEach(([cls, cur]) => {
+    const tgt = ctx.baseline.class?.[cls];
+    if (tgt == null) return;
+    const gap = cur - tgt;
+    if (Math.abs(gap) >= 8) out.push({
+      id: "drift_" + cls.toLowerCase(), severity: Math.abs(gap) >= 15 ? "medium" : "info",
+      userDecision: true, valueUSD: Math.round(cur / 100 * ctx.total),
+      title: `${cls} is ${cur.toFixed(0)}% vs ~${tgt}% target — ${gap > 0 ? "overweight" : "underweight"} by drift`,
+      body: `This weight may reflect price drift rather than a deliberate choice. If you'd pick ${cur.toFixed(0)}% on a blank sheet today, keep it; if not, it's a rebalancing candidate.`,
+      evidence: [{ label: `${cls} current`, value: `${cur.toFixed(0)}%` },
+                 { label: "Baseline target", value: `${tgt}%` }],
+      action: `Set an explicit target for ${cls} and rebalance the difference.`
+    });
+  });
+  return out;
+}
+
+// ── Rule 7 · Idle-cash opportunity cost (medium) ───────────────────────────
+function f_idleCash(holdings, ctx) {
+  const cash = (ctx.classes.Cash || 0);
+  if (!cash) return [];
+  const buffer = ctx.profile?.nearTermCashNeedUSD ?? Math.min(20000, cash * 0.25);
+  const idle = Math.max(0, cash - buffer);
+  if (idle < 5000) return [];
+  const mmfRate = 0.04;                                     // ~T-bill / MMF (assumption — refresh from a rate feed)
+  return [{
+    id: "idle_cash", severity: "medium", userDecision: false,
+    title: `~$${fmt(idle)} idle cash earning near 0%`,
+    body: "Cash beyond a sensible buffer is an opportunity cost while short-term rates are ~4%.",
+    valueUSD: idle, costUSD: Math.round(idle * mmfRate),
+    evidence: [{ label: "Total cash", value: `$${fmt(cash)}` },
+               { label: "Buffer kept", value: `$${fmt(buffer)}` },
+               { label: "Idle", value: `$${fmt(idle)}` }],
+    action: `Keep ~$${fmt(buffer)} as buffer; move the rest into a USD money-market / short T-bill fund at ~4%.`
+  }];
+}
+
+// ── Rule 8 · Goal / structure consistency (high) ───────────────────────────
+function f_goalStructure(holdings, ctx) {
+  const p = ctx.profile;
+  if (!p || p.returnObjective !== "beat_benchmark") return [];
+  const equity = pctOf((ctx.classes.Equities || 0) + (ctx.classes.ETFs || 0), ctx.total);
+  const defensive = 100 - equity;
+  if (defensive < 25) return [];                            // already growth-shaped → no tension
+  return [{
+    id: "goal_structure", severity: "high", userDecision: true,
+    title: `Goal says "beat ${p.benchmark || "the index"}" but ${defensive.toFixed(0)}% is defensive`,
+    body: `A book that is ${defensive.toFixed(0)}% in gold/bonds/cash structurally trails an equity index by that block's drag. You can't have maximum safety and index-beating returns from the same book — pick which goal wins.`,
+    valueUSD: Math.round(defensive / 100 * ctx.total),
+    evidence: [{ label: "Equity (incl. ETFs)", value: `${equity.toFixed(0)}%` },
+               { label: "Defensive (bonds/cash/alts)", value: `${defensive.toFixed(0)}%` }],
+    action: `Either lift equity toward 70%+ (accepting deeper worst-case drawdown), or change the stated goal to "balanced growth." The engine won't choose for you — but it will hold you to choosing.`
+  }];
+}
+
+// ── Orchestrator ───────────────────────────────────────────────────────────
+const RULES = [f_usSitusEstate, f_wrapperWithholding, f_factorConcentration,
+               f_ceilingBreach, f_redundancy, f_drift, f_idleCash, f_goalStructure];
+
+const SEVERITY_RANK = { high: 0, medium: 1, low: 2, info: 3 };
+
+// Runs every rule, sorts by severity then dollar impact. Fail-safe: one rule
+// throwing can't break the others. No network calls anywhere in here.
+function runFindings(state) {
+  const holdings = (state.holdings || []).filter(h => h.type !== "debt");
+  const s = buildPortfolioSummary();                        // reuse existing summary
+  const ctx = {
+    total: s.total, classes: s.classes,
+    sectorAgg: state.sectorAgg || {}, geoAgg: state.geoAgg || {},
+    profile: state.investorProfile || null,
+    baseline: BASELINE[(state.riskProfile && state.riskProfile.name)] || BASELINE.Balanced,
+    alloc: currentAllocation()
+  };
+  const findings = RULES.flatMap(fn => {
+    try { return fn(holdings, ctx) || []; }
+    catch (e) { console.warn("rule failed", fn.name, e); return []; }
+  });
+  findings.sort((a, b) => (SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
+                       || ((b.costUSD || 0) - (a.costUSD || 0)));
+  return findings;
+}
+
+// Render findings as a compact, auditable block for the synthesis prompt.
+function findingsForPrompt(findings) {
+  if (!findings.length) return "\nDETERMINISTIC FINDINGS: none triggered.";
+  return "\nDETERMINISTIC FINDINGS (computed in code — treat as ground truth, do not recompute):\n"
+    + findings.map((f, i) => `${i + 1}. [${f.severity.toUpperCase()}] ${f.title}`
+        + (f.costUSD ? ` (~$${fmt(f.costUSD)} at stake)` : "")
+        + `\n   ${f.body}`
+        + (f.action ? `\n   Suggested: ${f.action}` : "")
+        + (f.userDecision ? `\n   NOTE: this is the user's call — present the trade-off, do not decide for them.` : "")
+      ).join("\n");
+}
+
+// ── Findings panel renderer (UI · Risk Profile screen) ─────────────────────
+// Severity → colour. high=red, medium=amber, low/info=blue (reuses app vars).
+function _findingSeverityStyle(sev) {
+  if (sev === "high")   return { color: "var(--red)",  bg: "#fef2f2",         border: "#fecaca",        label: "High" };
+  if (sev === "medium") return { color: "#92400e",     bg: "#fffbeb",         border: "#fcd34d",        label: "Medium" };
+  if (sev === "low")    return { color: "var(--blue)", bg: "var(--blue-light)", border: "var(--blue-mid)", label: "Low" };
+  return                       { color: "var(--blue)", bg: "var(--blue-light)", border: "var(--blue-mid)", label: "Info" };
+}
+
+function renderFindings() {
+  const el = document.getElementById("findings-body");
+  if (!el) return;
+  let findings = [];
+  try { findings = runFindings(state) || []; }
+  catch (e) { console.warn("renderFindings: runFindings failed", e); }
+
+  const profileDone = !!(state.investorProfile && state.investorProfile.completedAt);
+  const hasHoldings = (state.holdings || []).some(h => h.type !== "debt");
+
+  if (!findings.length) {
+    el.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:13px;line-height:1.7;padding:1.5rem 1rem">`
+      + (hasHoldings
+          ? `✓ No findings triggered — nothing in your book trips a rule right now.`
+          : `Add holdings to see findings.`)
+      + (!profileDone
+          ? `<br><span style="font-size:12px">Complete your <a href="#" onclick="openRiskQuestionnaire();return false;" style="color:var(--blue)">investor profile</a> to unlock personalized checks (estate, FX, ceilings, goal fit).</span>`
+          : ``)
+      + `</div>`;
+    return;
+  }
+
+  const counts = findings.reduce((a, f) => { a[f.severity] = (a[f.severity] || 0) + 1; return a; }, {});
+  const summary = ["high", "medium", "low", "info"].filter(k => counts[k]).map(k => `${counts[k]} ${k}`).join(" · ");
+
+  const cards = findings.map(f => {
+    const s = _findingSeverityStyle(f.severity);
+    const ev = (f.evidence || []).length
+      ? `<details style="margin-top:.6rem"><summary style="cursor:pointer;font-size:12px;color:var(--muted);font-weight:500">Evidence (${f.evidence.length})</summary>`
+        + `<table style="width:100%;margin-top:.5rem;font-size:12px;border-collapse:collapse">`
+        + f.evidence.map(e => `<tr><td style="padding:3px 8px 3px 0;color:var(--muted);vertical-align:top">${escapeHtml(String(e.label))}</td>`
+            + `<td style="padding:3px 0;font-family:'DM Mono',monospace;text-align:right;white-space:nowrap">${escapeHtml(String(e.value))}</td></tr>`).join("")
+        + `</table></details>`
+      : ``;
+    const cost = f.costUSD ? `<span style="font-family:'DM Mono',monospace;font-size:12px;color:${s.color};white-space:nowrap">~$${fmt(f.costUSD)} at stake</span>` : ``;
+    const decision = f.userDecision ? `<span style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px">Your call</span>` : ``;
+    return `<div style="border:1px solid var(--border);border-left:3px solid ${s.color};border-radius:8px;padding:.9rem 1rem;margin-bottom:.75rem;background:#fff">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:.4rem">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:${s.color};background:${s.bg};border:1px solid ${s.border};border-radius:4px;padding:2px 7px">${s.label}</span>
+          ${decision}
+        </div>
+        ${cost}
+      </div>
+      <div style="font-size:14px;font-weight:600;letter-spacing:-.01em;line-height:1.35;margin-bottom:.35rem">${escapeHtml(f.title)}</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">${escapeHtml(f.body)}</div>
+      ${f.action ? `<div style="font-size:13px;line-height:1.6;margin-top:.5rem"><b style="color:var(--text)">Suggested:</b> <span style="color:var(--muted)">${escapeHtml(f.action)}</span></div>` : ``}
+      ${f.disclaimer ? `<div style="font-size:11px;color:var(--hint);font-style:italic;margin-top:.45rem">${escapeHtml(f.disclaimer)}</div>` : ``}
+      ${ev}
+    </div>`;
+  }).join("");
+
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:.85rem">${findings.length} finding${findings.length !== 1 ? "s" : ""} · ${summary}</div>` + cards;
+}
 
 async function generateHouseView() {
   const el = document.getElementById("houseview-content");
@@ -1487,6 +1991,288 @@ function holdingClass(h) {
   if (h.type === "commodity")    return "Commodity";
   if (h.isin && isETF(h.isin))   return "ETF";
   return "Equity";
+}
+
+// Stable id per holding for the manualOverrides map. ISIN-keyed holdings
+// share an id with their bond/etf row of the same ISIN — that's intentional:
+// a manual override on AAPL applies regardless of how the row was entered.
+function holdingId(h) {
+  if (h.isin) return (h.isin || "").toUpperCase();
+  if (h.type === "real_estate") return `re:${(h.address||"").toLowerCase()}|${(h.city||"").toLowerCase()}`;
+  if (h.type === "crypto")      return `crypto:${h.crypto_type||""}`;
+  if (h.type === "commodity")   return `commodity:${h.commodity_type||""}`;
+  return "";
+}
+
+// Inspect a holding's provenance and the FX/override state to decide what
+// loud flags to attach. Returns [{kind, severity, label, title}] for
+// rendering as inline chips in the holdings table. Severity is the trust
+// signal: high = number might be wrong, medium = number is stale, low =
+// number is fine but came from a non-default path (e.g. manual override).
+function holdingFlags(h) {
+  const flags = [];
+  const p = h.provenance || {};
+  // Manual override — clear signal that this row is user-pinned. Trumps
+  // any other flag because the value is "right" by construction.
+  if (h._override) {
+    const which = Object.keys(h._override).filter(k => k !== "ts").join("+");
+    flags.push({kind:"manual", severity:"low", label:`manual:${which}`,
+                title:`User-pinned ${which}. Won't be overwritten on re-fetch.`});
+    return flags;
+  }
+  if (p.fx_failed) {
+    flags.push({kind:"fx_failed", severity:"high", label:"FX failed",
+                title:`No FX rate for ${h.live_currency||h.currency||"the listing currency"} — the USD value shown may be the unconverted local amount.`});
+  }
+  if (p.mapping_ambiguous) {
+    const n = p.mapping_alternates || 0;
+    flags.push({kind:"mapping_ambiguous", severity:"high",
+                label:`+${n} listing${n!==1?"s":""}`,
+                title:`OpenFIGI returned ${n+1} candidates for this ISIN. We priced ${p.price_source||"the first one"}. If you see a wrong currency, that's the likely cause.`});
+  }
+  if (p.price_freshness === "cached" && (p.cache_age_seconds||0) > 300) {
+    const m = Math.round((p.cache_age_seconds||0)/60);
+    flags.push({kind:"price_stale", severity:"medium", label:`stale ${m}m`,
+                title:`Backend served a cached price ${m} minutes old. Refresh to refetch.`});
+  }
+  return flags;
+}
+
+// Inline chip style by severity. Returned as raw HTML for concatenation.
+function _flagChipHTML(flag) {
+  const styles = {
+    high:   "background:#fef2f2;border:1px solid #fecaca;color:var(--red);",
+    medium: "background:#fffbeb;border:1px solid #fcd34d;color:#92400e;",
+    low:    "background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;"
+  };
+  const s = styles[flag.severity] || styles.low;
+  return `<span title="${escapeHtml(flag.title)}" style="${s}border-radius:4px;padding:1px 6px;font-size:10px;margin-left:6px;display:inline-block;vertical-align:middle;font-family:'Inter',sans-serif">${escapeHtml(flag.label)}</span>`;
+}
+
+// Trust-layer provenance attached to each holding. The frontend reads:
+//   provenance.price_source / price_freshness / cache_age_seconds / price_as_of
+//   provenance.mapping_ambiguous + mapping_alternates  (silent-wrong-ticker risk)
+//   provenance.profile_source                          ("yahoo" | "fmp" | "none")
+//   provenance.fx { source, date, fetched_at } + provenance.fx_failed
+// All fields are optional — missing means we don't know, never show wrong.
+function holdingProvenance(quote, fxCcy, fxDate) {
+  const p = {
+    price_source:        (quote && quote.price_source)        || null,
+    price_freshness:     (quote && quote.price_freshness)     || null,
+    cache_age_seconds:   (quote && (quote.cache_age_seconds ?? 0)),
+    price_as_of:         (quote && quote.as_of)               || null,
+    mapping_ambiguous:   !!(quote && quote.mapping_ambiguous),
+    mapping_alternates:  (quote && (quote.mapping_alternates ?? 0)),
+    profile_source:      (quote && quote.profile_source)      || null,
+    fx: null,
+    fx_failed: false
+  };
+  if (fxCcy) {
+    const norm = normalizeFXCurrency(fxCcy);
+    if (norm === "USD") {
+      p.fx = { source: "identity", date: "", fetched_at: null };
+    } else {
+      const key = `${norm}-USD-${fxDate||'latest'}`;
+      p.fx = state.fxMeta[key] || null;
+      p.fx_failed = state.fxFailures.has(norm);
+    }
+  }
+  return p;
+}
+
+// Bucket a holding for the data-confidence summary line:
+//   live     — auto-fetched, fresh, no high-severity flag
+//   fallback — cached, stale, FX-failed, or mapping-ambiguous
+//   manual   — bond/RE/etc. user-entered, OR explicit user override
+function holdingTrustBucket(h) {
+  if (h._override) return "manual";
+  const p = h.provenance || {};
+  if (p.price_freshness === "manual") return "manual";
+  if (p.price_freshness === "live") {
+    const hi = holdingFlags(h).some(f => f.severity === "high");
+    return hi ? "fallback" : "live";
+  }
+  return "fallback";  // cached, missing provenance, anything else
+}
+
+function renderDataConfidence() {
+  const el = document.getElementById("kpi-confidence");
+  if (!el) return;
+  const assets = state.holdings.filter(h => h.type !== "debt");
+  if (!assets.length) { el.textContent = ""; return; }
+  const counts = {live:0, fallback:0, manual:0};
+  for (const h of assets) counts[holdingTrustBucket(h)]++;
+  const parts = [`${counts.live} of ${assets.length} positions live`];
+  if (counts.fallback) parts.push(`${counts.fallback} fallback`);
+  if (counts.manual)   parts.push(`${counts.manual} manual`);
+  el.textContent = parts.join(" · ");
+}
+
+// Apply user-pinned overrides on top of freshly-built holdings. Precedence:
+//   value (final USD)  >  price (× qty → toUSD)  >  fxRate (× existing local)
+// Pre-override `current` and `provenance` are cached on each holding so this
+// is safe to call multiple times — second call resets first.
+async function applyManualOverrides(holdings) {
+  for (const h of holdings) {
+    const id = holdingId(h);
+    if (!id) continue;
+    // Restore pre-override state for re-applies.
+    if (h._originalCurrent != null) h.current = h._originalCurrent;
+    if (h._originalProvenance)       h.provenance = JSON.parse(JSON.stringify(h._originalProvenance));
+    delete h._override;
+    const ov = state.manualOverrides[id];
+    if (!ov) continue;
+    if (h._originalCurrent == null)   h._originalCurrent  = h.current;
+    if (!h._originalProvenance)       h._originalProvenance = h.provenance ? JSON.parse(JSON.stringify(h.provenance)) : null;
+    h._override = {...ov};
+    h.provenance = h.provenance || {};
+    if (typeof ov.value === "number" && ov.value > 0) {
+      h.current = ov.value;
+      h.provenance.price_source = "override:value";
+      h.provenance.price_freshness = "manual";
+      h.provenance.price_as_of = ov.ts ? new Date(ov.ts).toISOString() : null;
+      continue;
+    }
+    if (typeof ov.price === "number" && ov.price > 0) {
+      const qty = h.quantity || 1;
+      const ccy = ov.priceCurrency || h.live_currency || "USD";
+      const localValue = qty * ov.price;
+      let usd;
+      if (typeof ov.fxRate === "number" && ov.fxRate > 0) {
+        usd = localValue * ov.fxRate;
+      } else if (normalizeFXCurrency(ccy) === "USD") {
+        usd = localValue;
+      } else {
+        const r = await fetchFX(normalizeFXCurrency(ccy), "USD");
+        usd = r ? localValue * r : localValue;
+      }
+      h.current = usd;
+      h.provenance.price_source = "override:price";
+      h.provenance.price_freshness = "manual";
+      h.provenance.price_as_of = ov.ts ? new Date(ov.ts).toISOString() : null;
+      continue;
+    }
+    if (typeof ov.fxRate === "number" && ov.fxRate > 0 && h.live_price && h.quantity) {
+      h.current = h.quantity * h.live_price * ov.fxRate;
+      h.provenance.fx = { source: "override", date: "", fetched_at: ov.ts || Date.now() };
+      h.provenance.fx_failed = false;
+    }
+  }
+}
+
+// Re-apply overrides without a full network refetch and repaint the
+// dashboard. Used after the popover Save so the user sees the impact
+// immediately.
+async function reapplyOverridesAndRerender() {
+  await applyManualOverrides(state.holdings);
+  computeAggregates();
+  renderCommandScreen();
+  renderHoldingsScreens();
+}
+
+/* ── Manual override popover (trust layer) ──────────────────────────────
+   Opens a modal anchored to the page center. Pre-fills with any existing
+   override for the given holding id, lets the user set/clear price + FX
+   + final-value, and on Save re-applies overrides and re-renders.
+─────────────────────────────────────────────────────────────────────── */
+const _OVERRIDE_CCYS = ["USD","EUR","GBP","JPY","CHF","CAD","AUD","CNY","HKD","SGD","NOK","SEK","DKK","SAR","AED","INR","BRL","MXN","ZAR","TRY"];
+let _overrideOpenId = null;
+
+function openOverrideModal(id) {
+  const h = state.holdings.find(x => holdingId(x) === id);
+  if (!h) return;
+  _overrideOpenId = id;
+  const ov = state.manualOverrides[id] || {};
+  const info = h.isin ? (state.infoMap[h.isin.toUpperCase()] || {}) : {};
+  const name = info.name || h.isin || h.address || h.crypto_type || h.commodity_type || "Holding";
+  const baseCcy = (h.live_currency || "USD").toUpperCase();
+  const liveLocal = h.live_price != null ? `${baseCcy} ${fmt2(h.live_price)}` : "—";
+  const currentUsd = `$${fmt(h._originalCurrent ?? h.current ?? 0)}`;
+
+  let modal = document.getElementById("override-modal");
+  if (modal) modal.remove();
+  modal = document.createElement("div");
+  modal.id = "override-modal";
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px";
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:14px;padding:22px;max-width:480px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.18)">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Override values</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:18px">
+        ${escapeHtml(name)} · current $${fmt(h._originalCurrent ?? h.current ?? 0)} ${baseCcy!=="USD"?`(live ${liveLocal})`:""}
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Price (per unit)</div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <input id="ov-price" type="number" step="0.01" min="0" value="${ov.price ?? ""}" placeholder="blank to skip" style="flex:1">
+          <select id="ov-price-ccy" style="width:90px">${_OVERRIDE_CCYS.map(c => `<option value="${c}" ${c===(ov.priceCurrency||baseCcy)?"selected":""}>${c}</option>`).join("")}</select>
+          <button onclick="document.getElementById('ov-price').value=''" class="btn-danger" style="padding:0 10px;font-size:11px">Clear</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">FX rate (source → USD)</div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <input id="ov-fx" type="number" step="0.0001" min="0" value="${ov.fxRate ?? ""}" placeholder="blank to skip" style="flex:1">
+          <span style="line-height:36px;font-size:12px;color:var(--muted);min-width:60px">→ USD</span>
+          <button onclick="document.getElementById('ov-fx').value=''" class="btn-danger" style="padding:0 10px;font-size:11px">Clear</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px">
+        <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Final value (USD) — wins over the above</div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <input id="ov-value" type="number" step="100" min="0" value="${ov.value ?? ""}" placeholder="blank to skip" style="flex:1">
+          <button onclick="document.getElementById('ov-value').value=''" class="btn-danger" style="padding:0 10px;font-size:11px">Clear</button>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <button onclick="clearOverride()" style="font-size:12px;color:var(--red);background:transparent;border:none;cursor:pointer;text-decoration:underline">Remove all overrides for this holding</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="closeOverrideModal()" style="padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:6px;cursor:pointer">Cancel</button>
+          <button onclick="saveOverride()" style="padding:8px 14px;background:#1D9E75;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500">Save</button>
+        </div>
+      </div>
+    </div>`;
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeOverrideModal(); });
+  document.body.appendChild(modal);
+}
+
+function closeOverrideModal() {
+  const m = document.getElementById("override-modal");
+  if (m) m.remove();
+  _overrideOpenId = null;
+}
+
+async function saveOverride() {
+  if (!_overrideOpenId) return;
+  const price  = parseFloat(document.getElementById("ov-price").value);
+  const ccy    = document.getElementById("ov-price-ccy").value;
+  const fxRate = parseFloat(document.getElementById("ov-fx").value);
+  const value  = parseFloat(document.getElementById("ov-value").value);
+  const ov = {ts: Date.now()};
+  if (isFinite(price) && price > 0) { ov.price = price; ov.priceCurrency = ccy; }
+  if (isFinite(fxRate) && fxRate > 0) { ov.fxRate = fxRate; }
+  if (isFinite(value) && value > 0)   { ov.value = value; }
+  if (Object.keys(ov).length === 1) {   // nothing set — treat as clear
+    delete state.manualOverrides[_overrideOpenId];
+  } else {
+    state.manualOverrides[_overrideOpenId] = ov;
+  }
+  closeOverrideModal();
+  markDirty();
+  savePortfolio();
+  await reapplyOverridesAndRerender();
+}
+
+async function clearOverride() {
+  if (!_overrideOpenId) return;
+  delete state.manualOverrides[_overrideOpenId];
+  closeOverrideModal();
+  markDirty();
+  savePortfolio();
+  await reapplyOverridesAndRerender();
 }
 
 // LSE and a few other UK venues quote in pence (GBp/GBX). Frankfurter only
@@ -1677,8 +2463,13 @@ async function _detectIsinRowImpl(idx, listKey, kind, key, gen) {
   const current = state[listKey] && state[listKey][idx];
   if (!current || (current.isin||"").trim().toUpperCase() !== isin) return;
   if (!quote) {
-    let msg = state._lastQuoteError || "Not found";
-    setDetectStatus(elId, `<div class="err-badge" style="margin-top:5px">✗ ${msg}</div>`);
+    if (kind === "bond") {
+      // Yahoo doesn't carry bond ISINs — that's expected, not a failure.
+      setDetectStatus(elId, `<div style="margin-top:5px;padding:4px 9px;border-radius:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:12px;display:inline-block">ⓘ Bonds aren't priced by Yahoo — fill in coupon, maturity, face value, and current price below.</div>`);
+    } else {
+      let msg = state._lastQuoteError || "Not found";
+      setDetectStatus(elId, `<div class="err-badge" style="margin-top:5px">✗ ${msg}</div>`);
+    }
     return;
   }
   // Pre-fetch historical purchase quote in background if date is set.
@@ -1937,7 +2728,25 @@ async function buildPortfolio() {
     const current = await toUSD(localValue, quote.currency);
     const paidCcy = r.currency || quote.currency || "USD";
     const paidLocal = parseFloat(r.amount_paid)||0;
-    const paid = paidLocal>0 ? await toUSD(paidLocal, paidCcy, r.date) : current;
+    // Cost basis: prefer user-entered amount. If they left it blank but
+    // gave us a purchase date, derive it from historical price × shares
+    // on that date so the Performance tab can show a real PnL instead
+    // of a misleading 0%.
+    let paid, basisCcy = paidCcy, basisLocal = paidLocal;
+    if (paidLocal > 0) {
+      paid = await toUSD(paidLocal, paidCcy, r.date);
+    } else if (r.date) {
+      const hist = await fetchQuote(isin, r.date);
+      if (hist && hist.price) {
+        basisLocal = qty * hist.price;
+        basisCcy = hist.currency || paidCcy;
+        paid = await toUSD(basisLocal, basisCcy, r.date);
+      } else {
+        paid = current;
+      }
+    } else {
+      paid = current;
+    }
     return {
       isin, quantity: qty, current, paid,
       date: r.date || "",
@@ -1945,9 +2754,10 @@ async function buildPortfolio() {
       asset_class_yh: quote.asset_class,  // "etf" | "equity" | "bond"
       live_price: quote.price,
       live_currency: quote.currency,
-      paid_currency: paidCcy,
-      paid_local: paidLocal,
-      ticker: quote.symbol
+      paid_currency: basisCcy,
+      paid_local: basisLocal,
+      ticker: quote.symbol,
+      provenance: holdingProvenance(quote, quote.currency)
     };
   });
   const isinResults = (await Promise.all(isinTasks)).filter(Boolean);
@@ -1958,32 +2768,43 @@ async function buildPortfolio() {
   state.cashRows.forEach(r => { if(r.amount>0) cashByCur[r.currency]=(cashByCur[r.currency]||0)+r.amount; });
   const cashTasks = Object.entries(cashByCur).map(async ([cur,amt]) => {
     const usd = await toUSD(amt, cur);
-    return {isin:`CASH_${cur}`, current:usd, paid:usd, date:new Date().toISOString().split("T")[0], asset_type:"cash", currency:cur, local_amount:amt};
+    return {isin:`CASH_${cur}`, current:usd, paid:usd, date:new Date().toISOString().split("T")[0], asset_type:"cash", currency:cur, local_amount:amt,
+            provenance: holdingProvenance(null, cur)};
   });
   holdings.push(...await Promise.all(cashTasks));
 
   // Bonds: keep manual current_price%; user provides paid + face × qty
   state.bondRows.forEach(r => {
     if (r.isin && r.isin.length===12 && r.face_value>0 && r.quantity>0)
-      holdings.push({isin:r.isin,current:r.face_value*r.quantity*(r.current_price/100),paid:r.face_value*r.quantity*((r.purchase_price||100)/100),date:new Date().toISOString().split("T")[0],asset_type:"bond",face_value:r.face_value,quantity:r.quantity,coupon:r.coupon,maturity:r.maturity,current_price:r.current_price});
+      holdings.push({isin:r.isin,current:r.face_value*r.quantity*(r.current_price/100),paid:r.face_value*r.quantity*((r.purchase_price||100)/100),date:new Date().toISOString().split("T")[0],asset_type:"bond",face_value:r.face_value,quantity:r.quantity,coupon:r.coupon,maturity:r.maturity,current_price:r.current_price,
+        provenance:{price_source:"manual:bond", price_freshness:"manual", price_as_of:null, fx:null, fx_failed:false}});
   });
 
   state.reRows.forEach(r => {
-    if (r.address && r.value>0) holdings.push({type:"real_estate",address:r.address,city:r.city,country:r.country,current:r.value,paid:r.purchase_price||r.value,mortgage:r.mortgage||0,date:new Date().toISOString().split("T")[0],asset_class:r.type});
+    if (r.address && r.value>0) holdings.push({type:"real_estate",address:r.address,city:r.city,country:r.country,current:r.value,paid:r.purchase_price||r.value,mortgage:r.mortgage||0,date:new Date().toISOString().split("T")[0],asset_class:r.type,
+      provenance:{price_source:"manual:real_estate", price_freshness:"manual", price_as_of:null, fx:null, fx_failed:false}});
   });
   // Crypto: live prices from CoinGecko
   const cryptoTokens = state.cryptoRows.map(r=>r.type);
   const cryptoPrices = await fetchCryptoPrices(cryptoTokens);
+  const cryptoFetchedAt = Date.now();
   state.cryptoRows.forEach(r => {
     if (!r.quantity) return;
     const livePrice = cryptoPrices[r.type] || 0;
     const current = livePrice ? r.quantity * livePrice : r.quantity * (r.avg_buy_price||0);
     const paid    = r.quantity * (r.avg_buy_price||0) || current;
-    if (current>0) holdings.push({type:"crypto",crypto_type:r.type,quantity:r.quantity,exchange:r.exchange,current,paid,live_price:livePrice||null});
+    if (current>0) holdings.push({type:"crypto",crypto_type:r.type,quantity:r.quantity,exchange:r.exchange,current,paid,live_price:livePrice||null,
+      provenance:{
+        price_source: livePrice ? "coingecko" : "manual:avg_buy_price",
+        price_freshness: livePrice ? "live" : "manual",
+        price_as_of: livePrice ? new Date(cryptoFetchedAt).toISOString() : null,
+        fx:null, fx_failed:false
+      }});
   });
 
   // Commodities: live metals prices; manual fallback for others
   const metalPrices = await fetchMetalPrices();
+  const metalsFetchedAt = Date.now();
   state.commRows.forEach(r => {
     if (!r.quantity) return;
     const metalKey = METAL_KEYS[r.type];
@@ -1992,7 +2813,13 @@ async function buildPortfolio() {
                   : (r.current_value||0) > 0 ? r.current_value
                   : r.quantity * (r.avg_buy_price||0);
     const paid = r.quantity * (r.avg_buy_price||0) || current;
-    if (current>0) holdings.push({type:"commodity",commodity_type:r.type,quantity:r.quantity,current,paid,live_price:livePrice||null});
+    if (current>0) holdings.push({type:"commodity",commodity_type:r.type,quantity:r.quantity,current,paid,live_price:livePrice||null,
+      provenance:{
+        price_source: livePrice ? "metals.live" : ((r.current_value||0)>0 ? "manual:current_value" : "manual:avg_buy_price"),
+        price_freshness: livePrice ? "live" : "manual",
+        price_as_of: livePrice ? new Date(metalsFetchedAt).toISOString() : null,
+        fx:null, fx_failed:false
+      }});
   });
   state.debtRows.forEach(r => {
     if (r.amount>0) holdings.push({type:"debt",debt_type:r.type,amount:r.amount,interest_rate:r.interest_rate,description:r.description});
@@ -2004,6 +2831,9 @@ async function buildPortfolio() {
       : "Couldn't price any holdings. Check the ISINs and quantities; the pricing backend may also be temporarily unavailable.";
     return;
   }
+  // Trust layer: re-price anything the user has pinned. Runs AFTER live
+  // fetches so an auto-refetch never silently undoes a manual override.
+  await applyManualOverrides(holdings);
   state.holdings = holdings;
 
   // Bonds: still lookup ISIN for name (no Yahoo quote)
@@ -2018,6 +2848,7 @@ async function buildPortfolio() {
   renderSimulator();
   renderIntelligenceScreen();
   renderMapScreen();
+  renderFindings();   // holdings changed → refresh the findings panel
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -2323,6 +3154,112 @@ function renderHealthScore(score, subs) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   BOND DURATION
+   Real modified duration for direct bonds (annual coupons, YTM via
+   bisection); table lookup for common bond ETFs. Funds we don't
+   recognize count toward total bond value but NOT toward coverage —
+   that gap is the signal the AI uses to qualify its answers.
+════════════════════════════════════════════════════════════════════ */
+const BOND_FUND_DURATION = {
+  AGG: 6.0, BND: 6.2, GOVT: 6.0, SHY: 1.9, IEF: 7.4, TLT: 16.5,
+  LQD: 8.4, HYG: 3.2, JNK: 3.1, VGIT: 5.2, VGSH: 1.9, VGLT: 15.5,
+  VCIT: 6.3, VCSH: 2.7,
+  "AGGG.L": 6.5, "VAGP.L": 6.8, "IGLT.L": 12.0, "VGOV.L": 11.5,
+};
+
+function bondModifiedDuration(couponPct, yearsToMaturity, price, faceValue) {
+  if (!(yearsToMaturity > 0)) return null;
+  const f = faceValue || 1000;
+  const c = f * ((couponPct || 0) / 100);
+  const priceDollar = f * ((price || 100) / 100);
+  if (!(priceDollar > 0)) return null;
+  // Annual coupons — round to whole years for discrete CFs.
+  const n = Math.max(1, Math.round(yearsToMaturity));
+  const pv = (y) => {
+    let s = 0;
+    for (let t = 1; t <= n; t++) s += c / Math.pow(1 + y, t);
+    s += f / Math.pow(1 + y, n);
+    return s;
+  };
+  // pv(y) is monotonically decreasing in y. Bisect the YTM bracket.
+  let lo = -0.005, hi = 1.0;
+  if (pv(lo) < priceDollar) return null;
+  if (pv(hi) > priceDollar) return null;
+  for (let i = 0; i < 80; i++) {
+    const m = (lo + hi) / 2;
+    if (pv(m) > priceDollar) lo = m; else hi = m;
+    if (hi - lo < 1e-8) break;
+  }
+  const y = (lo + hi) / 2;
+  let weighted = 0, total = 0;
+  for (let t = 1; t <= n; t++) {
+    const cfPv = c / Math.pow(1 + y, t);
+    weighted += t * cfPv;
+    total += cfPv;
+  }
+  const princPv = f / Math.pow(1 + y, n);
+  weighted += n * princPv;
+  total += princPv;
+  if (!(total > 0)) return null;
+  const macaulay = weighted / total;
+  return macaulay / (1 + y);
+}
+
+function computeEffectiveDuration() {
+  const assets = state.holdings.filter(h => h.type !== "debt");
+  let totalBondValue = 0;
+  let coveredValue = 0;
+  let weighted = 0;
+  let nComputed = 0, nLookup = 0;
+
+  assets.forEach(h => {
+    const value = h.current || 0;
+    if (value <= 0) return;
+    const isinKey = (h.isin || "").toUpperCase();
+    const info = isinKey ? (state.infoMap[isinKey] || {}) : {};
+
+    // Direct bonds: solve YTM from cash flows.
+    if (h.asset_type === "bond") {
+      totalBondValue += value;
+      if (!h.maturity) return;
+      const yrs = (new Date(h.maturity) - new Date()) / (1000 * 60 * 60 * 24 * 365.25);
+      const dur = bondModifiedDuration(h.coupon || 0, yrs, h.current_price || 100, h.face_value || 1000);
+      if (dur != null && isFinite(dur) && dur > 0) {
+        weighted += dur * value;
+        coveredValue += value;
+        nComputed++;
+      }
+      return;
+    }
+
+    // Bond funds: identify, then look up by ticker.
+    const isBondFund = holdingClass(h) === "Bonds"
+      || /bond|aggregate|treasury|gilt|fixed income/i.test(info.name || "");
+    if (!isBondFund) return;
+    totalBondValue += value;
+    const cached = isinKey ? (state.isinCache[isinKey] || {}) : {};
+    const sym = (cached.ticker || "").toUpperCase();
+    const lookup = BOND_FUND_DURATION[sym];
+    if (lookup != null) {
+      weighted += lookup * value;
+      coveredValue += value;
+      nLookup++;
+    }
+  });
+
+  if (totalBondValue === 0) return { duration: null, provenance: "none", coverage: 0 };
+  if (coveredValue === 0)   return { duration: null, provenance: "none", coverage: 0 };
+
+  const duration = weighted / coveredValue;
+  const coverage = coveredValue / totalBondValue;
+  let provenance;
+  if (nComputed > 0 && nLookup === 0)      provenance = "computed";
+  else if (nLookup > 0 && nComputed === 0) provenance = "estimated";
+  else                                     provenance = "mixed";
+  return { duration, provenance, coverage };
+}
+
+/* ════════════════════════════════════════════════════════════════════
    WHAT BREAKS MY PORTFOLIO
 ════════════════════════════════════════════════════════════════════ */
 function computeBreaks() {
@@ -2336,11 +3273,17 @@ function computeBreaks() {
   const cryptoPct = (classes.Crypto||0)/total;
   const commPct = (classes.Commodities||0)/total;
 
-  // Bond duration estimate: avg 5yr duration sensitivity ~-4.5% per 100bps
-  const bondDurSens = bondPct * 4.5;
+  // Bond rate sensitivity: prefer the real effective duration we derive
+  // from cash flows + fund table. Fall back to the old 4.5 placeholder
+  // when no duration is available so unchanged-bond portfolios behave
+  // identically. Output is loss as a fraction of total portfolio.
+  const eff = computeEffectiveDuration();
+  const bondShock = (bps) => eff.duration != null
+    ? eff.duration * (bps / 10000) * bondPct
+    : bondPct * 4.5 * (bps / 100);
   const scenarios = [
-    {name:"Rate spike +200bps",impact:-(bondDurSens*2 + eqPct*0.08 + rePct*0.10)*total},
-    {name:"Rate spike +300bps",impact:-(bondDurSens*3 + eqPct*0.12 + rePct*0.15)*total},
+    {name:"Rate spike +200bps",impact:-(bondShock(200) + eqPct*0.08 + rePct*0.10)*total},
+    {name:"Rate spike +300bps",impact:-(bondShock(300) + eqPct*0.12 + rePct*0.15)*total},
     {name:"Equity crash −35%",impact:-(eqPct*0.35)*total},
     {name:"Equity crash −50%",impact:-(eqPct*0.50)*total},
     {name:"Crypto −80%",impact:-(cryptoPct*0.80)*total},
@@ -2429,6 +3372,9 @@ function renderCommandScreen() {
     <div class="kpi"><div class="kpi-accent" style="background:${pnl>=0?'#1D9E75':'#dc2626'}"></div><div class="kpi-label">Total P&L</div><div class="kpi-value mono ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':'-'}$${fmt(Math.abs(pnl))}</div><div class="kpi-sub">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}% since purchase</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:#7F77DD"></div><div class="kpi-label">Net worth</div><div class="kpi-value mono ${netWorth>=0?'pos':'neg'}">${netWorth>=0?'':'-'}$${fmt(Math.abs(netWorth))}</div><div class="kpi-sub">${totalDebt>0?`after $${fmt(totalDebt)} debt`:'no debt'}</div></div>
     <div class="kpi"><div class="kpi-accent" style="background:#EF9F27"></div><div class="kpi-label">Health score</div><div class="kpi-value mono" id="kpi-health-num">—</div><div class="kpi-sub" id="kpi-health-grade"></div></div>`;
+
+  // Data-confidence summary: "9 of 12 positions live · 2 fallback · 1 manual"
+  renderDataConfidence();
 
   // Health score
   const hs = computeHealthScore();
@@ -2695,8 +3641,18 @@ function renderHoldingsTable() {
     const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||h.type;
     const type = holdingClass(h);
     const pc = total>0?cur/total*100:0;
+    const flags = holdingFlags(h);
+    const flagHtml = flags.map(_flagChipHTML).join("");
+    const p = h.provenance || {};
+    const sub = [];
+    if (p.price_source) sub.push(escapeHtml(p.price_source));
+    if (p.price_as_of)  sub.push("as of " + escapeHtml(p.price_as_of));
+    if (p.fx && p.fx.source && p.fx.source !== "identity") sub.push("fx:" + escapeHtml(p.fx.source));
+    const subline = sub.length ? `<div style="font-size:10px;color:var(--hint);margin-top:2px;font-family:'DM Mono',monospace">${sub.join(" · ")}</div>` : "";
+    const id = holdingId(h);
+    const overrideBtn = id ? `<button onclick="openOverrideModal('${escapeHtml(id)}')" title="Override price, FX rate, or value" style="margin-left:8px;background:transparent;border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;cursor:pointer;color:var(--muted);vertical-align:middle">✎</button>` : "";
     return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:10px">${escapeHtml(name)}</td>
+      <td style="padding:10px"><span>${escapeHtml(name)}</span>${flagHtml}${overrideBtn}${subline}</td>
       <td style="padding:10px;text-align:right;color:var(--muted)">${type}</td>
       <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">${pc.toFixed(1)}%</td>
       <td style="padding:10px;text-align:right;font-family:'DM Mono',monospace">$${fmt(paid)}</td>
@@ -3492,6 +4448,8 @@ function renderRiskProfile() {
     if (emptyEl) emptyEl.style.display = "";
     if (gapEl) gapEl.style.display = "none";
   }
+
+  renderFindings();   // rule-based findings panel — recomputed on every render
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -3517,6 +4475,8 @@ function openRiskQuestionnaire() {
   const modal = document.getElementById("rq-modal");
   if (modal) modal.classList.add("open");
   document.getElementById("rq-result").style.display = "none";
+  document.getElementById("pq-panel").style.display = "none";
+  document.getElementById("pq-done").style.display = "none";
   document.getElementById("rq-question").style.display = "";
   document.getElementById("rq-options").style.display = "";
   _renderRQStep();
@@ -3552,6 +4512,10 @@ function rqAnswer(score) {
     const profileName = total <= 14 ? "Conservative" : total <= 20 ? "Balanced" : total <= 26 ? "Growth" : "Aggressive";
     const profile = RP_PROFILES[profileName];
     state.riskProfile = {name: profileName, rawScore: total};
+    // Carry the overlapping answers (goal, drawdown, horizon) into the
+    // investor profile so Part 2 doesn't re-ask them, then persist both.
+    deriveProfileFromRisk();
+    savePortfolio();
     // Show result slide
     document.getElementById("rq-question").style.display = "none";
     document.getElementById("rq-options").style.display = "none";
@@ -3565,6 +4529,296 @@ function rqAnswer(score) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   INVESTOR-PROFILE INTAKE  (Part 2 of the questionnaire — Expansion A)
+   Renders PROFILE_QUESTIONS in the same modal, after the risk score.
+   Writes into state.investorProfile (supports dotted keys). Every question
+   is skippable; a partial profile still improves the review. On completion
+   we stamp completedAt and persist().
+════════════════════════════════════════════════════════════════════ */
+const PROFILE_QUESTIONS = [
+  { key:"isUSPerson", q:"Are you a US citizen or green-card holder?",
+    opts:[{label:"No",val:false},{label:"Yes",val:true},{label:"Not sure",val:null}] },
+
+  { key:"taxResidence", q:"Where are you tax-resident?", type:"country" },
+
+  { key:"spendingCurrency", q:"What currency do you mostly spend in?",
+    opts:[{label:"USD",val:"USD"},{label:"EUR",val:"EUR"},
+          {label:"CHF",val:"CHF"},{label:"GBP",val:"GBP"},{label:"Other",val:"OTHER"}] },
+
+  // NOTE: goal, drawdown tolerance and horizon are NOT asked here — they
+  // duplicate Part 1 (risk Q3 goal, Q2 reaction-to-a-drop, Q1 horizon) and are
+  // derived from those answers in deriveProfileFromRisk(). We only ask the one
+  // thing Part 1 never captures: whether the goal is to beat a specific index.
+  { key:"benchmark", q:"Are you specifically trying to beat a market index?",
+    opts:[{label:"No — I'm not benchmarking",val:null},
+          {label:"Yes — beat the S&P 500",val:"SPX"},
+          {label:"Yes — beat MSCI All-Country World",val:"ACWI"}] },
+
+  { key:"convictionHolds", q:"Any holdings you'll never sell? (optional)", type:"chips" },
+
+  { key:"ceilings.aiTechPct", q:"Cap on AI / tech exposure? (optional)",
+    type:"slider", min:0, max:100, step:5, suffix:"%", allowSkip:true },
+
+  { key:"annualIncomeUSD", q:"Stable income outside this portfolio?",
+    opts:[{label:"None",val:0},{label:"<$50k",val:40000},
+          {label:"$50–150k",val:100000},{label:"$150k+",val:200000}] }
+];
+
+// What each field buys the user — surfaced in the completeness meter so the
+// value of answering is legible ("add tax residence to unlock the estate check").
+const PROFILE_UNLOCKS = {
+  isUSPerson:           "US-situs estate exposure check",
+  taxResidence:         "estate-treaty & withholding notes",
+  spendingCurrency:     "FX-mismatch finding",
+  benchmark:            "goal vs. structure tension finding",
+  convictionHolds:      "protection of your holds from sell suggestions",
+  "ceilings.aiTechPct": "ceiling-breach finding",
+  annualIncomeUSD:      "cash-buffer floor & risk-capacity framing"
+};
+
+// Short label per field for the meter hint.
+const PROFILE_FIELD_LABELS = {
+  isUSPerson:"US-person status", taxResidence:"tax residence",
+  spendingCurrency:"spending currency", benchmark:"a benchmark target",
+  convictionHolds:"conviction holds",
+  "ceilings.aiTechPct":"AI/tech ceiling", annualIncomeUSD:"outside income"
+};
+
+// Dotted-key get/set so "ceilings.aiTechPct" reads/writes the nested object.
+function _ipGet(obj, key){ return key.split(".").reduce((o,k)=> (o==null?undefined:o[k]), obj); }
+function _ipSet(obj, key, val){
+  const ks = key.split("."); let o = obj;
+  for (let i=0;i<ks.length-1;i++){ if (o[ks[i]]==null || typeof o[ks[i]]!=="object") o[ks[i]]={}; o=o[ks[i]]; }
+  o[ks[ks.length-1]] = val;
+}
+
+// Country name → ISO-2 (best effort). Inverts the COUNTRY_NAMES map and adds a
+// few common extras; falls back to the full name string when unmapped — the
+// prompt/findings only print it, they don't branch on a specific code.
+const _NAME_TO_ISO = (() => {
+  const m = {};
+  Object.entries(COUNTRY_NAMES).forEach(([iso,name]) => { m[name.toLowerCase()] = iso; });
+  Object.assign(m, {"lebanon":"LB","united states":"US","united kingdom":"GB",
+    "south korea":"KR","czech republic":"CZ","uae":"AE","united arab emirates":"AE"});
+  return m;
+})();
+function _countryToISO(name){ return _NAME_TO_ISO[(name||"").toLowerCase()] || name; }
+
+// Derive the profile fields that duplicate Part 1, so Part 2 never re-asks
+// them. _rqAnswers holds the chosen option SCORE (2/4/6/8) per risk question:
+//   Q1 horizon, Q2 reaction-to-a-20%-drop, Q3 primary goal.
+// returnObjective is left alone if the user has explicitly chosen to beat a
+// benchmark (that's a deliberate upgrade Part 1 can't express).
+function deriveProfileFromRisk(){
+  const a = _rqAnswers;
+  if (!a || a.length < 3) return;
+  const ip = state.investorProfile;
+  ip.horizonYears  = ({2:1, 4:3, 6:7, 8:15})[a[0]]   ?? ip.horizonYears;
+  ip.maxDrawdownPct = ({2:10, 4:15, 6:25, 8:35})[a[1]] ?? ip.maxDrawdownPct;
+  if (ip.returnObjective !== "beat_benchmark"){
+    ip.returnObjective = ({2:"preserve", 4:"income", 6:"balanced_growth", 8:"balanced_growth"})[a[2]] ?? ip.returnObjective;
+  }
+}
+
+// Meter "answered" test. benchmark is special: the goal itself is always
+// captured (derived from Part 1), so the benchmark step counts as answered
+// once returnObjective is set, whether or not they chose to benchmark.
+function _pqAnswered(k){
+  if (k === "benchmark") return state.investorProfile.returnObjective != null;
+  const v = _ipGet(state.investorProfile, k);
+  return Array.isArray(v) ? v.length > 0 : v != null;
+}
+
+let _pqStep = 0;
+let _pqFollowup = null;   // e.g. "benchmark" — a sub-question shown within a step
+
+function startProfilePart(){
+  deriveProfileFromRisk();   // defensive — ensure derived fields are present
+  _pqStep = 0; _pqFollowup = null;
+  document.getElementById("rq-result").style.display = "none";
+  document.getElementById("rq-question").style.display = "none";
+  document.getElementById("rq-options").style.display = "none";
+  document.getElementById("pq-done").style.display = "none";
+  document.getElementById("pq-panel").style.display = "";
+  _renderPQStep();
+}
+
+function _renderPQStep(){
+  const total = PROFILE_QUESTIONS.length;
+  const q = PROFILE_QUESTIONS[_pqStep];
+  document.getElementById("rq-progress").textContent = `Profile · ${_pqStep+1} of ${total}`;
+  document.getElementById("rq-prog-bar").style.width = `${(_pqStep+1)/total*100}%`;
+  const qEl = document.getElementById("pq-question");
+  const inEl = document.getElementById("pq-input");
+
+  // Follow-up: benchmark choice after "Beat a benchmark".
+  if (_pqFollowup === "benchmark"){
+    qEl.textContent = "Which benchmark do you want to beat?";
+    const cur = state.investorProfile.benchmark;
+    inEl.innerHTML = [["SPX","S&P 500"],["ACWI","MSCI All-Country World"]]
+      .map(([v,lbl]) => `<button class="rq-option${cur===v?" selected":""}" onclick="pqBenchmark('${v}')">${lbl}</button>`).join("");
+    _renderPQNav(q); _renderPQMeter();
+    return;
+  }
+
+  qEl.textContent = q.q;
+  const cur = _ipGet(state.investorProfile, q.key);
+
+  if (q.opts){
+    inEl.innerHTML = q.opts.map((o,i) => {
+      const sel = (cur === o.val && !(cur==null && o.val==null && _ipGet(state.investorProfile,q.key)===undefined)) ? " selected" : "";
+      return `<button class="rq-option${sel}" onclick="pqOpt(${i})">${o.label}</button>`;
+    }).join("");
+  } else if (q.type === "country"){
+    const opts = WORLD_COUNTRIES_SIMPLE.map(c => {
+      const sel = (_countryToISO(c) === cur || c === cur) ? " selected" : "";
+      return `<option value="${c}"${sel}>${c}</option>`;
+    }).join("");
+    inEl.innerHTML = `<select id="pq-country" class="csv-select" style="font-size:14px;padding:9px 10px">`
+      + `<option value="">Select a country…</option>${opts}</select>`;
+  } else if (q.type === "slider"){
+    const val = (cur != null) ? cur : Math.round((q.min + q.max)/2 / q.step)*q.step;
+    inEl.innerHTML =
+      `<input type="range" id="pq-slider" min="${q.min}" max="${q.max}" step="${q.step}" value="${val}" `
+      + `oninput="document.getElementById('pq-slider-val').textContent=this.value+'${q.suffix||""}'" style="width:100%;accent-color:var(--blue)">`
+      + `<div style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;font-weight:600;color:var(--blue)">`
+      + `<span id="pq-slider-val">${val}${q.suffix||""}</span></div>`;
+  } else if (q.type === "chips"){
+    inEl.innerHTML =
+      `<div style="display:flex;gap:8px"><input id="pq-chip-input" class="csv-select" style="font-size:13px;padding:8px 10px" `
+      + `placeholder="Ticker, e.g. NVDA" onkeydown="if(event.key==='Enter'){event.preventDefault();pqAddChip();}">`
+      + `<button class="btn btn-outline btn-sm" type="button" onclick="pqAddChip()">Add</button></div>`
+      + `<div id="pq-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>`;
+    _renderChips();
+  }
+
+  _renderPQNav(q);
+  _renderPQMeter();
+}
+
+function _renderChips(){
+  const el = document.getElementById("pq-chips");
+  if (!el) return;
+  const holds = state.investorProfile.convictionHolds || [];
+  el.innerHTML = holds.length
+    ? holds.map((t,i) => `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--blue-light);border:1px solid var(--blue-mid);color:var(--blue);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:500">${escapeHtml(t)}`
+        + `<button type="button" onclick="pqRemoveChip(${i})" style="border:none;background:none;cursor:pointer;color:var(--blue);font-size:13px;line-height:1;padding:0">✕</button></span>`).join("")
+    : `<span style="font-size:12px;color:var(--hint)">None added.</span>`;
+}
+function pqAddChip(){
+  const inp = document.getElementById("pq-chip-input");
+  const v = (inp.value||"").trim().toUpperCase();
+  if (!v) return;
+  state.investorProfile.convictionHolds = state.investorProfile.convictionHolds || [];
+  if (!state.investorProfile.convictionHolds.includes(v)) state.investorProfile.convictionHolds.push(v);
+  inp.value = "";
+  _renderChips(); _renderPQMeter();
+}
+function pqRemoveChip(i){
+  state.investorProfile.convictionHolds.splice(i,1);
+  _renderChips(); _renderPQMeter();
+}
+
+function _renderPQNav(q){
+  const nav = document.getElementById("pq-nav");
+  const needsConfirm = (q.type==="country" || q.type==="slider" || q.type==="chips");
+  let html = "";
+  if (_pqStep > 0 || _pqFollowup) html += `<button class="btn btn-outline btn-sm" onclick="pqBack()">← Back</button>`;
+  html += `<button class="btn btn-outline btn-sm" onclick="pqSkip()">Skip</button>`;
+  if (needsConfirm && !_pqFollowup)
+    html += `<button class="btn btn-dark btn-sm" style="margin-left:auto" onclick="pqCommit()">`
+          + `${_pqStep === PROFILE_QUESTIONS.length-1 ? "Finish" : "Next →"}</button>`;
+  nav.innerHTML = html;
+}
+
+function _renderPQMeter(){
+  const el = document.getElementById("pq-meter");
+  if (!el) return;
+  const keys = PROFILE_QUESTIONS.map(q => q.key);
+  const answered = keys.filter(_pqAnswered).length;
+  const pct = Math.round(answered/keys.length*100);
+  const nextMissing = keys.find(k => !_pqAnswered(k));
+  const hint = nextMissing
+    ? `Add ${PROFILE_FIELD_LABELS[nextMissing]||nextMissing} to unlock the ${PROFILE_UNLOCKS[nextMissing]||"next check"}.`
+    : `Full context captured — every personalized check is unlocked.`;
+  el.innerHTML =
+    `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px">`
+    + `<span style="font-weight:600">Profile ${pct}%</span><span>${answered} of ${keys.length}</span></div>`
+    + `<div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden;margin-bottom:7px">`
+    + `<div style="height:100%;width:${pct}%;background:var(--blue);transition:width .3s"></div></div>`
+    + `<div style="font-size:12px;color:var(--muted);line-height:1.5">${hint}</div>`;
+}
+
+function pqOpt(i){
+  const q = PROFILE_QUESTIONS[_pqStep];
+  const o = q.opts[i];
+  // Benchmark is the one mandate question we ask: it upgrades the derived
+  // goal to "beat_benchmark" (or leaves the derived goal intact on "No").
+  if (q.key === "benchmark"){
+    if (o.val){
+      state.investorProfile.returnObjective = "beat_benchmark";
+      state.investorProfile.benchmark = o.val;
+      state.investorProfile.benchmarkMode = "beat";
+    } else {
+      state.investorProfile.benchmark = null;
+      state.investorProfile.benchmarkMode = null;
+      if (state.investorProfile.returnObjective === "beat_benchmark")
+        state.investorProfile.returnObjective = "balanced_growth";
+    }
+    _pqAdvance(); return;
+  }
+  _ipSet(state.investorProfile, q.key, o.val);
+  _pqAdvance();
+}
+function pqBenchmark(v){
+  state.investorProfile.benchmark = v;
+  state.investorProfile.benchmarkMode = "beat";
+  _pqFollowup = null;
+  _pqAdvance();
+}
+function pqCommit(){
+  const q = PROFILE_QUESTIONS[_pqStep];
+  if (q.type === "country"){
+    const v = document.getElementById("pq-country").value;
+    if (v){
+      const iso = _countryToISO(v);
+      _ipSet(state.investorProfile, "taxResidence", iso);
+      if (state.investorProfile.taxCitizenship == null) state.investorProfile.taxCitizenship = iso;
+    }
+  } else if (q.type === "slider"){
+    _ipSet(state.investorProfile, q.key, Number(document.getElementById("pq-slider").value));
+  } // chips already write live into state via pqAddChip/pqRemoveChip
+  _pqAdvance();
+}
+function pqSkip(){ _pqFollowup = null; _pqAdvance(); }
+function pqBack(){
+  if (_pqFollowup){ _pqFollowup = null; _renderPQStep(); return; }
+  if (_pqStep > 0){ _pqStep--; _renderPQStep(); }
+}
+function _pqAdvance(){
+  _pqFollowup = null;
+  if (_pqStep < PROFILE_QUESTIONS.length-1){ _pqStep++; _renderPQStep(); }
+  else pqFinish();
+}
+
+// Persist + show the done slide. completedAt gates staleness re-prompts.
+function pqFinish(){
+  state.investorProfile.completedAt = new Date().toISOString();
+  savePortfolio();
+  const keys = PROFILE_QUESTIONS.map(q => q.key);
+  const answered = keys.filter(_pqAnswered).length;
+  document.getElementById("pq-panel").style.display = "none";
+  document.getElementById("rq-progress").textContent = "Complete";
+  document.getElementById("rq-prog-bar").style.width = "100%";
+  document.getElementById("pq-done-sub").textContent =
+    `${answered} of ${keys.length} answered. You can retake the questionnaire anytime to update or add more.`;
+  document.getElementById("pq-done").style.display = "";
+  renderFindings();   // profile changed → personalized findings may now fire
+}
+// "Skip — I'll do this later": persist whatever's filled and close, without nagging.
+function pqFinishEarly(){ pqFinish(); }
+
+/* ════════════════════════════════════════════════════════════════════
    NAVIGATION
 ════════════════════════════════════════════════════════════════════ */
 function switchScreen(name) {
@@ -3573,7 +4827,6 @@ function switchScreen(name) {
   if (el) el.classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active",l.dataset.screen===name));
   state.activeScreen = name;
-  if (name==="markets") initMarketsScreen();
   if (name==="riskprofile") renderRiskProfile();
   if (name==="map") renderMapScreen();
   if (name==="command") updateRqBanner();
@@ -3587,54 +4840,6 @@ function updateRqBanner() {
   el.style.display = state.riskProfile ? "none" : "block";
 }
 
-
-/* ════════════════════════════════════════════════════════════════════
-   MARKETS SCREEN
-════════════════════════════════════════════════════════════════════ */
-let tvWidget = null;
-let tvScriptLoaded = false;
-let _currentMktSymbol = "AMEX:SPY";
-
-function loadTVScript(cb) {
-  if (tvScriptLoaded) { cb(); return; }
-  const s = document.createElement("script");
-  s.src = "https://s3.tradingview.com/tv.js";
-  s.onload = () => { tvScriptLoaded = true; cb(); };
-  document.head.appendChild(s);
-}
-
-function buildTVWidget(symbol) {
-  const container = document.getElementById("tv-chart");
-  container.innerHTML = "";
-  const inner = document.createElement("div");
-  inner.id = "tv-chart-inner";
-  inner.style.height = "100%";
-  container.appendChild(inner);
-  tvWidget = new TradingView.widget({
-    autosize: true,
-    symbol: symbol,
-    interval: "D",
-    timezone: "Etc/UTC",
-    theme: "light",
-    style: "1",
-    locale: "en",
-    hide_side_toolbar: false,
-    allow_symbol_change: false,
-    save_image: false,
-    container_id: "tv-chart-inner"
-  });
-}
-
-function initMarketsScreen() {
-  loadTVScript(() => buildTVWidget(_currentMktSymbol));
-}
-
-function switchMarket(btn, symbol, label) {
-  _currentMktSymbol = symbol;
-  document.querySelectorAll(".mkt-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  loadTVScript(() => buildTVWidget(symbol));
-}
 
 function showScreen(name) { switchScreen(name); }
 
