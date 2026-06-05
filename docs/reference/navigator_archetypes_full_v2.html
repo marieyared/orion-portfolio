@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigator — Full Archetype Atlas · v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14130F; --bg-deep:#0D0C09; --panel:#1C1A15; --panel-hi:#24211B;
+    --rule:#322E26; --rule-soft:#28251E;
+    --ink:#F2EDE0; --ink-soft:#B8B0A0; --ink-muted:#7A7264; --ink-faint:#524C42;
+    --ai-native:#E8A33D; --ai-amplified:#5FB89A; --ai-neutral:#8A8276;
+    --mature:#6B7A8F; --emerging:#C77D4A; --experimental:#A678B4;
+    --good:#6FBF8E; --mid:#D4A653; --low:#C56B5C;
+    --font-display:'Fraunces',Georgia,serif; --font-mono:'Space Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-display);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(232,163,61,0.06),transparent),radial-gradient(ellipse 60% 50% at 90% 8%,rgba(95,184,154,0.04),transparent);background-attachment:fixed}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:0.025;z-index:1;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+
+  /* hero */
+  .hero{padding:96px 0 56px;border-bottom:1px solid var(--rule)}
+  .hero-eyebrow{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.22em;color:var(--ai-native);margin-bottom:26px}
+  .hero-title{font-family:var(--font-display);font-weight:900;font-size:clamp(48px,8.5vw,98px);line-height:0.95;letter-spacing:-0.035em;margin-bottom:26px;font-variation-settings:'opsz' 144}
+  .hero-title .out{color:var(--ink-faint)} .hero-title em{font-style:italic;font-weight:500;color:var(--ai-native)}
+  .hero-deck{font-size:21px;line-height:1.55;color:var(--ink-soft);max-width:700px;font-weight:400}
+  .hero-meta{margin-top:34px;display:flex;gap:26px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.1em}
+  .hero-meta span{display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%}
+
+  /* the living-snapshot banner */
+  .snapshot{margin-top:36px;background:var(--bg-deep);border:1px solid var(--rule);border-left:3px solid var(--ai-amplified);border-radius:10px;padding:20px 24px}
+  .snapshot b{color:var(--ink)}
+  .snapshot p{font-size:15px;color:var(--ink-soft);line-height:1.55}
+
+  /* legend */
+  .legend{display:flex;gap:36px;flex-wrap:wrap;padding:22px 0;border-bottom:1px solid var(--rule);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);position:sticky;top:0;background:var(--bg);z-index:10}
+  .legend-group{display:flex;align-items:center;gap:14px}
+  .legend-group-label{color:var(--ink-faint)}
+  .legend-item{display:flex;align-items:center;gap:7px;color:var(--ink-soft)}
+  .legend-swatch{width:12px;height:12px;border-radius:3px}
+
+  /* section */
+  .section{padding:64px 0;border-bottom:1px solid var(--rule)}
+  .section-num{font-family:var(--font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ai-native);margin-bottom:14px}
+  .section-title{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-0.02em;margin-bottom:16px;font-variation-settings:'opsz' 72}
+  .section-sub{font-size:18px;color:var(--ink-soft);max-width:720px;font-weight:400}
+
+  /* family overview counts */
+  .families{margin-top:44px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .fam-chip{background:var(--panel);border:1px solid var(--rule);border-radius:11px;padding:18px;text-decoration:none;display:block;transition:transform .18s ease,border-color .18s ease}
+  .fam-chip:hover{transform:translateY(-2px);border-color:var(--ai-amplified)}
+  .fam-chip-count{font-family:var(--font-mono);font-size:26px;font-weight:700;color:var(--ink)}
+  .fam-chip-name{font-size:14px;color:var(--ink-soft);margin-top:4px;line-height:1.3}
+
+  /* family band */
+  .family{padding:56px 0 0}
+  .family-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;flex-wrap:wrap;scroll-margin-top:72px}
+  .family-tag{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--ai-native);letter-spacing:0.06em}
+  .family-name{font-family:var(--font-display);font-weight:600;font-size:30px;letter-spacing:-0.015em;font-variation-settings:'opsz' 48}
+  .family-desc{font-size:16px;color:var(--ink-soft);max-width:760px;margin-bottom:28px}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+
+  /* card */
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:24px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;scroll-margin-top:80px}
+  .card::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--card-accent,var(--ink-faint));opacity:.8}
+  .card:hover{transform:translateY(-2px)}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .card-id{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--card-accent,var(--ink));letter-spacing:.04em}
+  .card-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;padding:3px 8px;border-radius:10px;border:1px solid currentColor;font-weight:700}
+  .pill-mature{color:var(--mature)} .pill-emerging{color:var(--emerging)} .pill-experimental{color:var(--experimental)}
+  .pill-ai-native{color:var(--ai-native)} .pill-ai-amplified{color:var(--ai-amplified)} .pill-ai-neutral{color:var(--ai-neutral)}
+  .card-name{font-family:var(--font-display);font-weight:600;font-size:20px;line-height:1.18;letter-spacing:-.015em;margin-bottom:14px;font-variation-settings:'opsz' 36}
+
+  .fingerprint{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;padding:13px 0;border-top:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft)}
+  .fp-cell{text-align:center}
+  .fp-label{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:6px}
+  .fp-bars{display:flex;gap:2px;justify-content:center;align-items:flex-end;height:20px}
+  .fp-bar{width:5px;border-radius:1px;background:var(--ink-faint)}
+  .fp-bar.on{background:var(--fp-color,var(--ink-soft))}
+  .fp-val{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);margin-top:5px}
+
+  .meters{display:flex;flex-direction:column;gap:8px;margin-bottom:15px}
+  .meter-row{display:grid;grid-template-columns:74px 1fr 56px;gap:10px;align-items:center}
+  .meter-label{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted)}
+  .meter-track{height:5px;background:var(--rule);border-radius:3px;overflow:hidden}
+  .meter-fill{height:100%;border-radius:3px}
+  .meter-val{font-family:var(--font-mono);font-size:9px;color:var(--ink-soft);text-align:right}
+
+  .card-oneliner{font-size:14px;line-height:1.5;color:var(--ink-soft);font-style:italic;margin-bottom:14px}
+  .card-instances{display:flex;flex-direction:column;gap:7px;padding-top:13px;border-top:1px solid var(--rule-soft)}
+  .ins-label{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-faint);margin-bottom:2px}
+  .ins{font-size:12.5px;line-height:1.4;color:var(--ink-soft);padding-left:14px;position:relative}
+  .ins::before{content:"→";position:absolute;left:0;color:var(--card-accent,var(--ink-faint));font-family:var(--font-mono)}
+  .ins b{color:var(--ink);font-weight:600}
+
+  /* coverage edges */
+  .edges{margin-top:44px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .edge{background:var(--bg-deep);border:1px dashed var(--rule);border-radius:11px;padding:20px 22px}
+  .edge-q{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--experimental);margin-bottom:8px}
+  .edge-t{font-family:var(--font-display);font-weight:600;font-size:17px;margin-bottom:6px}
+  .edge-d{font-size:14px;color:var(--ink-soft);line-height:1.5}
+
+  .foot{padding:52px 0 80px}
+  .foot p{color:var(--ink-muted);font-size:14px;max-width:680px;line-height:1.65}
+  .foot b{color:var(--ink-soft)}
+
+  @media(max-width:880px){
+    .wrap{padding:0 22px}
+    .grid,.edges{grid-template-columns:1fr}
+    .hero{padding:56px 0 40px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-eyebrow">Navigator · Full Archetype Atlas · v2</div>
+    <h1 class="hero-title">Forty shapes.<br>One living <em>snapshot.</em></h1>
+    <p class="hero-deck">The complete current archetype space the engine generates from — organized into seven families, colored by AI-dependency, each with a constraint fingerprint and tailored instances.</p>
+    <div class="hero-meta">
+      <span><span class="dot" style="background:var(--ai-native)"></span><b id="countNative">–</b>&nbsp;AI-native</span>
+      <span><span class="dot" style="background:var(--ai-amplified)"></span><b id="countAmp">–</b>&nbsp;AI-amplified</span>
+      <span><span class="dot" style="background:var(--ai-neutral)"></span><b id="countNeu">–</b>&nbsp;AI-neutral</span>
+      <span><span class="dot" style="background:var(--ink-muted)"></span>reviewed May 2026</span>
+    </div>
+    <div class="snapshot">
+      <p><b>This is a snapshot, not a complete map — by design.</b> No fixed list can contain "all" business ideas, especially as AI spawns new shapes monthly. These 40 are the current best coverage. The <b>proposer</b> (the C-prime engine piece) keeps the space honest by surfacing new candidate archetypes for review as they emerge. The coverage-edges section at the bottom names what's deliberately still outside the space — that list is the proposer's standing queue.</p>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-group">
+      <span class="legend-group-label">AI-dependency</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:var(--ai-native)"></span>Native</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:var(--ai-amplified)"></span>Amplified</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:var(--ai-neutral)"></span>Neutral</span>
+    </div>
+    <div class="legend-group">
+      <span class="legend-group-label">Status</span>
+      <span class="legend-item" style="color:var(--mature)">Mature</span>
+      <span class="legend-item" style="color:var(--emerging)">Emerging</span>
+      <span class="legend-item" style="color:var(--experimental)">Experimental</span>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-num">Families</div>
+    <h2 class="section-title">Seven families, forty archetypes.</h2>
+    <p class="section-sub">The space is organized by the <em>core mechanism</em> of value creation, not by industry. Click a family to jump.</p>
+    <div class="families" id="familyChips"></div>
+  </section>
+
+  <div id="familyBands"></div>
+
+  <section class="section" id="edges">
+    <div class="section-num">Coverage edges</div>
+    <h2 class="section-title">What this space does <em>not</em> yet cover.</h2>
+    <p class="section-sub">Naming the boundary is what keeps the freshness promise honest. Each of these is a real or near-future shape deliberately held outside v2 — either too rare, too capital-heavy for the Navigator user, or too new to characterize confidently. This is the proposer's standing queue.</p>
+    <div class="edges" id="edgeGrid"></div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Navigator full archetype atlas, v2 — May 2026.</b> Forty archetypes across seven families. All metrics are drafted from market signal and must be calibrated against real user conversations before the engine ships. Color is the master signal: <span style="color:var(--ai-native)">amber</span> AI-native, <span style="color:var(--ai-amplified)">teal</span> AI-amplified, <span style="color:var(--ai-neutral)">stone</span> AI-neutral. The detailed field schema (source_evidence, last_reviewed, day-job conflicts, hard-no conflicts) lives in the companion reference document; this atlas is the scannable presentation layer.</p>
+  </footer>
+
+</div>
+
+<script>
+const AIHEX={native:'#E8A33D',amplified:'#5FB89A',neutral:'#8A8276'};
+
+// ============ FAMILIES ============
+const FAMILIES=[
+  {tag:'F1',key:'service',name:'Service & delivery',desc:'You deliver an outcome for a client. Income tracks your time and taste; ceilings are real but reachable fast.'},
+  {tag:'F2',key:'product',name:'Products & assets',desc:'You make a thing once and sell it many times. Slower to traction, compounding once it lands.'},
+  {tag:'F3',key:'audience',name:'Audience & media',desc:'You build attention first, monetize second. Patience-heavy, high ceiling, asset-like at maturity.'},
+  {tag:'F4',key:'software',name:'Software & tools',desc:'You ship software people pay to use. Highest ceilings, longest paths, real technical floor.'},
+  {tag:'F5',key:'aiservice',name:'AI-native services',desc:'AI does the labor; you supply judgment, positioning, and quality control. Fast, high-margin, shelf-life risk.'},
+  {tag:'F6',key:'aiproduct',name:'AI-native products',desc:'Products that only exist because of AI. Defensibility lives in niche depth and workflow embedment.'},
+  {tag:'F7',key:'commerce',name:'Commerce & operations',desc:'You move goods or run operations. Capital-heavier, mostly disqualified for the core Navigator user — kept for evaluation-mode rejections.'},
+];
+
+// ============ ARCHETYPES (40) ============
+// fp 1..4 ; speed/ceiling/effort 0..100
+const A=[
+// ---- F1 service ----
+{id:'A1',fam:'service',name:'Productized service, async delivery',ai:'amplified',status:'mature',speed:90,ceiling:55,effort:24,
+ fp:{cap:2,bud:1,run:1,aud:1},capTxt:'5h',budTxt:'$0',runTxt:'1mo',audTxt:'none',
+ one:'Fixed-scope deliverable sold async to buyers who self-identify online.',
+ ins:[['Designer','landing-page redesigns for indie SaaS founders, $800 flat'],['Writer','copy audits for technical SaaS, $500/page'],['Developer','API integration audits, $1.2K']]},
+{id:'A6',fam:'service',name:'Coaching / consulting practice',ai:'neutral',status:'mature',speed:55,ceiling:68,effort:30,
+ fp:{cap:2,bud:1,run:2,aud:4},capTxt:'5h',budTxt:'$0',runTxt:'3mo',audTxt:'required',
+ one:'One-to-one expertise sold by the hour or engagement, in a domain you know.',
+ ins:[['Senior PM','career coaching for mid-level PMs, $200/hr'],['Ex-founder','fractional advisory, $2K/mo retainer']]},
+{id:'A19',fam:'service',name:'Fractional operator (ops / finance / RevOps)',ai:'amplified',status:'mature',speed:62,ceiling:80,effort:34,
+ fp:{cap:3,bud:1,run:2,aud:2},capTxt:'8h',budTxt:'$0',runTxt:'2mo',audTxt:'helpful',
+ one:'Part-time senior expertise embedded in a few companies at once — not advice, execution.',
+ ins:[['Finance bg','fractional CFO for seed startups, $3K/mo'],['Ops bg','fractional RevOps for B2B SaaS, $2.5K/mo']]},
+{id:'A20',fam:'service',name:'Done-with-you hybrid program',ai:'amplified',status:'emerging',speed:58,ceiling:66,effort:38,
+ fp:{cap:3,bud:1,run:2,aud:3},capTxt:'7h',budTxt:'<$500',runTxt:'3mo',audTxt:'helpful',
+ one:'Between coaching and service — you guide while they execute, blending teaching and delivery.',
+ ins:[['Marketer','done-with-you SEO sprint for founders, $2K'],['Designer','brand-build-along for early startups, $3K']]},
+{id:'A21',fam:'service',name:'Specialized micro-agency',ai:'amplified',status:'mature',speed:70,ceiling:85,effort:50,
+ fp:{cap:4,bud:2,run:2,aud:2},capTxt:'12h',budTxt:'<$500',runTxt:'2mo',audTxt:'helpful',
+ one:'Productized service plus subcontractors — breaks the solo hour-ceiling by leveraging others.',
+ ins:[['Designer + network','subcontracted design studio for SaaS'],['Writer + network','content agency, niche B2B vertical']]},
+
+// ---- F2 product ----
+{id:'A11',fam:'product',name:'Templates & digital products',ai:'amplified',status:'mature',speed:62,ceiling:38,effort:18,
+ fp:{cap:1,bud:1,run:2,aud:2},capTxt:'3h',budTxt:'$0',runTxt:'3mo',audTxt:'helpful',
+ one:'One-time-purchase digital assets — Notion templates, Figma libraries, code starters.',
+ ins:[['Designer','Figma libraries for SaaS pages, $39'],['Notion power user','agency ops templates, $79']]},
+{id:'A22',fam:'product',name:'Niche printed / physical-digital hybrid',ai:'amplified',status:'mature',speed:48,ceiling:42,effort:30,
+ fp:{cap:2,bud:2,run:2,aud:2},capTxt:'5h',budTxt:'<$500',runTxt:'3mo',audTxt:'helpful',
+ one:'Print-on-demand books, journals, planners, posters — design once, fulfill on demand.',
+ ins:[['Writer','niche workbook series via Amazon KDP'],['Designer','POD wall-art line for a subculture']]},
+{id:'A23',fam:'product',name:'Paid data set / research product',ai:'amplified',status:'emerging',speed:40,ceiling:58,effort:36,
+ fp:{cap:2,bud:2,run:3,aud:2},capTxt:'6h',budTxt:'<$500',runTxt:'4mo',audTxt:'helpful',
+ one:'Curate, clean, and sell a dataset or recurring research report nobody else compiles.',
+ ins:[['Analyst','quarterly salary-benchmark report for a niche role'],['Domain expert','maintained directory of vetted suppliers']]},
+{id:'A24',fam:'product',name:'Stock / licensable creative assets',ai:'native',status:'emerging',speed:50,ceiling:40,effort:22,
+ fp:{cap:2,bud:2,run:3,aud:1},capTxt:'5h',budTxt:'<$500',runTxt:'4mo',audTxt:'none',
+ one:'AI-assisted stock libraries — sound, 3D, illustration, motion — sold by licence.',
+ ins:[['Designer','AI-assisted 3D icon packs'],['Audio person','royalty-free AI music beds for creators']]},
+
+// ---- F3 audience ----
+{id:'A2',fam:'audience',name:'Paid niche newsletter',ai:'amplified',status:'mature',speed:18,ceiling:62,effort:30,
+ fp:{cap:1,bud:2,run:2,aud:2},capTxt:'3h',budTxt:'<$500',runTxt:'3mo',audTxt:'helpful',
+ one:'Subscription publication for a narrow professional audience, search-distributed.',
+ ins:[['RevOps pro','weekly RevOps tactics, $15/mo'],['Technical PM','payments-infra deep-dives, $25/mo']]},
+{id:'A25',fam:'audience',name:'Sponsor-funded free newsletter',ai:'amplified',status:'mature',speed:30,ceiling:60,effort:30,
+ fp:{cap:2,bud:1,run:3,aud:2},capTxt:'5h',budTxt:'<$500',runTxt:'5mo',audTxt:'helpful',
+ one:'Free newsletter monetized by sponsorships once the list crosses a threshold.',
+ ins:[['Industry insider','free trade newsletter, sponsor slots at 5K subs'],['Curator','daily link digest for a profession']]},
+{id:'A16',fam:'audience',name:'AI-generated content brand',ai:'native',status:'emerging',speed:48,ceiling:66,effort:40,
+ fp:{cap:2,bud:2,run:3,aud:1},capTxt:'5h',budTxt:'<$500',runTxt:'6mo',audTxt:'none',
+ one:'Automated content channel — faceless video, AI podcasts, AI-driven social pages.',
+ ins:[['Language learner','AI-voiced learning podcast'],['Niche hobbyist','faceless AI-narrated YouTube']]},
+{id:'A26',fam:'audience',name:'Personality-led creator brand',ai:'amplified',status:'mature',speed:38,ceiling:88,effort:46,
+ fp:{cap:3,bud:1,run:3,aud:1},capTxt:'8h',budTxt:'<$500',runTxt:'6mo',audTxt:'none',
+ one:'On-camera or on-mic creator building a personal audience across one main platform.',
+ ins:[['Domain expert','YouTube on a technical niche'],['Builder','build-in-public on X + downstream products']]},
+{id:'A12',fam:'audience',name:'SEO / affiliate content site',ai:'amplified',status:'mature',speed:22,ceiling:56,effort:34,
+ fp:{cap:2,bud:1,run:4,aud:1},capTxt:'5h',budTxt:'<$500',runTxt:'6mo+',audTxt:'none',
+ one:'SEO-driven site covering a buying decision, monetized via affiliate and sponsorship.',
+ ins:[['Cyclist','commuter-bike comparison hub'],['Audio engineer','home-recording gear reviews']]},
+
+// ---- F4 software ----
+{id:'A7',fam:'software',name:'SaaS product, built from scratch',ai:'amplified',status:'mature',speed:20,ceiling:92,effort:70,
+ fp:{cap:4,bud:3,run:4,aud:2},capTxt:'10h',budTxt:'$2K+',runTxt:'6mo+',audTxt:'helpful',
+ one:'Subscription software you build and sell, typically narrow B2B, single-purpose.',
+ ins:[['Developer','scheduling tool for a niche profession'],['Tech PM','analytics layer for a vertical']]},
+{id:'A27',fam:'software',name:'Micro-SaaS on no-code',ai:'amplified',status:'emerging',speed:50,ceiling:55,effort:44,
+ fp:{cap:3,bud:2,run:3,aud:2},capTxt:'8h',budTxt:'<$500',runTxt:'4mo',audTxt:'helpful',
+ one:'Small single-purpose subscription tool built on Bubble/Glide, narrow audience.',
+ ins:[['No-code builder','booking tool for a local-service niche'],['Ops mind','internal-CRM template-as-product']]},
+{id:'A28',fam:'software',name:'Browser extension / plugin',ai:'amplified',status:'mature',speed:42,ceiling:50,effort:46,
+ fp:{cap:3,bud:1,run:3,aud:2},capTxt:'8h',budTxt:'$0',runTxt:'3mo',audTxt:'helpful',
+ one:'Add-on that lives inside an existing platform — Chrome, Figma, Notion, Shopify.',
+ ins:[['Developer','Figma plugin for design-token export'],['Coder','Chrome extension for a specific workflow']]},
+{id:'A29',fam:'software',name:'Marketplace / two-sided platform',ai:'amplified',status:'mature',speed:18,ceiling:90,effort:74,
+ fp:{cap:4,bud:3,run:4,aud:3},capTxt:'12h',budTxt:'$2K+',runTxt:'6mo+',audTxt:'required',
+ one:'Connect two groups and take a cut — the hardest cold-start, the biggest ceiling.',
+ ins:[['Connector','vetted-freelancer marketplace for a niche'],['Operator','rental platform for specialized gear']]},
+
+// ---- F5 ai-service ----
+{id:'A14',fam:'aiservice',name:'AI-delivered service',ai:'native',status:'emerging',speed:88,ceiling:72,effort:26,
+ fp:{cap:2,bud:2,run:1,aud:1},capTxt:'5h',budTxt:'<$500',runTxt:'1mo',audTxt:'none',
+ one:'Outcomes sold to clients where AI does most of the labor; you are taste & QC.',
+ ins:[['Marketer','AI-assisted SEO content, $3K/mo retainer'],['Designer','AI brand-asset packages, $1.5K flat']]},
+{id:'A15',fam:'aiservice',name:'Workflow automation as a service',ai:'amplified',status:'emerging',speed:86,ceiling:60,effort:24,
+ fp:{cap:2,bud:1,run:1,aud:1},capTxt:'5h',budTxt:'<$500',runTxt:'1mo',audTxt:'none',
+ one:'Building n8n / Make / Zapier integrations as deliverables — the plumbing, not the tool.',
+ ins:[['Ops + ecommerce','Shopify-Klaviyo flows, $2K + $300/mo'],['Sales ops','HubSpot lead-routing, $3K + $500/mo']]},
+{id:'A17',fam:'aiservice',name:'AI agent operator service',ai:'native',status:'experimental',speed:62,ceiling:78,effort:60,
+ fp:{cap:4,bud:3,run:2,aud:2},capTxt:'10h',budTxt:'$500-2K',runTxt:'3mo',audTxt:'helpful',
+ one:'Running autonomous agent stacks as a service — sales, support, research agents.',
+ ins:[['Sales bg','AI SDR-agent service, $4K/mo'],['Ops + code','support-agent service for ecommerce']]},
+{id:'A30',fam:'aiservice',name:'AI implementation consultancy',ai:'native',status:'emerging',speed:72,ceiling:82,effort:42,
+ fp:{cap:3,bud:1,run:2,aud:3},capTxt:'8h',budTxt:'$0',runTxt:'2mo',audTxt:'helpful',
+ one:'Helping non-technical companies adopt AI — audits, tool selection, staff training.',
+ ins:[['Operator','AI-adoption audits for law firms, $5K'],['Trainer','team AI-upskilling workshops, $3K']]},
+{id:'A31',fam:'aiservice',name:'Prompt / model fine-tuning service',ai:'native',status:'experimental',speed:66,ceiling:58,effort:40,
+ fp:{cap:3,bud:2,run:2,aud:2},capTxt:'7h',budTxt:'<$500',runTxt:'3mo',audTxt:'helpful',
+ one:'Building bespoke prompt systems or fine-tuned models for a company\'s narrow need.',
+ ins:[['AI fluent','custom prompt libraries for support teams'],['Coder','fine-tuned classifier for a vertical']]},
+
+// ---- F6 ai-product ----
+{id:'A13',fam:'aiproduct',name:'AI-wrapper micro-product',ai:'native',status:'emerging',speed:68,ceiling:60,effort:44,
+ fp:{cap:3,bud:2,run:2,aud:2},capTxt:'7h',budTxt:'<$500+',runTxt:'3mo',audTxt:'helpful',
+ one:'Single-purpose AI tool — thin wrapper over a model, fat layer of taste and niche.',
+ ins:[['Lawyer + code','lease-review tool for landlords, $29/mo'],['Therapist','session-note summarizer']]},
+{id:'A18',fam:'aiproduct',name:'Vertical AI assistant for a role',ai:'native',status:'emerging',speed:42,ceiling:90,effort:64,
+ fp:{cap:4,bud:3,run:3,aud:2},capTxt:'10h',budTxt:'$500-2K',runTxt:'6mo',audTxt:'helpful',
+ one:'Niche AI tool embedded deep in one profession\'s daily workflow.',
+ ins:[['Ex-teacher + code','lesson-planning assistant, $19/mo'],['Real-estate bg','assistant for solo agents, $49/mo']]},
+{id:'A32',fam:'aiproduct',name:'AI-native consumer app',ai:'native',status:'emerging',speed:46,ceiling:75,effort:56,
+ fp:{cap:4,bud:2,run:3,aud:2},capTxt:'10h',budTxt:'<$500',runTxt:'4mo',audTxt:'helpful',
+ one:'Consumer-facing app whose entire value is an AI interaction — journaling, coaching, learning.',
+ ins:[['Designer + AI','AI reflection-journaling app, $8/mo'],['Builder','AI language-practice companion']]},
+{id:'A33',fam:'aiproduct',name:'AI content / template engine',ai:'native',status:'emerging',speed:58,ceiling:62,effort:42,
+ fp:{cap:3,bud:2,run:2,aud:2},capTxt:'7h',budTxt:'<$500',runTxt:'3mo',audTxt:'helpful',
+ one:'A tool that generates a specific output type repeatedly — proposals, contracts, designs.',
+ ins:[['Sales bg','AI proposal generator for agencies'],['Designer','AI social-asset generator for a niche']]},
+{id:'A34',fam:'aiproduct',name:'Data-enriched AI insight tool',ai:'native',status:'experimental',speed:40,ceiling:80,effort:62,
+ fp:{cap:4,bud:3,run:3,aud:2},capTxt:'10h',budTxt:'$500-2K',runTxt:'5mo',audTxt:'helpful',
+ one:'AI layered on a proprietary or hard-to-assemble dataset, sold as ongoing insight.',
+ ins:[['Analyst + code','AI market-signal tool for a sector'],['Domain expert','AI risk-scoring for a niche']]},
+
+// ---- F7 commerce ----
+{id:'A4',fam:'commerce',name:'E-commerce / physical brand',ai:'amplified',status:'mature',speed:42,ceiling:88,effort:80,
+ fp:{cap:4,bud:4,run:4,aud:1},capTxt:'10h',budTxt:'$2K+',runTxt:'6mo+',audTxt:'none',
+ one:'DTC brand around a physical product, sold via Shopify and paid social.',
+ ins:[['—','rarely reached for the Navigator user — budget-blocked']]},
+{id:'A8',fam:'commerce',name:'Local service business',ai:'neutral',status:'mature',speed:80,ceiling:55,effort:60,
+ fp:{cap:4,bud:2,run:1,aud:1},capTxt:'10h',budTxt:'<$500',runTxt:'1mo',audTxt:'none',
+ one:'Hands-on local service — cleaning, detailing, organizing, pet care.',
+ ins:[['—','usually blocked by no-in-person / no-sales-calls nos']]},
+{id:'A35',fam:'commerce',name:'Rentals / asset-leasing micro-business',ai:'neutral',status:'mature',speed:55,ceiling:60,effort:66,
+ fp:{cap:3,bud:4,run:2,aud:1},capTxt:'7h',budTxt:'$2K+',runTxt:'3mo',audTxt:'none',
+ one:'Buy an asset once, rent it repeatedly — equipment, party gear, storage.',
+ ins:[['—','capital-heavy; held for evaluation-mode rejection']]},
+{id:'A36',fam:'commerce',name:'Acquire & operate a small business',ai:'neutral',status:'mature',speed:60,ceiling:85,effort:95,
+ fp:{cap:4,bud:4,run:4,aud:1},capTxt:'15h+',budTxt:'$2K+',runTxt:'6mo+',audTxt:'none',
+ one:'Buy a tiny existing cash-flowing business and improve it — the "search fund" in miniature.',
+ ins:[['—','far outside the Navigator user; evaluation-mode only']]},
+{id:'A37',fam:'commerce',name:'Reseller / arbitrage operation',ai:'amplified',status:'mature',speed:70,ceiling:48,effort:52,
+ fp:{cap:3,bud:3,run:1,aud:1},capTxt:'8h',budTxt:'$500-2K',runTxt:'1mo',audTxt:'none',
+ one:'Buy low, sell high, systematically — sourcing inefficiencies in a category you know.',
+ ins:[['—','inventory + capital; usually budget-blocked']]},
+{id:'A38',fam:'commerce',name:'Dropship / print-on-demand brand',ai:'amplified',status:'mature',speed:55,ceiling:50,effort:48,
+ fp:{cap:3,bud:2,run:2,aud:1},capTxt:'8h',budTxt:'<$500',runTxt:'2mo',audTxt:'none',
+ one:'Storefront with no inventory — supplier ships direct; you own brand and acquisition.',
+ ins:[['Designer','POD apparel for a subculture'],['Marketer','dropship niche-hobby store']]},
+{id:'A39',fam:'commerce',name:'Franchise / licensed micro-unit',ai:'neutral',status:'mature',speed:48,ceiling:70,effort:90,
+ fp:{cap:4,bud:4,run:4,aud:1},capTxt:'15h+',budTxt:'$2K+',runTxt:'6mo+',audTxt:'none',
+ one:'Operate under an established brand and system — lower risk, high capital, low autonomy.',
+ ins:[['—','capital + time outside the Navigator user entirely']]},
+{id:'A40',fam:'commerce',name:'Events / community-as-business',ai:'neutral',status:'mature',speed:58,ceiling:62,effort:58,
+ fp:{cap:3,bud:2,run:2,aud:3},capTxt:'8h',budTxt:'<$500',runTxt:'3mo',audTxt:'required',
+ one:'Paid events, retreats, or a membership community where the gathering is the product.',
+ ins:[['Connector','paid quarterly meetups for a profession'],['Host','curated retreat series for founders']]},
+];
+
+// ============ COVERAGE EDGES ============
+const EDGES=[
+ {q:'Too rare to characterize',t:'Robotics / hardware micro-ventures',d:'Hardware side-businesses exist but the build, capital, and supply-chain profile is so different it needs its own family once enough solo cases exist.'},
+ {q:'Too new to score',t:'Agent-to-agent commerce',d:'Operators selling to or via other AI agents (agent marketplaces, MCP-server products). Real but embryonic in mid-2026 — the proposer should watch this closely.'},
+ {q:'Regulatory-gated',t:'Fintech / regulated-vertical products',d:'AI in lending, insurance, health diagnostics. Genuine opportunity, but licensing and liability put it outside a no-runway solo founder\'s reach for now.'},
+ {q:'Capital-defined',t:'Real-estate & yield plays',d:'Short-term rental arbitrage, land, niche REITs. Capital-first rather than skill-first, so they sit at the far edge of the Navigator user\'s profile.'},
+ {q:'Platform-dependent',t:'Single-platform monetization shapes',d:'Businesses that live entirely inside one platform\'s creator economy (e.g. a specific app\'s revenue-share program). High platform risk; the proposer should add or retire these as platforms rise and fall.'},
+ {q:'Emerging fast',t:'Physical-AI / embodied services',d:'Drone services, AI-guided local inspection, sensor-data businesses. Crossing into reach as hardware costs drop — a likely near-term proposer addition.'},
+];
+
+// ============ RENDER ============
+function fpBars(n,col){let s='<div class="fp-bars">';for(let i=1;i<=4;i++){const h=7+i*3;s+=`<div class="fp-bar ${i<=n?'on':''}" style="height:${h}px;--fp-color:${col}"></div>`;}return s+'</div>';}
+function mc(v){return v>=66?'var(--good)':v>=38?'var(--mid)':'var(--low)';}
+function speedTxt(v){return v>=66?'fast':v>=38?'medium':'slow';}
+function ceilTxt(v){return v>=66?'high':v>=38?'medium':'low';}
+
+function cardHTML(d){
+  const col=AIHEX[d.ai];
+  return `<div class="card" id="card-${d.id}" style="--card-accent:${col}">
+    <div class="card-top"><div class="card-id">${d.id}</div>
+      <div class="card-tags"><span class="pill pill-${d.status}">${d.status}</span><span class="pill pill-ai-${d.ai}">AI·${d.ai}</span></div>
+    </div>
+    <div class="card-name">${d.name}</div>
+    <div class="fingerprint">
+      <div class="fp-cell"><div class="fp-label">Capacity</div>${fpBars(d.fp.cap,col)}<div class="fp-val">${d.capTxt}</div></div>
+      <div class="fp-cell"><div class="fp-label">Budget</div>${fpBars(d.fp.bud,col)}<div class="fp-val">${d.budTxt}</div></div>
+      <div class="fp-cell"><div class="fp-label">Runway</div>${fpBars(d.fp.run,col)}<div class="fp-val">${d.runTxt}</div></div>
+      <div class="fp-cell"><div class="fp-label">Audience</div>${fpBars(d.fp.aud,col)}<div class="fp-val">${d.audTxt}</div></div>
+    </div>
+    <div class="meters">
+      <div class="meter-row"><div class="meter-label">Speed</div><div class="meter-track"><div class="meter-fill" style="width:${d.speed}%;background:${mc(d.speed)}"></div></div><div class="meter-val">${speedTxt(d.speed)}</div></div>
+      <div class="meter-row"><div class="meter-label">Ceiling</div><div class="meter-track"><div class="meter-fill" style="width:${d.ceiling}%;background:${mc(d.ceiling)}"></div></div><div class="meter-val">${ceilTxt(d.ceiling)}</div></div>
+    </div>
+    <div class="card-oneliner">${d.one}</div>
+    <div class="card-instances"><div class="ins-label">Example instances</div>
+      ${d.ins.map(p=>`<div class="ins"><b>${p[0]}</b> · ${p[1]}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// family chips
+const chips=document.getElementById('familyChips');
+FAMILIES.forEach(f=>{
+  const n=A.filter(a=>a.fam===f.key).length;
+  chips.innerHTML+=`<a class="fam-chip" href="#fam-${f.key}"><div class="fam-chip-count">${n}</div><div class="fam-chip-name">${f.name}</div></a>`;
+});
+
+// family bands
+const bands=document.getElementById('familyBands');
+FAMILIES.forEach(f=>{
+  const cards=A.filter(a=>a.fam===f.key).map(cardHTML).join('');
+  bands.innerHTML+=`<section class="section"><div class="family">
+    <div class="family-head" id="fam-${f.key}"><span class="family-tag">${f.tag}</span><span class="family-name">${f.name}</span></div>
+    <p class="family-desc">${f.desc}</p>
+    <div class="grid">${cards}</div>
+  </div></section>`;
+});
+
+// edges
+const eg=document.getElementById('edgeGrid');
+EDGES.forEach(e=>{eg.innerHTML+=`<div class="edge"><div class="edge-q">${e.q}</div><div class="edge-t">${e.t}</div><div class="edge-d">${e.d}</div></div>`;});
+
+// counts
+document.getElementById('countNative').textContent=A.filter(a=>a.ai==='native').length;
+document.getElementById('countAmp').textContent=A.filter(a=>a.ai==='amplified').length;
+document.getElementById('countNeu').textContent=A.filter(a=>a.ai==='neutral').length;
+</script>
+</body>
+</html>

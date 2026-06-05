@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orion — Intake + Findings Engine Expansion Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Libre+Franklin:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16201d; --ink-soft:#3a4742; --paper:#f3efe6; --card:#fffdf8;
+    --line:#e3dccd; --line-strong:#cdc4b1;
+    --green:#1b7a55; --green-bg:#e6f2ec;
+    --red:#b23320; --red-bg:#fbe9e5;
+    --amber:#b9820e; --amber-bg:#fbf2dc;
+    --blue:#2d5a8a; --blue-bg:#e8eef6;
+    --gold:#9a7b1f; --gold-bg:#f5edd6;
+    --code-bg:#1d2723; --code-ink:#e8e3d4; --code-dim:#9aa39c;
+    --shadow:0 1px 2px rgba(30,30,20,.04),0 8px 24px rgba(30,30,20,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 12% -5%,rgba(155,123,31,.05),transparent 40%),radial-gradient(circle at 100% 0%,rgba(45,90,138,.05),transparent 35%);
+    color:var(--ink); font-family:"Libre Franklin",sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased; padding:0 0 90px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+  .mono{font-family:"Spline Sans Mono",monospace;font-feature-settings:"tnum"}
+  a{color:var(--blue)}
+
+  header.mast{border-bottom:2px solid var(--ink);margin-bottom:36px;background:linear-gradient(180deg,rgba(255,253,248,.7),transparent)}
+  .mast-inner{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;padding:40px 0 22px}
+  .brand{font-family:"Fraunces",serif;font-weight:600;font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink-soft)}
+  h1.title{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(32px,5vw,50px);line-height:1.03;letter-spacing:-.01em;margin-top:6px}
+  h1.title em{font-style:italic;color:var(--gold)}
+  .meta{text-align:right;font-size:12.5px;color:var(--ink-soft);line-height:1.7}
+  .meta b{color:var(--ink);font-weight:600}
+
+  section{margin:44px 0;scroll-margin-top:20px}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .sec-num{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--gold);font-weight:600;border:1px solid var(--gold);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(22px,3vw,30px);letter-spacing:-.01em}
+  h3{font-family:"Fraunces",serif;font-weight:600;font-size:19px;margin:26px 0 10px;letter-spacing:-.01em}
+  h4{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);font-weight:600;margin:20px 0 8px}
+  .lede{font-size:16.5px;color:var(--ink-soft);max-width:68ch;margin-bottom:6px}
+  p{margin-bottom:13px;max-width:74ch}
+  ul,ol{margin:0 0 13px 22px}
+  li{margin-bottom:7px;max-width:72ch}
+  strong{font-weight:600}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:22px 24px;box-shadow:var(--shadow);margin:14px 0}
+  .callout{border-left:4px solid;border-radius:0 6px 6px 0;padding:16px 20px;margin:16px 0}
+  .co-blue{background:var(--blue-bg);border-color:var(--blue)}
+  .co-amber{background:var(--amber-bg);border-color:var(--amber)}
+  .co-green{background:var(--green-bg);border-color:var(--green)}
+  .co-title{font-family:"Fraunces",serif;font-weight:600;font-size:16px;margin-bottom:5px}
+  .co-blue .co-title{color:var(--blue)}.co-amber .co-title{color:var(--amber)}.co-green .co-title{color:var(--green)}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:18px 20px;overflow-x:auto;margin:14px 0;font-family:"Spline Sans Mono",monospace;font-size:12.5px;line-height:1.65;box-shadow:var(--shadow)}
+  pre .c{color:var(--code-dim)}
+  pre .k{color:#e0ad3e}
+  pre .s{color:#8fd0a8}
+  pre .f{color:#7fb0e0}
+  code.inl{font-family:"Spline Sans Mono",monospace;font-size:.88em;background:var(--gold-bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:#7a5f10}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+  thead th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;padding:10px 12px;border-bottom:2px solid var(--ink)}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tbody tr:hover{background:rgba(155,123,31,.04)}
+
+  .prompt-block{background:var(--card);border:1px solid var(--line-strong);border-left:4px solid var(--blue);border-radius:0 6px 6px 0;padding:18px 22px;margin:16px 0;box-shadow:var(--shadow)}
+  .prompt-block .pb-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .prompt-block .pb-num{font-family:"Spline Sans Mono",monospace;font-size:11px;font-weight:600;color:#fff;background:var(--blue);padding:3px 9px;border-radius:100px;letter-spacing:.05em}
+  .prompt-block .pb-title{font-family:"Fraunces",serif;font-weight:600;font-size:16px}
+  .prompt-body{font-family:"Spline Sans Mono",monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;background:#fbf8f0;border:1px solid var(--line);border-radius:6px;padding:14px 16px;color:var(--ink)}
+
+  .badge{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:100px;border:1px solid}
+  .b-red{color:var(--red);background:var(--red-bg);border-color:var(--red)}
+  .b-amber{color:var(--amber);background:var(--amber-bg);border-color:var(--amber)}
+  .b-blue{color:var(--blue);background:var(--blue-bg);border-color:var(--blue)}
+  .b-green{color:var(--green);background:var(--green-bg);border-color:var(--green)}
+
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+  .toc a{font-size:12.5px;text-decoration:none;color:var(--ink-soft);border:1px solid var(--line);background:var(--card);padding:6px 12px;border-radius:100px}
+  .toc a:hover{border-color:var(--gold);color:var(--ink)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:780px){.grid2{grid-template-columns:1fr}.meta{text-align:left}}
+  .disclaimer{margin-top:40px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink-soft);line-height:1.7;background:var(--card)}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap mast-inner">
+    <div>
+      <div class="brand">Orion · Engineering Spec</div>
+      <h1 class="title">From a one-off review to a <em>reproducible</em> engine</h1>
+    </div>
+    <div class="meta">
+      <div><b>Scope</b> · Expansion A + B</div>
+      <div><b>Target</b> · orion_v2.html</div>
+      <div><b>For</b> · Karl</div>
+      <div><b>Drafted</b> · 1 Jun 2026</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section id="intro">
+  <p class="lede">This spec turns the qualities of an expert portfolio review — context-rich, rule-aware, specific — into two stackable layers you can ship into Orion: <strong>(A) an expanded investor-profile intake</strong> and <strong>(B) a deterministic findings engine</strong>. The intake supplies the <em>context</em> the review depended on; the engine supplies the <em>domain rules</em>. Together they feed a synthesis prompt so the output is reproducible for users who can't prompt an AI themselves.</p>
+
+  <div class="toc">
+    <a href="#why">Why this design</a>
+    <a href="#a-model">A · Data model</a>
+    <a href="#a-questions">A · Questionnaire</a>
+    <a href="#a-context">A · Prompt context</a>
+    <a href="#b-shape">B · Finding shape</a>
+    <a href="#b-helpers">B · Helpers</a>
+    <a href="#b-rules">B · Rule functions</a>
+    <a href="#b-orchestrator">B · Orchestrator</a>
+    <a href="#c-prompts">C · Claude Code prompts</a>
+    <a href="#test">Testing</a>
+  </div>
+
+  <div class="callout co-blue">
+    <div class="co-title">The one-paragraph mental model</div>
+    <p style="margin-bottom:0">Three layers, executed in order. <strong>Intake</strong> collects facts only the user knows (tax domicile, goal, constraints). The <strong>findings engine</strong> runs pure functions over holdings + intake and emits structured, auditable findings (rules, not opinions). The <strong>synthesis prompt</strong> receives both and writes the memo. Anything that is a <em>rule</em> lives in code so it is always correct; anything that is <em>judgement</em> lives in the prompt. Prompting is the last layer, not the first.</p>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-head"><div class="sec-num">0</div><h2>Why split it this way</h2></div>
+  <p>Orion already computes the quantitative scaffolding (look-through geo/sector via <code class="inl">state.geoAgg</code>/<code class="inl">state.sectorAgg</code>, concentration, a risk sub-score model, scenario shocks, bond-duration provenance). What it lacks is the <strong>personal/tax context</strong> that makes advice specific and the <strong>encoded rules</strong> that catch estate-situs, wrapper, redundancy, and drift issues. The current <code class="inl">houseView</code> prompt even admits it: <em>"this user has NOT given a full financial picture (goals, horizon, tax, income)."</em> You can't prompt your way to estate advice you don't have inputs for.</p>
+  <p>Keeping rules in deterministic functions (not the LLM) buys three things: the numbers are always correct, every finding is auditable to a line of code, and the model can't hallucinate a $60k threshold or invent a withholding rate. The model's job shrinks to what it's good at: weighing, sequencing, and explaining.</p>
+</section>
+
+<!-- ============================ EXPANSION A ============================ -->
+<section id="a-model">
+  <div class="sec-head"><div class="sec-num">A1</div><h2>Expansion A · The investor-profile data model</h2></div>
+  <p>Add a new top-level state object, <code class="inl">state.investorProfile</code>, kept distinct from the existing <code class="inl">state.riskProfile</code> (the 4-question risk score). The risk score stays as-is and feeds the strategic baseline; the investor profile carries the context the review ran on. All fields are optional and nullable so partial profiles degrade gracefully — the engine simply skips rules it lacks inputs for.</p>
+
+  <pre><span class="c">// New canonical shape. Lives alongside state.riskProfile.</span>
+<span class="c">// Every field nullable; null means "unknown" — never assume a default that changes advice.</span>
+state.investorProfile = {
+  <span class="c">// — Tax & residency (drives estate-situs, withholding, FX) —</span>
+  <span class="f">taxCitizenship</span>:   <span class="s">null</span>,   <span class="c">// e.g. "US" | "LB" | "FR" — ISO-2</span>
+  <span class="f">isUSPerson</span>:       <span class="s">null</span>,   <span class="c">// bool — US citizen or green-card / substantial-presence</span>
+  <span class="f">taxResidence</span>:     <span class="s">null</span>,   <span class="c">// ISO-2 country where the owner is tax-resident</span>
+  <span class="f">spendingCurrency</span>: <span class="s">null</span>,   <span class="c">// "USD" | "EUR" | "CHF" … the wallet that ultimately matters</span>
+  <span class="f">eventualBeneficiaryCountry</span>: <span class="s">null</span>, <span class="c">// where the book is heading (FX transmission)</span>
+
+  <span class="c">// — Mandate (drives the goal/structure tension) —</span>
+  <span class="f">returnObjective</span>:  <span class="s">null</span>,   <span class="c">// "preserve" | "income" | "balanced_growth" | "beat_benchmark"</span>
+  <span class="f">benchmark</span>:        <span class="s">null</span>,   <span class="c">// "SPX" | "ACWI" | null — only when objective is beat/match</span>
+  <span class="f">benchmarkMode</span>:    <span class="s">null</span>,   <span class="c">// "beat" | "match"</span>
+  <span class="f">maxDrawdownPct</span>:    <span class="s">null</span>,   <span class="c">// explicit number, e.g. 20</span>
+  <span class="f">horizonYears</span>:     <span class="s">null</span>,   <span class="c">// integer; can mirror risk-Q1 but stored explicitly</span>
+
+  <span class="c">// — Liquidity / income context —</span>
+  <span class="f">annualIncomeUSD</span>:  <span class="s">null</span>,   <span class="c">// stable income outside the portfolio</span>
+  <span class="f">liquidityNeed</span>:    <span class="s">null</span>,   <span class="c">// "none" | "occasional" | "regular_withdrawals"</span>
+  <span class="f">nearTermCashNeedUSD</span>: <span class="s">null</span>, <span class="c">// money needed within ~2 yrs → cash buffer floor</span>
+
+  <span class="c">// — Hard constraints (the engine must respect these) —</span>
+  <span class="f">convictionHolds</span>:  [],     <span class="c">// tickers/ISINs the user will NOT sell, e.g. ["NVDA"]</span>
+  <span class="f">ceilings</span>: {                 <span class="c">// self-imposed caps, percent of book</span>
+    <span class="f">aiTechPct</span>: <span class="s">null</span>,           <span class="c">// e.g. 30</span>
+    <span class="f">singleNamePct</span>: <span class="s">null</span>,       <span class="c">// e.g. 5</span>
+    <span class="f">usSitusUSD</span>: <span class="s">null</span>          <span class="c">// e.g. 60000 — the user's own line</span>
+  },
+  <span class="f">exclusions</span>:       [],     <span class="c">// sectors/themes to avoid (ESG, tobacco, etc.)</span>
+
+  <span class="c">// — Account context —</span>
+  <span class="f">custodian</span>:        <span class="s">null</span>,   <span class="c">// free text — "UBS (CH)"</span>
+  <span class="f">accountTaxType</span>:   <span class="s">null</span>,   <span class="c">// "taxable" | "tax_deferred" | "tax_exempt"</span>
+
+  <span class="f">completedAt</span>:      <span class="s">null</span>    <span class="c">// ISO date; gate re-prompts on staleness</span>
+};</pre>
+
+  <h4>Persistence</h4>
+  <p>Add <code class="inl">"investorProfile"</code> to the existing <code class="inl">PERSISTED_FIELDS</code> array (currently at ~line 973) so it survives reloads exactly like <code class="inl">riskProfile</code>. No other persistence wiring is needed — it rides the same save/load path.</p>
+  <pre>const PERSISTED_FIELDS = [<span class="s">"isinRows"</span>,<span class="s">"cashRows"</span>,<span class="s">"bondRows"</span>,<span class="s">"reRows"</span>,
+  <span class="s">"cryptoRows"</span>,<span class="s">"commRows"</span>,<span class="s">"debtRows"</span>,<span class="s">"riskProfile"</span>,<span class="s">"manualOverrides"</span>,
+  <span class="k">"investorProfile"</span>]; <span class="c">// ← add this</span></pre>
+</section>
+
+<section id="a-questions">
+  <div class="sec-head"><div class="sec-num">A2</div><h2>Expansion A · The intake flow</h2></div>
+  <p>Extend the existing risk-questionnaire modal into a two-part flow. <strong>Part 1</strong> is the current 4-question <code class="inl">RQ_QUESTIONS</code> risk score (leave it untouched). <strong>Part 2</strong> is a new <code class="inl">PROFILE_QUESTIONS</code> set — short, single-tap where possible, with sensible "prefer not to say / unknown" escapes so a user can stop early. The intake's job is to fill <code class="inl">state.investorProfile</code>, not to score.</p>
+
+  <p>Design principle: <strong>each question must unlock at least one finding</strong>. If a question doesn't change any rule's output, cut it. The mapping below is the justification for each.</p>
+
+  <table>
+    <thead><tr><th>Question (user-facing)</th><th>Writes to</th><th>Unlocks finding</th></tr></thead>
+    <tbody>
+      <tr><td>"Are you a US citizen or green-card holder?" (Yes / No / Not sure)</td><td><code class="inl">isUSPerson</code></td><td>US-situs estate exposure (only fires for non-US persons)</td></tr>
+      <tr><td>"Which country are you tax-resident in?"</td><td><code class="inl">taxResidence</code>, <code class="inl">taxCitizenship</code></td><td>Estate treaty note, withholding wrapper check</td></tr>
+      <tr><td>"What currency do you actually spend in?"</td><td><code class="inl">spendingCurrency</code></td><td>FX mismatch finding</td></tr>
+      <tr><td>"What's the real goal for this money?" (Preserve / Income / Balanced growth / Beat a benchmark)</td><td><code class="inl">returnObjective</code>, <code class="inl">benchmark</code></td><td>Goal/structure tension finding</td></tr>
+      <tr><td>"Largest drop you could stomach without selling?" (slider → %)</td><td><code class="inl">maxDrawdownPct</code></td><td>Scenario / drawdown-consistency framing</td></tr>
+      <tr><td>"Any holdings you will never sell?" (ticker chips)</td><td><code class="inl">convictionHolds</code></td><td>Action plan respects these; re-wrap suggestions route around them</td></tr>
+      <tr><td>"Any self-imposed limits?" (e.g. max % in AI/tech)</td><td><code class="inl">ceilings</code></td><td>Ceiling-breach finding ("no room to add")</td></tr>
+      <tr><td>"Roughly, stable income outside this portfolio?" (bands)</td><td><code class="inl">annualIncomeUSD</code>, <code class="inl">liquidityNeed</code></td><td>Cash-buffer floor; risk-capacity framing</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Data definition (drop-in, mirrors RQ_QUESTIONS style)</h4>
+  <pre>const PROFILE_QUESTIONS = [
+  { <span class="f">key</span>:<span class="s">"isUSPerson"</span>, <span class="f">q</span>:<span class="s">"Are you a US citizen or green-card holder?"</span>,
+    <span class="f">opts</span>:[{<span class="f">label</span>:<span class="s">"No"</span>,<span class="f">val</span>:<span class="s">false</span>},{<span class="f">label</span>:<span class="s">"Yes"</span>,<span class="f">val</span>:<span class="s">true</span>},{<span class="f">label</span>:<span class="s">"Not sure"</span>,<span class="f">val</span>:<span class="s">null</span>}] },
+
+  { <span class="f">key</span>:<span class="s">"taxResidence"</span>, <span class="f">q</span>:<span class="s">"Where are you tax-resident?"</span>, <span class="f">type</span>:<span class="s">"country"</span> },
+
+  { <span class="f">key</span>:<span class="s">"spendingCurrency"</span>, <span class="f">q</span>:<span class="s">"What currency do you mostly spend in?"</span>,
+    <span class="f">opts</span>:[{<span class="f">label</span>:<span class="s">"USD"</span>,<span class="f">val</span>:<span class="s">"USD"</span>},{<span class="f">label</span>:<span class="s">"EUR"</span>,<span class="f">val</span>:<span class="s">"EUR"</span>},
+          {<span class="f">label</span>:<span class="s">"CHF"</span>,<span class="f">val</span>:<span class="s">"CHF"</span>},{<span class="f">label</span>:<span class="s">"GBP"</span>,<span class="f">val</span>:<span class="s">"GBP"</span>},{<span class="f">label</span>:<span class="s">"Other"</span>,<span class="f">val</span>:<span class="s">"OTHER"</span>}] },
+
+  { <span class="f">key</span>:<span class="s">"returnObjective"</span>, <span class="f">q</span>:<span class="s">"What's the real goal for this money?"</span>,
+    <span class="f">opts</span>:[{<span class="f">label</span>:<span class="s">"Preserve capital"</span>,<span class="f">val</span>:<span class="s">"preserve"</span>},
+          {<span class="f">label</span>:<span class="s">"Steady income"</span>,<span class="f">val</span>:<span class="s">"income"</span>},
+          {<span class="f">label</span>:<span class="s">"Balanced growth"</span>,<span class="f">val</span>:<span class="s">"balanced_growth"</span>},
+          {<span class="f">label</span>:<span class="s">"Beat a benchmark"</span>,<span class="f">val</span>:<span class="s">"beat_benchmark"</span>,<span class="f">followup</span>:<span class="s">"benchmark"</span>}] },
+
+  { <span class="f">key</span>:<span class="s">"maxDrawdownPct"</span>, <span class="f">q</span>:<span class="s">"Largest drop you could hold through without selling?"</span>,
+    <span class="f">type</span>:<span class="s">"slider"</span>, <span class="f">min</span>:5, <span class="f">max</span>:50, <span class="f">step</span>:5, <span class="f">suffix</span>:<span class="s">"%"</span> },
+
+  { <span class="f">key</span>:<span class="s">"convictionHolds"</span>, <span class="f">q</span>:<span class="s">"Any holdings you'll never sell? (optional)"</span>, <span class="f">type</span>:<span class="s">"chips"</span> },
+
+  { <span class="f">key</span>:<span class="s">"ceilings.aiTechPct"</span>, <span class="f">q</span>:<span class="s">"Cap on AI / tech exposure? (optional)"</span>,
+    <span class="f">type</span>:<span class="s">"slider"</span>, <span class="f">min</span>:0, <span class="f">max</span>:100, <span class="f">step</span>:5, <span class="f">suffix</span>:<span class="s">"%"</span>, <span class="f">allowSkip</span>:<span class="s">true</span> },
+
+  { <span class="f">key</span>:<span class="s">"annualIncomeUSD"</span>, <span class="f">q</span>:<span class="s">"Stable income outside this portfolio?"</span>,
+    <span class="f">opts</span>:[{<span class="f">label</span>:<span class="s">"None"</span>,<span class="f">val</span>:0},{<span class="f">label</span>:<span class="s">"<$50k"</span>,<span class="f">val</span>:40000},
+          {<span class="f">label</span>:<span class="s">"$50–150k"</span>,<span class="f">val</span>:100000},{<span class="f">label</span>:<span class="s">"$150k+"</span>,<span class="f">val</span>:200000}] }
+];</pre>
+
+  <div class="callout co-amber">
+    <div class="co-title">Keep it optional and reversible</div>
+    <p style="margin-bottom:0">Render this as a second tab in the existing questionnaire modal with a persistent "Skip — I'll do this later" control. A half-filled profile still meaningfully improves output; gating the whole app on a long form kills completion. Show a small completeness meter ("Profile 60% — add tax residence to unlock the estate check") to make the value legible.</p>
+  </div>
+</section>
+
+<section id="a-context">
+  <div class="sec-head"><div class="sec-num">A3</div><h2>Expansion A · Threading profile into the prompt</h2></div>
+  <p>Add one helper to the <code class="inl">PROMPTS</code> object that renders the profile as a compact context block, and splice it into <code class="inl">houseView</code> (and optionally <code class="inl">copilot</code>). Emit only known fields, so the model is never told a default that would change advice.</p>
+  <pre><span class="c">// Add inside the PROMPTS object, near _assetMix / _bondDurationLine.</span>
+_profileBlock(p) {
+  <span class="k">if</span> (!p) <span class="k">return</span> <span class="s">"\nINVESTOR CONTEXT: none provided — keep all advice general and say so."</span>;
+  <span class="k">const</span> L = [];
+  <span class="k">if</span> (p.isUSPerson === <span class="s">false</span>) L.push(<span class="s">"Non-US person (NRA) for US tax — US estate-situs rules apply."</span>);
+  <span class="k">if</span> (p.taxResidence)     L.push(<span class="s">`Tax-resident: ${p.taxResidence}.`</span>);
+  <span class="k">if</span> (p.spendingCurrency) L.push(<span class="s">`Spends in: ${p.spendingCurrency}.`</span>);
+  <span class="k">if</span> (p.returnObjective)  L.push(<span class="s">`Stated goal: ${p.returnObjective}`</span> +
+        (p.benchmark ? <span class="s">` (${p.benchmarkMode||"beat"} ${p.benchmark})`</span> : <span class="s">""</span>) + <span class="s">"."</span>);
+  <span class="k">if</span> (p.maxDrawdownPct != <span class="s">null</span>) L.push(<span class="s">`Max drawdown tolerance: ${p.maxDrawdownPct}%.`</span>);
+  <span class="k">if</span> (p.convictionHolds?.length) L.push(<span class="s">`NEVER suggest selling: ${p.convictionHolds.join(", ")}.`</span>);
+  <span class="k">if</span> (p.ceilings?.aiTechPct != <span class="s">null</span>) L.push(<span class="s">`Self-imposed AI/tech ceiling: ${p.ceilings.aiTechPct}%.`</span>);
+  <span class="k">if</span> (p.annualIncomeUSD != <span class="s">null</span>) L.push(<span class="s">`Stable outside income: ~$${fmt(p.annualIncomeUSD)}/yr.`</span>);
+  <span class="k">return</span> <span class="s">"\nINVESTOR CONTEXT (ground truth — reason from this, respect every constraint):\n- "</span>
+         + L.join(<span class="s">"\n- "</span>);
+}</pre>
+  <p>Then in <code class="inl">houseView</code>, append <code class="inl">${PROMPTS._profileBlock(state.investorProfile)}</code> after the ground-truth holdings block, and update the "IMPORTANT LIMITATIONS" note to only claim missing context that is actually missing.</p>
+</section>
+
+<!-- ============================ EXPANSION B ============================ -->
+<section id="b-shape">
+  <div class="sec-head"><div class="sec-num">B1</div><h2>Expansion B · The Finding object</h2></div>
+  <p>Every rule returns zero or one (occasionally several) <code class="inl">Finding</code> objects with a uniform shape. Uniformity is what lets the UI render them, the orchestrator sort them, and the prompt consume them without special-casing.</p>
+  <pre><span class="c">/**
+ * @typedef {Object} Finding
+ * @property {string}  id         stable slug, e.g. "us_situs_estate"
+ * @property {string}  title      one line, human-readable
+ * @property {"high"|"medium"|"low"|"info"} severity
+ * @property {string}  body       1–3 sentences of plain explanation
+ * @property {number=} valueUSD   the dollar amount the finding is about
+ * @property {number=} costUSD    estimated $ cost/exposure (for ranking + memo)
+ * @property {Object[]} evidence  [{label, value}] — auditable inputs
+ * @property {string=} action     concrete, specific suggested move
+ * @property {boolean} userDecision  true = it's the user's call, don't decide for them
+ * @property {string=} disclaimer  rule-specific caveat (e.g. "confirm with cross-border counsel")
+ */</span></pre>
+  <div class="callout co-green">
+    <div class="co-title">Why <code class="inl">userDecision</code> matters</div>
+    <p style="margin-bottom:0">The best reviews refuse to decide what is genuinely the owner's call (e.g. "what's gold's target weight?") while being decisive about what is objectively a fix (estate-situs overage). This flag carries that distinction all the way to the prompt, which is told to <em>present the trade-off and hold the user accountable to choosing</em> rather than picking for them.</p>
+  </div>
+</section>
+
+<section id="b-helpers">
+  <div class="sec-head"><div class="sec-num">B2</div><h2>Expansion B · Detection helpers</h2></div>
+  <p>Shared, conservative classifiers. They lean on the ISIN you already store on holdings (<code class="inl">h.isin</code>) and fall back to a manual override flag rather than guessing wrongly.</p>
+  <pre><span class="c">// US-situs = US-listed individual securities + US-domiciled funds (ETFs/ETPs).</span>
+<span class="c">// Irish (IE) / Luxembourg (LU) UCITS are NOT US-situs. Treasuries are situs;</span>
+<span class="c">// most corporate bonds are NOT. When unsure, mark unknown — never silently assume.</span>
+<span class="k">function</span> <span class="f">domicileOf</span>(h) {
+  <span class="k">const</span> isin = (h.isin || <span class="s">""</span>).toUpperCase();
+  <span class="k">if</span> (h.manualDomicile) <span class="k">return</span> h.manualDomicile;       <span class="c">// user override wins</span>
+  <span class="k">if</span> (isin.startsWith(<span class="s">"US"</span>)) <span class="k">return</span> <span class="s">"US"</span>;
+  <span class="k">if</span> (isin.startsWith(<span class="s">"IE"</span>) || isin.startsWith(<span class="s">"LU"</span>)) <span class="k">return</span> <span class="s">"UCITS"</span>;
+  <span class="k">if</span> (isin.length === 12) <span class="k">return</span> isin.slice(0,2);        <span class="c">// other ISO-2 prefix</span>
+  <span class="k">return</span> <span class="s">"UNKNOWN"</span>;
+}
+
+<span class="k">function</span> <span class="f">isUSSitus</span>(h) {
+  <span class="k">const</span> d = domicileOf(h);
+  <span class="k">if</span> (h.type === <span class="s">"equities"</span>)              <span class="k">return</span> d === <span class="s">"US"</span>;       <span class="c">// US-listed single stock</span>
+  <span class="k">if</span> (h.type === <span class="s">"crypto"</span> &amp;&amp; h.isin)    <span class="k">return</span> d === <span class="s">"US"</span>;       <span class="c">// US-domiciled spot ETF (IBIT)</span>
+  <span class="k">if</span> (h.assetClassIsFund || h.type === <span class="s">"etf"</span>) <span class="k">return</span> d === <span class="s">"US"</span>;  <span class="c">// US-domiciled fund</span>
+  <span class="k">return</span> <span class="s">false</span>;                                            <span class="c">// cash, RE, non-US bonds → out of scope</span>
+}
+
+<span class="k">function</span> <span class="f">pctOf</span>(valueUSD, total) { <span class="k">return</span> total ? (valueUSD/total*100) : 0; }</pre>
+  <div class="callout co-amber">
+    <div class="co-title">Heuristic, by design</div>
+    <p style="margin-bottom:0">These classifiers are good enough to <em>flag</em>, never to <em>file</em>. Every situs/tax finding must carry the disclaimer that the actual treatment depends on domicile, treaties, and account structure, and must be confirmed with a cross-border tax professional. The engine surfaces the question; it does not give the legal answer.</p>
+  </div>
+</section>
+
+<section id="b-rules">
+  <div class="sec-head"><div class="sec-num">B3</div><h2>Expansion B · The rule functions</h2></div>
+  <p>Each is a pure function <code class="inl">(holdings, ctx) =&gt; Finding[]</code> where <code class="inl">ctx</code> bundles <code class="inl">{total, classes, sectorAgg, geoAgg, profile, baseline}</code>. Stubs below are wired to your real data shapes and are deliberately conservative.</p>
+
+  <h3>1 · US-situs estate exposure <span class="badge b-red">high</span></h3>
+  <pre><span class="k">function</span> <span class="f">f_usSitusEstate</span>(holdings, ctx) {
+  <span class="k">const</span> p = ctx.profile;
+  <span class="k">if</span> (!p || p.isUSPerson !== <span class="s">false</span>) <span class="k">return</span> [];      <span class="c">// only fires for confirmed non-US persons</span>
+  <span class="k">const</span> situs = holdings.filter(isUSSitus);
+  <span class="k">const</span> exposed = situs.reduce((a,h)=>a+(h.current||0), 0);
+  <span class="k">const</span> line = p.ceilings?.usSitusUSD ?? 60000;       <span class="c">// statutory NRA exemption</span>
+  <span class="k">if</span> (exposed &lt;= line) <span class="k">return</span> [];
+  <span class="k">const</span> over = exposed - line;
+  <span class="k">const</span> estTax = [Math.round(over*0.26), Math.round(over*0.40)]; <span class="c">// marginal band</span>
+  <span class="k">const</span> keep = new Set((p.convictionHolds||[]).map(s=&gt;s.toUpperCase()));
+  <span class="k">const</span> reWrap = situs.filter(h =&gt; !keep.has((h.symbol||h.name||<span class="s">""</span>).toUpperCase()));
+  <span class="k">return</span> [{
+    id:<span class="s">"us_situs_estate"</span>, severity:<span class="s">"high"</span>, userDecision:<span class="s">false</span>,
+    title:<span class="s">`US-situs assets $${fmt(exposed)} — $${fmt(over)} over the $${fmt(line)} line`</span>,
+    body:<span class="s">`As a non-US person, US-situs assets above $${fmt(line)} can face US estate tax up to 40%. `</span>+
+         <span class="s">`Re-wrapping US-listed names into the UCITS ETFs already held removes situs while keeping exposure.`</span>,
+    valueUSD: exposed, costUSD: estTax[1],
+    evidence: situs.map(h=&gt;({label:h.name, value:<span class="s">`$${fmt(h.current)} (${domicileOf(h)})`</span>})),
+    action: <span class="s">`Convert ${reWrap.map(h=&gt;h.symbol||h.name).join(", ")} into UCITS S&amp;P/Nasdaq wrappers; `</span>+
+            <span class="s">`keeps ${[...keep].join(", ")||"core"} untouched and drops situs below the line.`</span>,
+    disclaimer:<span class="s">"General NRA rules; no US treaty assumed. Confirm with cross-border tax counsel before acting."</span>
+  }];
+}</pre>
+
+  <h3>2 · Wrapper / dividend-withholding drag <span class="badge b-amber">medium</span></h3>
+  <pre><span class="k">function</span> <span class="f">f_wrapperWithholding</span>(holdings, ctx) {
+  <span class="k">const</span> p = ctx.profile;
+  <span class="k">if</span> (!p || p.isUSPerson !== <span class="s">false</span>) <span class="k">return</span> [];
+  <span class="k">const</span> usFunds = holdings.filter(h =&gt; (h.assetClassIsFund||h.type===<span class="s">"etf"</span>) &amp;&amp; domicileOf(h)===<span class="s">"US"</span>);
+  <span class="k">if</span> (!usFunds.length) <span class="k">return</span> [];
+  <span class="k">const</span> v = usFunds.reduce((a,h)=&gt;a+(h.current||0),0);
+  <span class="k">return</span> [{
+    id:<span class="s">"wrapper_withholding"</span>, severity:<span class="s">"medium"</span>, userDecision:<span class="s">false</span>,
+    title:<span class="s">`$${fmt(v)} in US-domiciled funds — 30% dividend withholding vs 15% via UCITS`</span>,
+    body:<span class="s">"US-domiciled funds withhold US dividends at 30% for many non-US holders; an Irish UCITS equivalent typically reduces this to 15% and removes US estate situs."</span>,
+    valueUSD:v, evidence: usFunds.map(h=&gt;({label:h.name, value:<span class="s">`$${fmt(h.current)}`</span>})),
+    action:<span class="s">"Prefer the Irish-domiciled UCITS share class of the same index for future buys and re-wraps."</span>,
+    disclaimer:<span class="s">"Withholding depends on the holder's treaty position; confirm specifics."</span>
+  }];
+}</pre>
+
+  <h3>3 · Single-risk-engine concentration <span class="badge b-amber">medium</span></h3>
+  <pre><span class="c">// Diversification by ticker count is not diversification by risk factor.</span>
+<span class="c">// Sum everything that draws on the same US mega-cap engine: S&amp;P + Nasdaq +</span>
+<span class="c">// covered-call income funds + US tech singles. Reuse your sector look-through.</span>
+<span class="k">function</span> <span class="f">f_factorConcentration</span>(holdings, ctx) {
+  <span class="k">const</span> usLargeCap = pctOf(ctx.geoAgg?.[<span class="s">"United States"</span>]||0, 100); <span class="c">// geoAgg already a %</span>
+  <span class="k">const</span> tech = (ctx.sectorAgg?.[<span class="s">"Technology"</span>]||0) + (ctx.sectorAgg?.[<span class="s">"Communication Services"</span>]||0);
+  <span class="k">const</span> findings = [];
+  <span class="k">if</span> (usLargeCap &gt;= 40) findings.push({
+    id:<span class="s">"factor_us_engine"</span>, severity:<span class="s">"medium"</span>, userDecision:<span class="s">false</span>,
+    title:<span class="s">`~${usLargeCap.toFixed(0)}% of equity rides one US large-cap engine`</span>,
+    body:<span class="s">"S&amp;P, Nasdaq, income-overlay funds and US single names mostly draw on the same ~30 mega-caps. A US tech drawdown hits most of them at once, regardless of ticker count."</span>,
+    valueUSD: Math.round(usLargeCap/100*ctx.total),
+    evidence:[{label:<span class="s">"US (look-through)"</span>,value:<span class="s">`${usLargeCap.toFixed(0)}%`</span>},
+              {label:<span class="s">"Tech+Comms"</span>,value:<span class="s">`${tech.toFixed(0)}%`</span>}],
+    action:<span class="s">"Treat ticker-count diversification as cosmetic here; diversify by risk factor (size, geography, style), not by adding more US mega-cap lines."</span>
+  });
+  <span class="k">return</span> findings;
+}</pre>
+
+  <h3>4 · Self-imposed ceiling breach <span class="badge b-blue">info</span></h3>
+  <pre><span class="k">function</span> <span class="f">f_ceilingBreach</span>(holdings, ctx) {
+  <span class="k">const</span> cap = ctx.profile?.ceilings?.aiTechPct;
+  <span class="k">if</span> (cap == <span class="s">null</span>) <span class="k">return</span> [];
+  <span class="k">const</span> tech = (ctx.sectorAgg?.[<span class="s">"Technology"</span>]||0) + (ctx.sectorAgg?.[<span class="s">"Communication Services"</span>]||0);
+  <span class="k">if</span> (tech &lt; cap - 2) <span class="k">return</span> [];                       <span class="c">// comfortably under → no finding</span>
+  <span class="k">return</span> [{
+    id:<span class="s">"ceiling_ai_tech"</span>, severity:<span class="s">"info"</span>, userDecision:<span class="s">false</span>,
+    title:<span class="s">`AI/tech ~${tech.toFixed(0)}% is at your ${cap}% ceiling`</span>,
+    body:<span class="s">"You have essentially no room to add AI/tech under your own rule. Adding would require trimming elsewhere first — this is the rule working as intended."</span>,
+    action:<span class="s">"Park new AI ideas on a watchlist; only add after trimming an existing tech line."</span>
+  }];
+}</pre>
+
+  <h3>5 · Product redundancy <span class="badge b-amber">medium</span></h3>
+  <pre><span class="k">function</span> <span class="f">f_redundancy</span>(holdings, ctx) {
+  <span class="k">const</span> out = [];
+  <span class="c">// Acc + Dist of the same index: group by a normalized index key you can derive</span>
+  <span class="c">// from the name (strip "Acc"/"Dist"/"Distributing"/"Accumulating").</span>
+  <span class="k">const</span> keyOf = n =&gt; (n||<span class="s">""</span>).replace(/\b(acc|dist|distributing|accumulating)\b/ig,<span class="s">""</span>)
+                          .replace(/\s+/g,<span class="s">" "</span>).trim().toLowerCase();
+  <span class="k">const</span> groups = {};
+  holdings.forEach(h =&gt; { (groups[keyOf(h.name)] ||= []).push(h); });
+  Object.values(groups).forEach(g =&gt; {
+    <span class="k">if</span> (g.length &gt; 1 &amp;&amp; /s&amp;p|msci|nasdaq|index/i.test(g[0].name)) {
+      <span class="k">const</span> v = g.reduce((a,h)=&gt;a+(h.current||0),0);
+      out.push({ id:<span class="s">"redundant_index_"</span>+keyOf(g[0].name).slice(0,12),
+        severity:<span class="s">"medium"</span>, userDecision:<span class="s">false</span>, valueUSD:v,
+        title:<span class="s">`Duplicate index exposure: ${g.map(h=&gt;h.name).join(" + ")}`</span>,
+        body:<span class="s">"You hold two share classes of the same index doing the same job. If the goal is growth, the distributing class pays taxable income you may not want."</span>,
+        action:<span class="s">"Consolidate into the accumulating share class unless you specifically need the distributions."</span> });
+    }
+  });
+  <span class="c">// Income/covered-call product vs a growth mandate</span>
+  <span class="k">if</span> (ctx.profile?.returnObjective &amp;&amp; /growth|beat/.test(ctx.profile.returnObjective)) {
+    holdings.filter(h =&gt; /equity premium income|covered call|buywrite|qyld|jepi|jepq/i.test(h.name))
+      .forEach(h =&gt; out.push({ id:<span class="s">"income_in_growth"</span>, severity:<span class="s">"low"</span>, userDecision:<span class="s">true</span>,
+        title:<span class="s">`${h.name} caps upside in a growth mandate`</span>, valueUSD:h.current,
+        body:<span class="s">"A covered-call income product trades away upside for yield — the opposite of a pure-growth objective."</span>,
+        action:<span class="s">"Decide deliberately: keep as a volatility dampener, or swap for plain growth exposure."</span> }));
+  }
+  <span class="k">return</span> out;
+}</pre>
+
+  <h3>6 · Drift vs decision <span class="badge b-blue">info</span> / <span class="badge b-amber">medium</span></h3>
+  <pre><span class="c">// A position that has grown well past its strategic target is there "by drift,</span>
+<span class="c">// not decision." Compare current weight to the risk-profile baseline weight.</span>
+<span class="k">function</span> <span class="f">f_drift</span>(holdings, ctx) {
+  <span class="k">if</span> (!ctx.baseline) <span class="k">return</span> [];
+  <span class="k">const</span> out = [];
+  Object.entries(ctx.classes).forEach(([cls, usd]) =&gt; {
+    <span class="k">const</span> cur = pctOf(usd, ctx.total);
+    <span class="k">const</span> tgt = ctx.baseline.class?.[cls];
+    <span class="k">if</span> (tgt == <span class="s">null</span>) <span class="k">return</span>;
+    <span class="k">const</span> gap = cur - tgt;
+    <span class="k">if</span> (Math.abs(gap) &gt;= 8) out.push({
+      id:<span class="s">"drift_"</span>+cls.toLowerCase(), severity: Math.abs(gap)&gt;=15?<span class="s">"medium"</span>:<span class="s">"info"</span>,
+      userDecision:<span class="s">true</span>, valueUSD: usd,
+      title:<span class="s">`${cls} is ${cur.toFixed(0)}% vs ~${tgt}% target — ${gap&gt;0?"overweight":"underweight"} by drift`</span>,
+      body:<span class="s">`This weight may reflect price drift rather than a deliberate choice. If you'd pick ${cur.toFixed(0)}% on a blank sheet today, keep it; if not, it's a rebalancing candidate.`</span>,
+      action:<span class="s">`Set an explicit target for ${cls} and rebalance the difference.`</span>
+    });
+  });
+  <span class="k">return</span> out;
+}</pre>
+
+  <h3>7 · Idle-cash opportunity cost <span class="badge b-amber">medium</span></h3>
+  <pre><span class="k">function</span> <span class="f">f_idleCash</span>(holdings, ctx) {
+  <span class="k">const</span> cash = (ctx.classes.Cash || 0);
+  <span class="k">if</span> (!cash) <span class="k">return</span> [];
+  <span class="k">const</span> buffer = ctx.profile?.nearTermCashNeedUSD ?? Math.min(20000, cash*0.25);
+  <span class="k">const</span> idle = Math.max(0, cash - buffer);
+  <span class="k">if</span> (idle &lt; 5000) <span class="k">return</span> [];
+  <span class="k">const</span> mmfRate = 0.04;                                  <span class="c">// ~T-bill / MMF; refresh from a rate feed if available</span>
+  <span class="k">return</span> [{
+    id:<span class="s">"idle_cash"</span>, severity:<span class="s">"medium"</span>, userDecision:<span class="s">false</span>,
+    title:<span class="s">`~$${fmt(idle)} idle cash earning near 0%`</span>,
+    body:<span class="s">"Cash beyond a sensible buffer is an opportunity cost while short-term rates are ~4%."</span>,
+    valueUSD: idle, costUSD: Math.round(idle*mmfRate),
+    action:<span class="s">`Keep ~$${fmt(buffer)} as buffer; move the rest into a USD money-market / short T-bill fund at ~4%.`</span>
+  }];
+}</pre>
+
+  <h3>8 · Goal / structure consistency <span class="badge b-red">high</span></h3>
+  <pre><span class="c">// The central "tension": a defensive-heavy book cannot beat an equity index.</span>
+<span class="k">function</span> <span class="f">f_goalStructure</span>(holdings, ctx) {
+  <span class="k">const</span> p = ctx.profile;
+  <span class="k">if</span> (!p || p.returnObjective !== <span class="s">"beat_benchmark"</span>) <span class="k">return</span> [];
+  <span class="k">const</span> equity = pctOf((ctx.classes.Equities||0)+(ctx.classes.ETFs||0), ctx.total);
+  <span class="k">const</span> defensive = 100 - equity;
+  <span class="k">if</span> (defensive &lt; 25) <span class="k">return</span> [];                       <span class="c">// already growth-shaped → no tension</span>
+  <span class="k">return</span> [{
+    id:<span class="s">"goal_structure"</span>, severity:<span class="s">"high"</span>, userDecision:<span class="s">true</span>,
+    title:<span class="s">`Goal says "beat ${p.benchmark||"the index"}" but ${defensive.toFixed(0)}% is defensive`</span>,
+    body:<span class="s">`A book that is ${defensive.toFixed(0)}% in gold/bonds/cash structurally trails an equity index by that block's drag. You can't have maximum safety and index-beating returns from the same book — pick which goal wins.`</span>,
+    valueUSD: Math.round(defensive/100*ctx.total),
+    action:<span class="s">`Either lift equity toward 70%+ (accepting deeper worst-case drawdown), or change the stated goal to "balanced growth." The engine won't choose for you — but it will hold you to choosing.`</span>
+  }];
+}</pre>
+</section>
+
+<section id="b-orchestrator">
+  <div class="sec-head"><div class="sec-num">B4</div><h2>Expansion B · Orchestrator + prompt hand-off</h2></div>
+  <p>One entry point runs every rule, sorts by severity then dollar impact, and exposes the result to both the UI and the synthesis prompt.</p>
+  <pre><span class="k">const</span> RULES = [f_usSitusEstate, f_wrapperWithholding, f_factorConcentration,
+               f_ceilingBreach, f_redundancy, f_drift, f_idleCash, f_goalStructure];
+
+<span class="k">const</span> SEVERITY_RANK = { high:0, medium:1, low:2, info:3 };
+
+<span class="k">function</span> <span class="f">runFindings</span>(state) {
+  <span class="k">const</span> holdings = state.holdings || [];
+  <span class="k">const</span> s = buildPortfolioSummary();                    <span class="c">// reuse existing summary</span>
+  <span class="k">const</span> ctx = {
+    total: s.total, classes: s.classes,
+    sectorAgg: state.sectorAgg || {}, geoAgg: state.geoAgg || {},
+    profile: state.investorProfile || <span class="s">null</span>,
+    baseline: BASELINE[(state.riskProfile &amp;&amp; state.riskProfile.profile)] || BASELINE.Balanced
+  };
+  <span class="k">const</span> findings = RULES.flatMap(fn =&gt; { <span class="k">try</span> { <span class="k">return</span> fn(holdings, ctx) || []; }
+                                       <span class="k">catch</span>(e){ console.warn(<span class="s">"rule failed"</span>,fn.name,e); <span class="k">return</span> []; } });
+  findings.sort((a,b) =&gt; (SEVERITY_RANK[a.severity]-SEVERITY_RANK[b.severity])
+                       || ((b.costUSD||0)-(a.costUSD||0)));
+  <span class="k">return</span> findings;
+}
+
+<span class="c">// Render findings as a compact, auditable block for the synthesis prompt.</span>
+<span class="k">function</span> <span class="f">findingsForPrompt</span>(findings) {
+  <span class="k">if</span> (!findings.length) <span class="k">return</span> <span class="s">"\nDETERMINISTIC FINDINGS: none triggered."</span>;
+  <span class="k">return</span> <span class="s">"\nDETERMINISTIC FINDINGS (computed in code — treat as ground truth, do not recompute):\n"</span>
+    + findings.map((f,i) =&gt; <span class="s">`${i+1}. [${f.severity.toUpperCase()}] ${f.title}`</span>
+        + (f.costUSD?<span class="s">` (~$${fmt(f.costUSD)} at stake)`</span>:<span class="s">""</span>)
+        + <span class="s">`\n   ${f.body}`</span>
+        + (f.action?<span class="s">`\n   Suggested: ${f.action}`</span>:<span class="s">""</span>)
+        + (f.userDecision?<span class="s">`\n   NOTE: this is the user's call — present the trade-off, do not decide for them.`</span>:<span class="s">""</span>)
+      ).join(<span class="s">"\n"</span>);
+}</pre>
+
+  <h4>Upgrade the synthesis prompt to consume findings</h4>
+  <p>In <code class="inl">PROMPTS.houseView</code>, append both the profile block and the findings block, and add stance instructions that mirror a sharp private-bank memo:</p>
+  <pre>...existing ground-truth block...
+${PROMPTS._profileBlock(state.investorProfile)}
+${findingsForPrompt(runFindings(state))}
+
+WRITING STANCE:
+- Open with a 3-sentence executive summary: what's right, the core tension, the avoidable cost.
+- Name specific holdings and dollar amounts. Sequence actions by risk-adjusted impact.
+- State trade-offs plainly — no free lunch. If trimming X raises return AND worst-case drawdown, say so.
+- Respect every hard constraint in INVESTOR CONTEXT (never suggest selling conviction holds).
+- For findings flagged "user's call," present the choice and hold them to picking — don't pick for them.
+- End with the single biggest thing you still don't know about their situation.</pre>
+
+  <h4>Optional: a Findings panel in the UI</h4>
+  <p>Because findings share one shape, a list renderer is trivial — map <code class="inl">runFindings(state)</code> to cards coloured by <code class="inl">severity</code>, each showing <code class="inl">title</code>, <code class="inl">body</code>, <code class="inl">action</code>, and an expandable <code class="inl">evidence</code> table. This gives users the rule-based half of the review even before they read the AI memo, and makes every AI claim traceable to a finding.</p>
+</section>
+
+<!-- ============================ CLAUDE CODE PROMPTS ============================ -->
+<section id="c-prompts">
+  <div class="sec-head"><div class="sec-num">C</div><h2>Claude Code execution prompts</h2></div>
+  <p>Copy these into Claude Code, run in order, and review the diff after each. They reference the real symbols in <code class="inl">orion_v2.html</code> and keep the single-file architecture intact. Run from the repo root.</p>
+
+  <div class="prompt-block">
+    <div class="pb-head"><span class="pb-num">PROMPT 1</span><span class="pb-title">Add the investor-profile data model + persistence</span></div>
+    <div class="prompt-body">In orion_v2.html, add a new state object `state.investorProfile` with the exact shape documented in our spec (taxCitizenship, isUSPerson, taxResidence, spendingCurrency, eventualBeneficiaryCountry, returnObjective, benchmark, benchmarkMode, maxDrawdownPct, horizonYears, annualIncomeUSD, liquidityNeed, nearTermCashNeedUSD, convictionHolds[], ceilings{aiTechPct, singleNamePct, usSitusUSD}, exclusions[], custodian, accountTaxType, completedAt). Initialise every field to null (or [] / {} for collections). Then add the string "investorProfile" to the PERSISTED_FIELDS array so it saves and loads exactly like riskProfile. Do not touch riskProfile or any other state. Show me the diff and confirm the file still parses.</div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="pb-head"><span class="pb-num">PROMPT 2</span><span class="pb-title">Build the intake UI (Part 2 of the questionnaire)</span></div>
+    <div class="prompt-body">In orion_v2.html, extend the existing risk-questionnaire modal into a two-part flow. Leave Part 1 (RQ_QUESTIONS, the 4 risk questions) untouched. Add a PROFILE_QUESTIONS array exactly as in our spec and render it as Part 2 after the risk questions, writing answers into state.investorProfile (support dotted keys like "ceilings.aiTechPct"). Each question must be skippable, support the input types used (opts buttons, country select, slider, chips), and on completion set investorProfile.completedAt and call persist(). Add a small completeness meter that tells the user which finding each missing field would unlock. Match the existing modal's styling and class names. Show me the diff.</div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="pb-head"><span class="pb-num">PROMPT 3</span><span class="pb-title">Create the findings engine</span></div>
+    <div class="prompt-body">In orion_v2.html, add a new clearly-commented section "FINDINGS ENGINE" after the PROMPTS object. Implement the Finding typedef, the helpers (domicileOf, isUSSitus, pctOf), the eight rule functions (f_usSitusEstate, f_wrapperWithholding, f_factorConcentration, f_ceilingBreach, f_redundancy, f_drift, f_idleCash, f_goalStructure), the RULES array, SEVERITY_RANK, runFindings(state), findingsForPrompt(findings), exactly as specified in our spec. Reuse buildPortfolioSummary(), state.sectorAgg, state.geoAgg, and BASELINE. Every rule must be a pure function, fail safe (wrapped so one error can't break the others), and return [] when it lacks inputs. Do not call any network APIs. Show me the diff and list which rules fire on the current sample portfolio.</div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="pb-head"><span class="pb-num">PROMPT 4</span><span class="pb-title">Wire findings + profile into the house-view prompt</span></div>
+    <div class="prompt-body">In orion_v2.html, add a PROMPTS._profileBlock(p) helper as specified, emitting only known fields. In PROMPTS.houseView, append ${PROMPTS._profileBlock(state.investorProfile)} and ${findingsForPrompt(runFindings(state))} after the ground-truth holdings block, and add the WRITING STANCE instructions from our spec (executive summary, name holdings + dollars, state trade-offs with no free lunch, respect conviction holds, present user-decision trade-offs without deciding, end on the biggest unknown). Update the existing "IMPORTANT LIMITATIONS" note so it only claims context that is actually missing from investorProfile. Keep the not-investment-advice disclaimer. Show me the before/after of the houseView prompt string.</div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="pb-head"><span class="pb-num">PROMPT 5</span><span class="pb-title">Add a Findings panel to the Risk screen</span></div>
+    <div class="prompt-body">In orion_v2.html, add a "Findings" card to the Risk Profile screen that calls runFindings(state) and renders each finding as a card coloured by severity (high=red, medium=amber, low/info=blue), showing title, body, suggested action, and an expandable evidence table. Re-render it whenever holdings or investorProfile change (hook into the existing render/markDirty path). If no findings fire, show a friendly empty state. Reuse existing CSS variables and card classes. Show me the diff.</div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="pb-head"><span class="pb-num">PROMPT 6</span><span class="pb-title">Verify</span></div>
+    <div class="prompt-body">Without changing app logic, write a short self-contained Node script (test_findings.mjs) that imports nothing from the browser but pastes in the helpers + rule functions, feeds three synthetic portfolios — (a) NRA with $105k US-situs + idle cash + duplicate S&P, (b) US-person growth-shaped book, (c) empty profile — and asserts: rule (a) fires us_situs_estate/idle_cash/redundancy, rule (b) fires none of the situs rules, rule (c) degrades gracefully with no crashes. Print a pass/fail table. Then run it and show output.</div>
+  </div>
+
+  <div class="callout co-blue">
+    <div class="co-title">Sequencing note</div>
+    <p style="margin-bottom:0">Prompts 1 → 3 are independent of the UI and can ship first (the engine improves the AI memo even with no new UI). Prompts 2 and 5 are the user-facing surface. Prompt 6 should pass before you wire findings into the live prompt in production.</p>
+  </div>
+</section>
+
+<section id="test">
+  <div class="sec-head"><div class="sec-num">D</div><h2>Testing &amp; guardrails checklist</h2></div>
+  <ul>
+    <li><strong>Degrade gracefully.</strong> With <code class="inl">investorProfile = null</code>, every rule returns <code class="inl">[]</code> or skips, and <code class="inl">houseView</code> still produces a general memo. No rule should throw.</li>
+    <li><strong>Never invent thresholds.</strong> The $60k line, 30%/15% withholding, ~4% MMF rate live in one place each and are commented as assumptions to refresh.</li>
+    <li><strong>Respect constraints.</strong> A conviction hold (e.g. NVDA) must never appear in a "sell/convert" action — assert this in Prompt 6.</li>
+    <li><strong>Auditability.</strong> Every finding carries <code class="inl">evidence[]</code> so any number in the AI memo traces back to a holding.</li>
+    <li><strong>Liability.</strong> Keep the existing not-investment-advice disclaimer; tax/estate findings additionally carry their own "confirm with cross-border counsel" caveat. The engine surfaces questions; it does not give legal answers.</li>
+    <li><strong>Staleness.</strong> Use <code class="inl">completedAt</code> to nudge a profile refresh after, say, 12 months or after a major holdings change.</li>
+  </ul>
+</section>
+
+<div class="disclaimer">
+  <strong>Note.</strong> This is an engineering specification for a software feature, not investment, tax, or legal advice. The rule thresholds and rates shown (the $60,000 US-situs exemption, 30%/15% dividend-withholding figures, ~4% short-rate assumption, estate-tax bands) are illustrative defaults for implementation and must be validated against current law and the end-user's actual circumstances before any output is relied upon. Any portfolio output the feature produces should retain a clear not-a-recommendation disclaimer and direct users to a qualified, licensed professional.
+</div>
+
+</div>
+</body>
+</html>

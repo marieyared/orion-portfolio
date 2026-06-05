@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Review — Confidential</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Libre+Franklin:wght@300;400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16201d; --ink-soft:#3a4742; --paper:#f3efe6; --card:#fffdf8;
+    --line:#e3dccd; --line-strong:#cdc4b1;
+    --green:#1b7a55; --green-bg:#e6f2ec; --green-line:#bfe0d0;
+    --red:#b23320; --red-bg:#fbe9e5; --red-line:#f0c8bf;
+    --amber:#b9820e; --amber-bg:#fbf2dc; --amber-line:#efdcad;
+    --blue:#2d5a8a; --blue-bg:#e8eef6; --blue-line:#c4d4e8;
+    --gold:#9a7b1f; --gold-bg:#f5edd6;
+    --shadow:0 1px 2px rgba(30,30,20,.04),0 8px 24px rgba(30,30,20,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 12% -5%,rgba(155,123,31,.05),transparent 40%),radial-gradient(circle at 100% 0%,rgba(45,90,138,.05),transparent 35%);
+    color:var(--ink); font-family:"Libre Franklin",sans-serif; line-height:1.55;
+    -webkit-font-smoothing:antialiased; padding:0 0 80px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  .mono{font-family:"Spline Sans Mono",monospace;font-feature-settings:"tnum"}
+
+  /* MASTHEAD */
+  header.mast{
+    border-bottom:2px solid var(--ink); margin-bottom:38px;
+    background:linear-gradient(180deg,rgba(255,253,248,.7),transparent);
+  }
+  .mast-inner{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;padding:40px 0 22px}
+  .brand{font-family:"Fraunces",serif;font-weight:600;font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink-soft)}
+  h1.title{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(34px,5vw,52px);line-height:1.02;letter-spacing:-.01em;margin-top:6px}
+  h1.title em{font-style:italic;color:var(--gold)}
+  .meta{text-align:right;font-size:12.5px;color:var(--ink-soft);line-height:1.7}
+  .meta b{color:var(--ink);font-weight:600}
+  .grade-chip{display:inline-flex;align-items:baseline;gap:8px;margin-top:10px;background:var(--ink);color:#f6f2e8;padding:8px 16px;border-radius:2px}
+  .grade-chip .g{font-family:"Fraunces",serif;font-size:26px;font-weight:600;line-height:1}
+  .grade-chip .l{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.8}
+
+  /* SECTIONS */
+  section{margin:46px 0;scroll-margin-top:20px}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+  .sec-num{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--gold);font-weight:600;border:1px solid var(--gold);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(22px,3vw,30px);letter-spacing:-.01em}
+  .lede{font-size:16.5px;color:var(--ink-soft);max-width:64ch;margin-bottom:6px}
+  p{margin-bottom:13px}p:last-child{margin-bottom:0}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:24px 26px;box-shadow:var(--shadow)}
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}.meta{text-align:left}}
+
+  /* STAT TILES */
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+  .stat .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft);font-weight:600}
+  .stat .v{font-family:"Fraunces",serif;font-size:30px;font-weight:600;margin-top:6px;line-height:1}
+  .stat .sub{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:100px;border:1px solid}
+  .b-green{color:var(--green);background:var(--green-bg);border-color:var(--green-line)}
+  .b-red{color:var(--red);background:var(--red-bg);border-color:var(--red-line)}
+  .b-amber{color:var(--amber);background:var(--amber-bg);border-color:var(--amber-line)}
+  .b-blue{color:var(--blue);background:var(--blue-bg);border-color:var(--blue-line)}
+  .b-ink{color:#f6f2e8;background:var(--ink);border-color:var(--ink)}
+
+  /* PROGRESS BARS */
+  .bar-row{display:grid;grid-template-columns:1fr auto;gap:10px 14px;align-items:center;margin-bottom:14px}
+  .bar-row:last-child{margin-bottom:0}
+  .bar-label{font-size:14px;font-weight:500}
+  .bar-label small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+  .bar-val{font-family:"Spline Sans Mono",monospace;font-size:14px;font-weight:600;text-align:right}
+  .track{grid-column:1/-1;height:9px;background:var(--paper);border:1px solid var(--line);border-radius:100px;overflow:hidden}
+  .fill{height:100%;border-radius:100px}
+  .f-gold{background:linear-gradient(90deg,#caa636,#9a7b1f)}
+  .f-blue{background:linear-gradient(90deg,#5b86b3,#2d5a8a)}
+  .f-green{background:linear-gradient(90deg,#3aa178,#1b7a55)}
+  .f-amber{background:linear-gradient(90deg,#e0ad3e,#b9820e)}
+  .f-red{background:linear-gradient(90deg,#d05a45,#b23320)}
+  .f-ink{background:linear-gradient(90deg,#46544f,#16201d)}
+
+  /* DONUT */
+  .donut-wrap{display:flex;gap:30px;align-items:center;flex-wrap:wrap}
+  .donut{width:200px;height:200px;border-radius:50%;flex:0 0 auto;
+    background:conic-gradient(
+      #9a7b1f 0 24.5%,
+      #2d5a8a 24.5% 58.5%,
+      #5b86b3 58.5% 71.3%,
+      #3aa178 71.3% 81.2%,
+      #c98a12 81.2% 87.9%,
+      #b23320 87.9% 88.4%,
+      #cdc4b1 88.4% 100%);
+    position:relative;box-shadow:var(--shadow)}
+  .donut::after{content:"";position:absolute;inset:30px;background:var(--card);border-radius:50%}
+  .donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}
+  .donut .ctr .big{font-family:"Fraunces",serif;font-size:26px;font-weight:600}
+  .donut .ctr .lab{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .legend{flex:1;min-width:240px}
+  .legend li{list-style:none;display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .legend li:last-child{border-bottom:none}
+  .dot{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .legend .nm{flex:1}
+  .legend .pc{font-family:"Spline Sans Mono",monospace;font-weight:600}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;padding:10px 12px;border-bottom:2px solid var(--ink)}
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tbody tr:hover{background:rgba(155,123,31,.04)}
+  td.num,th.num{text-align:right;font-family:"Spline Sans Mono",monospace}
+  .holding-nm{font-weight:600}
+  .holding-nm small{display:block;font-weight:400;color:var(--ink-soft);font-size:11.5px}
+
+  /* CALLOUT */
+  .callout{border-left:4px solid;border-radius:0 6px 6px 0;padding:18px 22px;margin:16px 0}
+  .co-red{background:var(--red-bg);border-color:var(--red)}
+  .co-amber{background:var(--amber-bg);border-color:var(--amber)}
+  .co-green{background:var(--green-bg);border-color:var(--green)}
+  .co-blue{background:var(--blue-bg);border-color:var(--blue)}
+  .co-title{font-family:"Fraunces",serif;font-weight:600;font-size:17px;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+  .co-red .co-title{color:var(--red)}.co-amber .co-title{color:var(--amber)}
+  .co-green .co-title{color:var(--green)}.co-blue .co-title{color:var(--blue)}
+
+  /* LIST CARDS */
+  .pts li{list-style:none;padding:12px 0 12px 28px;border-bottom:1px solid var(--line);position:relative;font-size:14.5px}
+  .pts li:last-child{border-bottom:none}
+  .pts li::before{position:absolute;left:0;top:12px;font-family:"Spline Sans Mono",monospace;font-weight:600}
+  .pts.good li::before{content:"+";color:var(--green)}
+  .pts.bad li::before{content:"–";color:var(--red)}
+  .pts.flag li::before{content:"!";color:var(--amber)}
+  .pts li b{font-weight:600}
+
+  /* RISK GAUGE */
+  .gauge{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  .gauge-bar{flex:1;min-width:260px}
+  .gauge-scale{height:16px;border-radius:100px;background:linear-gradient(90deg,#1b7a55,#a9b62a 35%,#c98a12 60%,#d05a45 80%,#b23320);position:relative;border:1px solid var(--line-strong)}
+  .gauge-pin{position:absolute;top:-7px;width:3px;height:30px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+  .gauge-pin::after{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:13px;height:13px;background:var(--ink);border-radius:50%;border:2px solid var(--card)}
+  .gauge-ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-soft);margin-top:8px;letter-spacing:.04em;text-transform:uppercase}
+  .gauge-score{text-align:center;flex:0 0 auto}
+  .gauge-score .num{font-family:"Fraunces",serif;font-size:52px;font-weight:600;line-height:1}
+  .gauge-score .den{font-size:14px;color:var(--ink-soft)}
+
+  /* SCENARIO */
+  .scen{border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:var(--shadow)}
+  .scen-head{padding:16px 20px;color:#fff}
+  .scen-bull{background:linear-gradient(135deg,#1b7a55,#13593e)}
+  .scen-base{background:linear-gradient(135deg,#2d5a8a,#1f4063)}
+  .scen-bear{background:linear-gradient(135deg,#b23320,#8a2616)}
+  .scen-head .ret{font-family:"Spline Sans Mono",monospace;font-size:30px;font-weight:600}
+  .scen-head .nm{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+  .scen-body{padding:16px 20px;font-size:13.5px;background:var(--card)}
+  .scen-body p{margin-bottom:8px}
+
+  /* ACTION PLAN */
+  .act{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .act-h{padding:11px 16px;font-family:"Fraunces",serif;font-weight:600;font-size:15px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+  .act-keep{background:#1b7a55}.act-add{background:#2d5a8a}.act-reduce{background:#b9820e}
+  .act-avoid{background:#b23320}.act-watch{background:#5a5247}
+  .act-h .ct{font-family:"Spline Sans Mono",monospace;font-size:12px;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:100px}
+  .act-list{padding:6px 16px;background:var(--card)}
+  .act-list li{list-style:none;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .act-list li:last-child{border-bottom:none}
+  .act-list b{font-weight:600}
+
+  .note{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:10px}
+  hr.div{border:none;border-top:1px solid var(--line);margin:0}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:10px}
+
+  /* TOC */
+  nav.toc{position:sticky;top:0;z-index:20;background:rgba(243,239,230,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-bottom:0;font-size:12px}
+  .toc-inner{max-width:1120px;margin:0 auto;padding:11px 28px;display:flex;gap:6px 18px;flex-wrap:wrap}
+  nav.toc a{color:var(--ink-soft);text-decoration:none;white-space:nowrap;font-weight:500}
+  nav.toc a:hover{color:var(--gold)}
+
+  footer{border-top:2px solid var(--ink);margin-top:50px;padding-top:24px;font-size:12px;color:var(--ink-soft)}
+  footer b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav class="toc">
+  <div class="toc-inner">
+    <a href="#summary">Summary</a><a href="#snapshot">Snapshot</a><a href="#allocation">Allocation</a>
+    <a href="#concentration">Concentration</a><a href="#tech">Tech / AI</a><a href="#fx">Currency</a>
+    <a href="#geo">Geography</a><a href="#risk">Risk Score</a><a href="#swot">Strengths / Weaknesses</a>
+    <a href="#flags">Red Flags</a><a href="#scenarios">Scenarios</a><a href="#improve">Improvements</a>
+    <a href="#holdings">Holdings</a><a href="#action">Action Plan</a><a href="#final">Verdict</a>
+  </div>
+</nav>
+
+<header class="mast">
+  <div class="wrap mast-inner">
+    <div>
+      <div class="brand">Private Portfolio Review</div>
+      <h1 class="title">A serious look at<br>a <em>well-built</em> book<br>with two fixable flaws</h1>
+    </div>
+    <div class="meta">
+      <div><b>Mandate</b> · Long-term growth (20+ yr)</div>
+      <div><b>Owner profile</b> · NRA, Lebanon-domiciled</div>
+      <div><b>Custodian</b> · UBS (Switzerland)</div>
+      <div><b>Total value</b> · <span class="mono">$1,040,000</span></div>
+      <div><b>As of</b> · 30 May 2026</div>
+      <div class="grade-chip"><span class="g">B+</span><span class="l">Construction grade</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 1 EXECUTIVE SUMMARY -->
+<section id="summary">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Executive Summary</h2></div>
+  <div class="card">
+    <p class="lede">This is a genuinely thoughtful portfolio — more sophisticated than most retail books I see — and it gets two structural things right that most people miss. But it has one tension at its core and one avoidable tax exposure, and it carries some lazy cash.</p>
+    <p><b>What's right:</b> You hold US-equity exposure almost entirely through <b>Irish-domiciled UCITS ETFs</b> rather than US funds, and your bond sleeve is floating-rate / short-maturity. The first point is a deliberate, intelligent estate-tax structure (more on that below); the second means you carry almost no interest-rate duration risk at a time when rates are high and sticky. Someone here knows what they're doing.</p>
+    <p><b>The core tension:</b> You told me the goal is <b>long-term growth, ideally beating or matching the S&amp;P 500</b>, with a <b>20% maximum drawdown</b> tolerance. But only <b>~58% of the book is in equities</b>; the other ~42% sits in gold, short bonds, and cash. <span style="background:var(--amber-bg);padding:1px 5px;border-radius:3px">Those two goals fight each other.</span> A portfolio that's 42% defensive cannot beat the S&amp;P 500 unless your equity sleeve massively outperforms — which is the opposite of "match the index." You have to consciously choose which goal wins. I'll show you the trade-off in numbers.</p>
+    <p><b>The avoidable exposure:</b> You hold <b>~$105,000 in individual US stocks plus a US-listed Bitcoin ETF</b>. For a non-US person, US-situs assets above <b>$60,000</b> are exposed to US estate tax of up to 40% on death. Your instinct to "keep individual US stocks near $60k" was exactly right — you're just <b>$45k over the line today.</b> The fix is clean and respects your wish to never sell Nvidia.</p>
+    <p style="margin-bottom:0"><b>Bottom line:</b> Don't tear this up. Three moves — convert the non-Nvidia US single stocks into the UCITS wrappers you already own, put the idle cash to work, and consciously set a target weight for gold — would tighten the book considerably without changing its character. Detail follows.</p>
+  </div>
+</section>
+
+<!-- 2 SNAPSHOT -->
+<section id="snapshot">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Portfolio Snapshot</h2></div>
+  <div class="grid g4" style="margin-bottom:18px">
+    <div class="stat"><div class="k">Total Value</div><div class="v mono">$1.04M</div><div class="sub">25 line items across 4 currencies</div></div>
+    <div class="stat"><div class="k">Equity Weight</div><div class="v mono">58.3%</div><div class="sub">$606,800 · 47% ETF / 12% single</div></div>
+    <div class="stat" style="--gold:#9a7b1f"><div class="k">Gold Weight</div><div class="v mono">24.5%</div><div class="sub">$255,300 · the single largest bet</div></div>
+    <div class="stat" style="--gold:#b23320"><div class="k">US-Situs Risk</div><div class="v mono">$105k</div><div class="sub">$45k over the $60k estate line</div></div>
+  </div>
+  <div class="grid g4">
+    <div class="stat" style="--gold:#2d5a8a"><div class="k">Tech / AI (look-through)</div><div class="v mono">~23%</div><div class="sub">~30% on an "AI-complex" basis</div></div>
+    <div class="stat" style="--gold:#2d5a8a"><div class="k">USD Exposure</div><div class="v mono">~87%</div><div class="sub">share-class basis; ~78% underlying</div></div>
+    <div class="stat" style="--gold:#c98a12"><div class="k">Idle Cash</div><div class="v mono">$69.7k</div><div class="sub">much of it earning ~0%</div></div>
+    <div class="stat" style="--gold:#1b7a55"><div class="k">Bond Duration</div><div class="v mono">~0.3 yr</div><div class="sub">FRN + short note: near-zero rate risk</div></div>
+  </div>
+</section>
+
+<!-- 3 ALLOCATION -->
+<section id="allocation">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Asset Allocation Analysis</h2></div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="donut-wrap">
+      <div class="donut"><div class="ctr"><span class="big mono">58/42</span><span class="lab">Risk / Defensive</span></div></div>
+      <ul class="legend">
+        <li><span class="dot" style="background:#9a7b1f"></span><span class="nm">Gold</span><span class="pc">24.5%</span></li>
+        <li><span class="dot" style="background:#2d5a8a"></span><span class="nm">Equity — UCITS ETFs</span><span class="pc">46.9%</span></li>
+        <li><span class="dot" style="background:#5b86b3"></span><span class="nm">Equity — single stocks</span><span class="pc">11.5%</span></li>
+        <li><span class="dot" style="background:#3aa178"></span><span class="nm">Bonds (FRN + short note)</span><span class="pc">9.9%</span></li>
+        <li><span class="dot" style="background:#c98a12"></span><span class="nm">Cash</span><span class="pc">6.7%</span></li>
+        <li><span class="dot" style="background:#b23320"></span><span class="nm">Crypto (IBIT)</span><span class="pc">0.5%</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="kicker">Reading the mix</div>
+      <p>For a 20+ year horizon with stable income and no liquidity needs, <b>58% equity is on the conservative side.</b> Textbook glide-paths for that horizon and a 6–7/10 stated risk appetite would sit at 70–85% equity. Your defensive sleeve is doing two jobs at once: gold as a macro hedge, and short bonds/cash as dry powder.</p>
+      <p style="margin-bottom:0">That's a perfectly defensible <em>capital-preservation-with-growth</em> stance. It is <b>not</b> a "beat the S&amp;P 500" stance. Be honest with yourself about which one you actually want — the allocation currently says the former while your words say the latter.</p>
+    </div>
+    <div class="card">
+      <div class="kicker">The maths of the tension</div>
+      <p>If your equity sleeve simply <em>matches</em> the S&amp;P (say +8%/yr) and gold/bonds/cash return ~3%, the blended portfolio returns roughly <b>+6%/yr</b> — i.e. it <b>structurally trails the index</b> by the drag of the 42% defensive block.</p>
+      <p style="margin-bottom:0">To beat the index from here you need <b>either</b> more equity (which raises drawdown past your 20% comfort), <b>or</b> genuine stock-picking alpha (hard, and your own results are concentrated in two lucky-or-skilled names). There's no free lunch in that gap.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 CONCENTRATION -->
+<section id="concentration">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Concentration Risk</h2></div>
+  <p class="lede">No single <em>stock</em> is oversized — but two thematic bets dominate the book.</p>
+  <div class="card" style="margin-bottom:18px">
+    <div class="bar-row"><div class="bar-label">Gold metal account<small>One position, one macro thesis</small></div><div class="bar-val">24.5%</div><div class="track"><div class="fill f-gold" style="width:61%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">S&amp;P 500 (two ETFs combined)<small>Acc + Dist doing the same job</small></div><div class="bar-val">24.6%</div><div class="track"><div class="fill f-blue" style="width:61.5%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">US large-cap beta (all US equity)<small>S&amp;P + Nasdaq + EPI + US singles</small></div><div class="bar-val">43.1%</div><div class="track"><div class="fill f-ink" style="width:100%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Largest single stock — Nvidia<small>Reasonable at this size</small></div><div class="bar-val">3.0%</div><div class="track"><div class="fill f-green" style="width:7.5%"></div></div></div>
+  </div>
+  <div class="callout co-amber">
+    <div class="co-title">⚑ Two hidden concentrations</div>
+    <p style="margin-bottom:8px"><b>1. Gold at 24.5%.</b> After gold's ~40% run over the past year (now ~$4,500/oz, off a January record near $5,500), this weight has likely <em>grown into</em> its size rather than being deliberately chosen. You told me you have "no conviction position you'd never sell" except Nvidia — so is a quarter of the book in a non-income, non-productive asset really intentional? That's the first question to settle.</p>
+    <p style="margin-bottom:0"><b>2. One US-equity engine.</b> Your S&amp;P, Nasdaq-100, JPM Nasdaq-income and US single stocks all draw from the same ~30 mega-caps. On paper you own ~12 equity lines; in practice a US tech drawdown hits most of them at once. Diversification by <em>ticker count</em> is not diversification by <em>risk factor</em>.</p>
+  </div>
+</section>
+
+<!-- 5 TECH / AI -->
+<section id="tech">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Tech &amp; AI Exposure</h2></div>
+  <p class="lede">You set a ceiling of 30% AI/tech. You're already at it — once you look <em>through</em> the ETFs.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="bar-row"><div class="bar-label">Strict info-tech look-through</div><div class="bar-val">~23%</div><div class="track"><div class="fill f-blue" style="width:77%"></div></div></div>
+      <div class="bar-row"><div class="bar-label">"AI-complex" (mega-cap + semis + AI-power)</div><div class="bar-val">~30%</div><div class="track"><div class="fill f-amber" style="width:100%"></div></div></div>
+      <div class="bar-row"><div class="bar-label">Your self-imposed ceiling</div><div class="bar-val">30%</div><div class="track"><div class="fill f-red" style="width:100%"></div></div></div>
+      <p class="note" style="margin-top:14px">Counting Nvidia, Microsoft, Alphabet, Amazon, the Nasdaq weights inside EQQQ and the JPM income ETF, the S&amp;P's tech/comms block, plus Vistra (an AI-power proxy) and Bitcoin, the cluster that moves <em>together</em> in an AI sell-off is right at your line.</p>
+    </div>
+    <div class="card">
+      <div class="kicker">What this means for "should I add Nvidia / Micron / more AI?"</div>
+      <p><b>You have essentially no room to add AI</b> under your own rule. Buying Micron, or topping up Nvidia/Microsoft, would breach the 30% ceiling unless you trim elsewhere first.</p>
+      <p style="margin-bottom:0">This is the rule working <em>for</em> you. Your Nvidia and Alphabet wins are real, but adding to a theme after it has run — and at an S&amp;P trading on a forward P/E of ~21 and a Shiller CAPE near 41.6 (second-highest in 140 years) — is exactly when discipline matters most. <b>Hold the line.</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 CURRENCY -->
+<section id="fx">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Currency Exposure</h2></div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="bar-row"><div class="bar-label">USD<small>gold is priced in USD; most ETFs &amp; bonds too</small></div><div class="bar-val">~78%</div><div class="track"><div class="fill f-ink" style="width:78%"></div></div></div>
+      <div class="bar-row"><div class="bar-label">EUR</div><div class="bar-val">~8%</div><div class="track"><div class="fill f-blue" style="width:8%"></div></div></div>
+      <div class="bar-row"><div class="bar-label">CHF</div><div class="bar-val">~5%</div><div class="track"><div class="fill f-green" style="width:5%"></div></div></div>
+      <div class="bar-row"><div class="bar-label">Other underlying (EM, JPY, GBP…)</div><div class="bar-val">~9%</div><div class="track"><div class="fill f-amber" style="width:9%"></div></div></div>
+      <p class="note" style="margin-top:14px">On a share-class basis the book reads ~87% USD, but the CHF/EUR ETF share classes still hold mostly USD assets underneath — true economic USD exposure is ~78%. Share-class currency is cosmetic; underlying matters.</p>
+    </div>
+    <div class="card">
+      <div class="kicker">Is heavy USD a problem? It depends whose wallet matters.</div>
+      <p>You said you'd like to diversify currency "a bit." Here's the honest nuance: for a <b>Lebanon-based owner</b>, USD is arguably the <em>right</em> base currency — it's the de facto store of value there, so 78% USD isn't really a mismatch for the current holder.</p>
+      <p style="margin-bottom:0">It becomes a mismatch <b>on transmission to you, in France</b>, where you live and spend in euros. If this book is ultimately heading to a EUR-spender, a gentle tilt — routing future contributions into the EUR/CHF UCITS lines, or adding a EUR-hedged global equity sleeve — makes sense. No need for a dramatic shift; FX hedging has its own cost and timing risk.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 GEOGRAPHY -->
+<section id="geo">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Geographic Exposure</h2></div>
+  <div class="card">
+    <div class="bar-row"><div class="bar-label">United States<small>~74% of the equity sleeve</small></div><div class="bar-val">43.1%</div><div class="track"><div class="fill f-ink" style="width:100%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Europe (incl. Roche, LVMH, DAX, MSCI Europe)</div><div class="bar-val">7.5%</div><div class="track"><div class="fill f-blue" style="width:17%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Emerging Markets</div><div class="bar-val">5.7%</div><div class="track"><div class="fill f-amber" style="width:13%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Global / World-ex-US blends</div><div class="bar-val">2.5%</div><div class="track"><div class="fill f-green" style="width:6%"></div></div></div>
+    <p style="margin-top:16px;margin-bottom:0">Within equities you're <b>~74% US</b> — heavier than global market-cap (~63%). For a growth mandate that's been the right bet for a decade and is not "wrong," but recognise it's an <em>active</em> overweight, not neutral. Your EM and Europe sleeves are sensible diversifiers; I wouldn't cut them. Gold sits outside this map as a global, currency-agnostic hedge.</p>
+  </div>
+</section>
+
+<!-- 8 RISK SCORE -->
+<section id="risk">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Risk Score &amp; Rating</h2></div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="gauge">
+      <div class="gauge-score"><div class="num">5.5</div><div class="den">/ 10 risk</div></div>
+      <div class="gauge-bar">
+        <div class="gauge-scale"><div class="gauge-pin" style="left:55%"></div></div>
+        <div class="gauge-ticks"><span>Defensive</span><span>Balanced</span><span>Growth</span><span>Aggressive</span></div>
+        <p style="margin-top:14px;margin-bottom:0;font-size:14px">A <b>moderate</b> overall risk level. The 42% gold/bond/cash buffer plus near-zero bond duration genuinely cushions drawdowns — which is <em>why</em> your 20% pain threshold is roughly respectable. The flip side is that the same buffer caps your upside relative to the index you want to beat.</p>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="kicker">Component scores</div>
+    <div class="bar-row"><div class="bar-label">Diversification across asset classes</div><div class="bar-val">8 / 10</div><div class="track"><div class="fill f-green" style="width:80%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Drawdown resilience</div><div class="bar-val">7 / 10</div><div class="track"><div class="fill f-green" style="width:70%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Tax &amp; estate structure (UCITS use)</div><div class="bar-val">7 / 10</div><div class="track"><div class="fill f-blue" style="width:70%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Concentration discipline</div><div class="bar-val">6 / 10</div><div class="track"><div class="fill f-amber" style="width:60%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Cost &amp; structural efficiency</div><div class="bar-val">6 / 10</div><div class="track"><div class="fill f-amber" style="width:60%"></div></div></div>
+    <div class="bar-row"><div class="bar-label">Alignment with stated goals</div><div class="bar-val">5 / 10</div><div class="track"><div class="fill f-amber" style="width:50%"></div></div></div>
+    <p class="note" style="margin-top:14px">Composite construction grade <b>B+</b>: strong bones, tax-aware, well-diversified — marked down for the goal/structure contradiction, the US-situs single-stock exposure, idle cash, and product redundancy. All fixable without a teardown.</p>
+  </div>
+</section>
+
+<!-- 9 STRENGTHS / WEAKNESSES -->
+<section id="swot">
+  <div class="sec-head"><span class="sec-num">09</span><h2>Strengths &amp; Weaknesses</h2></div>
+  <div class="grid g2">
+    <div class="card">
+      <span class="badge b-green">Strengths</span>
+      <ul class="pts good" style="margin-top:14px">
+        <li><b>Estate-smart wrappers.</b> US-equity exposure via Irish UCITS ETFs avoids US estate situs <em>and</em> cuts US dividend withholding from 30% to 15%. Deliberate and clever.</li>
+        <li><b>Almost no interest-rate risk.</b> A SOFR floating-rate note and a 2026 note — duration ≈ 0.3yr. Smart positioning while rates are high and the Fed is on hold.</li>
+        <li><b>Real multi-asset diversification.</b> Equity, gold, bonds, cash and a dash of crypto — not just "20 stocks."</li>
+        <li><b>Long runway, stable backing.</b> 20+ year horizon, ~$130k of income, no liquidity needs — you can genuinely carry equity risk.</li>
+        <li><b>Sensible core-satellite shape.</b> Broad index core, modest single-name satellites, none oversized.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="badge b-red">Weaknesses</span>
+      <ul class="pts bad" style="margin-top:14px">
+        <li><b>Goal vs structure mismatch.</b> "Beat the S&amp;P" with 42% in defensives is close to self-defeating.</li>
+        <li><b>Redundant S&amp;P 500 holding.</b> You own the Acc <em>and</em> Dist versions of the same index ($164k + $91k) — the Dist version pays taxable income you said you don't want.</li>
+        <li><b>An income product in a growth mandate.</b> The JPM Nasdaq <em>Equity Premium Income</em> ETF caps upside via covered calls — the opposite of "pure growth."</li>
+        <li><b>$69.7k idle cash,</b> much at ~0% (the CHF account explicitly 0%). That's real opportunity cost vs ~4% on USD T-bills/MMFs.</li>
+        <li><b>Overlapping US tech engines</b> create factor concentration the ticker count hides.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 10 RED FLAGS -->
+<section id="flags">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Red Flags</h2></div>
+  <div class="callout co-red">
+    <div class="co-title">⛔ Priority 1 — US estate-tax exposure on single stocks</div>
+    <p style="margin-bottom:8px">As a non-US person, only <b>$60,000</b> of US-situs assets is exempt; the rest can be taxed up to <b>40%</b> on death, with a Form 706-NA filing required. US-listed stocks and US-domiciled ETFs are US-situs; <b>Irish UCITS ETFs are not.</b> There is no US–Lebanon estate-tax treaty to soften this.</p>
+    <table style="margin-top:6px">
+      <thead><tr><th>US-situs holding</th><th class="num">Value</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Nvidia (NVDA)</td><td class="num">$31,553</td><td><span class="badge b-green">Keep — your one conviction</span></td></tr>
+        <tr><td>Alphabet (GOOGL)</td><td class="num">$25,008</td><td><span class="badge b-amber">Convert to ETF</span></td></tr>
+        <tr><td>Microsoft (MSFT)</td><td class="num">$22,428</td><td><span class="badge b-amber">Convert to ETF</span></td></tr>
+        <tr><td>Amazon (AMZN)</td><td class="num">$16,177</td><td><span class="badge b-amber">Convert to ETF</span></td></tr>
+        <tr><td>iShares Bitcoin Trust (IBIT)</td><td class="num">$5,101</td><td><span class="badge b-amber">Swap to EU-domiciled ETP</span></td></tr>
+        <tr><td>Vistra (VST)</td><td class="num">$4,789</td><td><span class="badge b-amber">Convert to ETF</span></td></tr>
+        <tr><td><b>Total US-situs</b></td><td class="num"><b>$105,056</b></td><td><b>$45k over the $60k line</b></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:10px;margin-bottom:0">Potential estate-tax cost on the current excess: roughly <b>$12,000–$18,000</b> depending on marginal bracket. <b>The fix (next section) gets you back under $60k while keeping Nvidia and your full economic exposure.</b></p>
+  </div>
+  <div class="callout co-amber">
+    <div class="co-title">⚑ Priority 2 — A quarter of the book in gold, by drift not decision</div>
+    <p style="margin-bottom:0">Gold at 24.5% after a 40% rally needs an <em>explicit target</em>. If you'd choose 24.5% on a blank sheet today, fine — keep it. If not, it's a rebalancing candidate, and trimming it is the most natural source of funds to close the equity gap your "beat the S&amp;P" goal implies.</p>
+  </div>
+  <div class="callout co-amber">
+    <div class="co-title">⚑ Priority 3 — Single-issuer credit in the bond sleeve</div>
+    <p style="margin-bottom:0">~9.5% of the entire book is one Goldman Sachs note. The FRN structure is fine and it's a strong issuer, but that's meaningful <em>single-name credit</em> risk for a "safe" sleeve. It also matures Nov 2026 — diarise the reinvestment decision now.</p>
+  </div>
+</section>
+
+<!-- 11 SCENARIOS -->
+<section id="scenarios">
+  <div class="sec-head"><span class="sec-num">11</span><h2>Scenario Analysis</h2></div>
+  <p class="lede">Illustrative 12-month outcomes for the <em>current</em> mix. These are rough sensitivities to show shape — not forecasts, and certainly not guarantees.</p>
+  <div class="grid g3">
+    <div class="scen"><div class="scen-head scen-bull"><div class="nm">Bull case</div><div class="ret">+16 to +18%</div></div>
+      <div class="scen-body"><p>AI/US-equity rally continues (+25% equities), gold holds, crypto rips. Your defensive sleeve caps the upside — a pure S&amp;P holder would beat you here by several points. <b>This is the scenario where your structure costs you.</b></p></div>
+    </div>
+    <div class="scen"><div class="scen-head scen-base"><div class="nm">Base case</div><div class="ret">+5 to +7%</div></div>
+      <div class="scen-body"><p>Equities +7%, gold +3%, bonds ~4%, cash ~3%. A solid, unspectacular year that <em>trails</em> the index by the drag of the 42% defensive block — the structural tax on your stated goal, made concrete.</p></div>
+    </div>
+    <div class="scen"><div class="scen-head scen-bear"><div class="nm">Bear case</div><div class="ret">–17 to –20%</div></div>
+      <div class="scen-body"><p>US tech draws down ~35%, gold rallies ~12% as a haven. The gold cushion keeps you <em>near</em> your 20% limit rather than through it. <b>A stagflation shock where gold ALSO falls (~–20%) would breach 20%</b> — your tail risk lives here.</p></div>
+    </div>
+  </div>
+  <p class="note">Key insight: your 20% drawdown tolerance is consistent with this book in a <em>normal</em> equity bear because gold cushions it — but it is <em>not</em> safe if gold and equities fall together. If you trim gold to add equities, you raise both your upside and your worst-case drawdown. That is the trade-off, stated plainly.</p>
+</section>
+
+<!-- 12 IMPROVEMENTS -->
+<section id="improve">
+  <div class="sec-head"><span class="sec-num">12</span><h2>Suggested Allocation Improvements</h2></div>
+  <div class="callout co-green">
+    <div class="co-title">✓ Move 1 — Re-wrap US single stocks (the headline fix)</div>
+    <p style="margin-bottom:0">Sell <b>GOOGL, MSFT, AMZN and VST (~$68,400)</b> and redeploy into the <b>S&amp;P 500 / Nasdaq UCITS ETFs you already own.</b> You keep essentially the same economic and AI exposure, but US-situs drops to <b>~$36,700</b> (Nvidia + a small Bitcoin position) — comfortably under $60k with room for Nvidia to grow. Keeps your one conviction name, honours your $60k instinct, and simplifies the book.</p>
+  </div>
+  <div class="callout co-blue">
+    <div class="co-title">→ Move 2 — Put the idle cash to work</div>
+    <p style="margin-bottom:0">Keep a buffer (say $15–20k), and move the rest of the ~$70k into a USD money-market / short T-bill UCITS earning ~4%, or into the FRN sleeve. That's roughly <b>$2,000/yr</b> currently left on the table by the 0% accounts.</p>
+  </div>
+  <div class="callout co-amber">
+    <div class="co-title">⚑ Move 3 — Decide gold's target weight (your call, not mine)</div>
+    <p style="margin-bottom:0">If the answer is "I want a big gold hedge," keep ~20–25% and rebalance the drift. If the answer is "I actually want to beat the S&amp;P," a 10–15% gold target frees up <b>$100k+</b> to raise equity toward 70%+ — which is the only structurally honest way to pursue that goal. I won't pick for you; I'll just hold you to picking <em>one</em>.</p>
+  </div>
+  <div class="callout co-blue">
+    <div class="co-title">→ Move 4 — Tidy redundancy</div>
+    <p style="margin-bottom:0">Consolidate the two S&amp;P 500 ETFs into the <b>accumulating</b> one (cleaner, no unwanted taxable distributions for a growth mandate). Re-examine the JPM Equity Premium Income ETF: it's an income/covered-call product fighting your "pure growth" objective — either accept it as a deliberate volatility-dampener or replace it with plain Nasdaq/growth exposure.</p>
+  </div>
+</section>
+
+<!-- 13 HOLDINGS -->
+<section id="holdings">
+  <div class="sec-head"><span class="sec-num">13</span><h2>Comments on Major Holdings</h2></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr><th>Holding</th><th class="num">Wt</th><th class="num">Value</th><th>Verdict &amp; comment</th></tr></thead>
+      <tbody>
+        <tr><td class="holding-nm">Gold metal account<small>USD · loco Zurich</small></td><td class="num">24.5%</td><td class="num">$255,300</td><td><span class="badge b-amber">Set a target</span> Excellent hedge, but oversized by drift. Decide its role; rebalance the rest.</td></tr>
+        <tr><td class="holding-nm">iShares S&amp;P 500 (Acc)<small>IE00B5BMR087</small></td><td class="num">15.8%</td><td class="num">$164,300</td><td><span class="badge b-green">Keep — core</span> The right wrapper. Make this your consolidation target for the Dist version.</td></tr>
+        <tr><td class="holding-nm">Goldman Sachs FRN<small>SOFR · Nov-2026</small></td><td class="num">9.5%</td><td class="num">$99,100</td><td><span class="badge b-blue">Keep / watch</span> Good short yield, zero duration. But single-issuer credit; diarise the 2026 maturity.</td></tr>
+        <tr><td class="holding-nm">iShares S&amp;P 500 (Dist)<small>IE0031442068</small></td><td class="num">8.8%</td><td class="num">$91,100</td><td><span class="badge b-amber">Consolidate</span> Duplicate index; the distributions are taxable income you don't want. Merge into Acc.</td></tr>
+        <tr><td class="holding-nm">iShares MSCI EM<small>IE00B4L5YC18</small></td><td class="num">5.7%</td><td class="num">$58,900</td><td><span class="badge b-green">Keep</span> Genuine diversifier away from US mega-cap. Volatile but uncorrelated-ish.</td></tr>
+        <tr><td class="holding-nm">JPM Nasdaq Equity Premium Income<small>IE000U9J8HX9</small></td><td class="num">4.8%</td><td class="num">$49,400</td><td><span class="badge b-amber">Review</span> Covered-call income product in a growth mandate. Caps your AI upside. Reconsider.</td></tr>
+        <tr><td class="holding-nm">iShares Core MSCI Europe<small>EUR · IE00B4K48X80</small></td><td class="num">4.7%</td><td class="num">$48,800</td><td><span class="badge b-green">Keep</span> Geographic + EUR diversifier. Useful for eventual transmission to France.</td></tr>
+        <tr><td class="holding-nm">Nvidia (NVDA)<small>US-situs</small></td><td class="num">3.0%</td><td class="num">$31,600</td><td><span class="badge b-green">Keep — don't add</span> Your conviction hold and under $60k alone. Don't top up — you're at your AI ceiling.</td></tr>
+        <tr><td class="holding-nm">Invesco EQQQ Nasdaq-100<small>IE0032077012</small></td><td class="num">2.5%</td><td class="num">$25,900</td><td><span class="badge b-blue">Keep</span> Fine, but overlaps S&amp;P and the JPM ETF — part of the factor concentration.</td></tr>
+        <tr><td class="holding-nm">Alphabet (GOOGL)<small>US-situs</small></td><td class="num">2.4%</td><td class="num">$25,000</td><td><span class="badge b-amber">Convert</span> Great company, but re-wrap into the UCITS S&amp;P to kill US estate situs.</td></tr>
+        <tr><td class="holding-nm">Microsoft (MSFT)<small>US-situs</small></td><td class="num">2.2%</td><td class="num">$22,400</td><td><span class="badge b-amber">Convert</span> Same logic — economic exposure preserved inside the index ETF.</td></tr>
+        <tr><td class="holding-nm">Amazon (AMZN)<small>US-situs</small></td><td class="num">1.6%</td><td class="num">$16,200</td><td><span class="badge b-amber">Convert</span> Same logic. Re-wrap.</td></tr>
+        <tr><td class="holding-nm">iShares Core MSCI World<small>CHF · IE00B4L5Y983</small></td><td class="num">1.4%</td><td class="num">$14,700</td><td><span class="badge b-green">Keep</span> Broad, cheap global core. CHF share class is cosmetic but harmless.</td></tr>
+        <tr><td class="holding-nm">iShares MSCI USA Small Cap ESG<small>IE00B3VWM098</small></td><td class="num">1.2%</td><td class="num">$12,900</td><td><span class="badge b-green">Keep</span> A rare non-mega-cap US sleeve — good factor balance. Hold.</td></tr>
+        <tr><td class="holding-nm">iShares MSCI World ex-USA<small>EUR · IE000R4ZNTN3</small></td><td class="num">1.1%</td><td class="num">$11,900</td><td><span class="badge b-green">Keep</span> Deliberate US underweight tool. Sensible.</td></tr>
+        <tr><td class="holding-nm">Roche participation cert<small>CHF · CH1499059983</small></td><td class="num">1.0%</td><td class="num">$10,500</td><td><span class="badge b-green">Keep</span> Defensive CHF dividend payer. Nice ballast; not US-situs.</td></tr>
+        <tr><td class="holding-nm">iShares Core DAX<small>EUR · DE0005933931</small></td><td class="num">0.9%</td><td class="num">$9,600</td><td><span class="badge b-blue">Keep (small)</span> Fine EUR exposure; tiny. No action.</td></tr>
+        <tr><td class="holding-nm">LVMH (MC)<small>EUR · FR0000121014</small></td><td class="num">0.8%</td><td class="num">$8,800</td><td><span class="badge b-green">Keep</span> Quality EUR luxury name, not US-situs. Pleasant diversifier.</td></tr>
+        <tr><td class="holding-nm">iShares Bitcoin Trust (IBIT)<small>US-situs ETF</small></td><td class="num">0.5%</td><td class="num">$5,100</td><td><span class="badge b-amber">Swap wrapper</span> Tiny, but it's a US-domiciled ETF = US-situs. If you want BTC, use an EU-domiciled ETP.</td></tr>
+        <tr><td class="holding-nm">Vistra (VST)<small>US-situs</small></td><td class="num">0.5%</td><td class="num">$4,800</td><td><span class="badge b-amber">Convert/exit</span> The "AI-power" thesis is real but it's a single US name adding situs for little weight.</td></tr>
+        <tr><td class="holding-nm">Walmart 3.05% Notes<small>2026 · US931142EM13</small></td><td class="num">0.4%</td><td class="num">$4,000</td><td><span class="badge b-blue">Hold to maturity</span> Short, near par. Let it roll off in 2026; corporate debt generally isn't US-situs.</td></tr>
+        <tr><td class="holding-nm">UBS cash (USD + CHF + EUR + GBP)</td><td class="num">6.7%</td><td class="num">$69,700</td><td><span class="badge b-amber">Deploy</span> Keep a buffer; move the rest to ~4% money-market. The 0% CHF account is pure drag.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 14 ACTION PLAN -->
+<section id="action">
+  <div class="sec-head"><span class="sec-num">14</span><h2>Action Plan</h2></div>
+  <div class="grid g2">
+    <div class="act"><div class="act-h act-keep">KEEP <span class="ct">core</span></div><ul class="act-list">
+      <li><b>iShares S&amp;P 500 (Acc)</b> — your core engine &amp; consolidation hub</li>
+      <li><b>MSCI EM, MSCI Europe, World, World-ex-US, USA Small Cap</b> — diversifiers</li>
+      <li><b>Nvidia</b> — conviction hold, under $60k alone</li>
+      <li><b>Roche, LVMH, DAX</b> — non-US-situs quality names</li>
+      <li><b>Goldman FRN</b> (watch 2026 maturity)</li>
+    </ul></div>
+    <div class="act"><div class="act-h act-add">ADD / REDEPLOY <span class="ct">funds</span></div><ul class="act-list">
+      <li><b>Idle cash → ~4% money-market</b> (keep a small buffer)</li>
+      <li><b>If you choose the "beat S&amp;P" path:</b> gold proceeds → S&amp;P 500 / global equity to lift equity toward 70%</li>
+      <li><b>Optional EUR tilt</b> via existing EUR/CHF UCITS lines for transmission</li>
+    </ul></div>
+    <div class="act"><div class="act-h act-reduce">REDUCE / CONVERT <span class="ct">re-wrap</span></div><ul class="act-list">
+      <li><b>GOOGL, MSFT, AMZN, VST</b> → fold into UCITS ETFs (kills US-situs, keeps exposure)</li>
+      <li><b>iShares S&amp;P 500 (Dist)</b> → consolidate into Acc</li>
+      <li><b>Gold</b> → trim toward a chosen target if "growth" wins</li>
+      <li><b>JPM Equity Premium Income</b> → re-examine vs a growth alternative</li>
+    </ul></div>
+    <div class="act"><div class="act-h act-avoid">AVOID <span class="ct">discipline</span></div><ul class="act-list">
+      <li><b>Adding more AI/tech</b> — you're at your 30% ceiling</li>
+      <li><b>Topping up Nvidia</b> at current levels &amp; valuations</li>
+      <li><b>New individual US-listed stocks</b> — they re-create the situs problem</li>
+      <li><b>Long-duration bonds</b> — don't undo your duration advantage</li>
+    </ul></div>
+  </div>
+  <div class="act" style="margin-top:18px"><div class="act-h act-watch">WATCHLIST <span class="ct">monitor</span></div><ul class="act-list">
+    <li><b>Micron (your earlier question):</b> a legitimate AI-memory play, but buying it would breach your 30% AI ceiling — only if you first trim elsewhere. Park it on the watchlist, don't chase it.</li>
+    <li><b>Gold price:</b> near record highs; watch for a rebalancing trigger if it runs further.</li>
+    <li><b>Goldman FRN maturity (Nov 2026)</b> and <b>Walmart note (2026)</b> — reinvestment decisions due.</li>
+    <li><b>US estate-tax rules &amp; any Lebanon/France treaty changes</b> — confirm with cross-border counsel before executing the re-wrap.</li>
+  </ul></div>
+</section>
+
+<!-- 15 FINAL -->
+<section id="final">
+  <div class="sec-head"><span class="sec-num">15</span><h2>Final Recommendation</h2></div>
+  <div class="card" style="border:2px solid var(--ink)">
+    <span class="badge b-ink">The verdict</span>
+    <p style="margin-top:14px;font-size:17px"><b>This is a B+ portfolio with A-grade plumbing and one philosophical knot to untie.</b> Don't rebuild it. Do three things, in order:</p>
+    <ul class="pts" style="margin:10px 0 4px">
+      <li style="padding-left:30px"><b style="position:absolute;left:0;font-family:'Spline Sans Mono',monospace;color:var(--green)">1.</b> <b>Re-wrap the non-Nvidia US single stocks into your UCITS ETFs.</b> Biggest risk-adjusted improvement; gets you back under the $60k estate line while keeping Nvidia and your full economic exposure. (Check the tax cost of selling first — Swiss private investors are typically capital-gains-exempt, but confirm for the actual owner.)</li>
+      <li style="padding-left:30px"><b style="position:absolute;left:0;font-family:'Spline Sans Mono',monospace;color:var(--blue)">2.</b> <b>Put the idle cash to work</b> at ~4%. Free money you're currently leaving on the table.</li>
+      <li style="padding-left:30px"><b style="position:absolute;left:0;font-family:'Spline Sans Mono',monospace;color:var(--amber)">3.</b> <b>Pick one goal and set gold's target accordingly.</b> "Hedge-and-grow" → keep ~20–25% gold and accept you'll track <em>near</em> the S&amp;P. "Beat the S&amp;P" → cut gold to 10–15% and lift equity to ~70%, accepting a deeper worst-case drawdown. You can't have maximum safety and index-beating returns from the same book.</li>
+    </ul>
+    <p style="margin-top:14px;margin-bottom:0">Do those and you'd move from B+ to A–. The bones are good; the discipline is mostly already here. The work now is consistency between what the portfolio says and what you say you want.</p>
+  </div>
+</section>
+
+<footer>
+  <p style="margin-bottom:10px"><b>Important — please read.</b> This review is educational analysis, not personalised investment, tax, or legal advice, and I am not your licensed financial advisor, accountant, or attorney. Nothing here is a guarantee of any outcome; all return figures and scenarios are illustrative sensitivities, not forecasts. Markets and tax rules change.</p>
+  <p style="margin-bottom:10px">The estate-tax points reflect general US rules for non-resident, non-citizen owners and current public sources; the actual treatment depends on the owner's <b>domicile</b>, any applicable treaties, account structure, and how/when assets are held or transferred. The capital-gains cost of selling appreciated positions, and the right Bitcoin/ETP substitute, also depend on the owner's tax residency. <b>Confirm the re-wrap and any sale with a cross-border tax professional and your custodian before acting.</b></p>
+  <p style="margin-bottom:0;color:var(--ink-soft)">Prepared 30 May 2026 · Figures derived from the supplied holdings file · Total reviewed: $1,040,000 · Confidential.</p>
+</footer>
+
+</div>
+</body>
+</html>
