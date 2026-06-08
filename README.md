@@ -1,6 +1,21 @@
 # Orion
 
-A single-page portfolio intelligence app: live prices, AI briefings, risk diagnostics, and crisis simulations.
+**A portfolio risk early-warning system.** Orion stress-tests your holdings against the
+crises that move markets and tells you, in dollars, what breaks your portfolio first — then
+narrates the biggest building risk as a weekly warning. Single static frontend; two small
+backends. (It also does live prices, look-through, and crisis simulation — but the product
+is the *warning*, not the tracker.)
+
+## Documentation map
+
+Five markdown files, each with one job and no overlap:
+
+| Doc | What it answers | Read when |
+|-----|-----------------|-----------|
+| **`README.md`** (this file) | What Orion is; how to run and deploy | Setting up or shipping |
+| **`REFRAME_PLAN.md`** | *Positioning* — what Orion is and isn't (the risk reframe) | Working on copy, layout, hierarchy, prompts |
+| **`MOAT.md`** | *Differentiation* — the moat we're building toward, and its gate | Prioritising the roadmap / strategy calls |
+| **`CLAUDE.md`** | *Build rules* for AI coding agents (auto-read by Claude Code) | Any change to the code |
 
 ## What's in here
 

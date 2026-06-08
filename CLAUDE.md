@@ -3,6 +3,14 @@
 Orion is a **single-page portfolio risk app**. The entire frontend is one static file: `orion.html`.
 Two small backends support it. Keep the single-file architecture — do not split `orion.html` into modules.
 
+## Companion docs (read the one that matches your task)
+| Doc | Answers | Read when |
+|-----|---------|-----------|
+| `README.md` | What Orion is; how to run & deploy | Setting up or deploying |
+| `REFRAME_PLAN.md` | **Positioning** — what Orion is / isn't (the reframe) | Changing copy, layout, hierarchy, prompts |
+| `MOAT.md` | **Differentiation** — the moat we build toward + its gate | Prioritising features / strategy calls |
+| `CLAUDE.md` (this file) | **Build rules** — how to work in the code | Any code change (this is the canonical guide) |
+
 ## Active goal
 Execute the **Phase 1 reframe** described in `REFRAME_PLAN.md`: shift Orion from a net-worth tracker
 to a **risk early-warning system**. This phase is copy, layout, hierarchy, and the AI-briefing prompt —
@@ -10,6 +18,10 @@ to a **risk early-warning system**. This phase is copy, layout, hierarchy, and t
 
 Apply this gate to every change: **"Does this help someone see or avoid a portfolio risk?"**
 If no, don't ship it.
+
+When two worthwhile changes compete, use `MOAT.md`'s gate as the tiebreaker: favour what deepens
+the **risk-history + trust** moat (anything a brand-new user with no history could get identically
+is a wedge feature at best, not a moat one).
 
 ## Source files (the only things to edit)
 | File | What it is |
