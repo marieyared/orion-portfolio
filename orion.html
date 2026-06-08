@@ -585,6 +585,13 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <div class="page-title">Risk Analytics</div>
   <div class="page-sub">Quantitative diagnostics: factor exposure, rate sensitivity, shock impact, and concentration.</div>
 
+  <!-- Hidden overlap — first-class single-name look-through lens -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Hidden overlap</div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:1rem">Your true single-name exposure once you look through the funds. Diversification by ticker count is not diversification by risk.</div>
+    <div id="overlap-lens"></div>
+  </div>
+
   <div class="grid-2" style="margin-bottom:12px">
     <!-- Expanded breaks card -->
     <div class="card">
@@ -1610,6 +1617,35 @@ function f_factorConcentration(holdings, ctx) {
   return findings;
 }
 
+// ── Rule 3b · Hidden overlap (single-name concentration through funds) ──────
+// The diversification illusion: funds that look different holding the same
+// mega-caps. Fires when fund look-through reveals one name carried across
+// multiple holdings, or sitting above a single-name concentration threshold.
+function f_hiddenOverlap(holdings, ctx) {
+  const ov = computeNameOverlap();
+  if (!ov || !ov.hasEtf || !ov.fundsWithData) return [];
+  const top = ov.top1;
+  // Only a *hidden* risk if it's invisible at the line-item level — i.e. the
+  // name is carried across ≥2 holdings, or is already a large aggregate.
+  const multiSource = top.fundCount >= 2;
+  if (!multiSource && top.pct < 8) return [];
+  const sev = top.pct >= 15 ? "high" : top.pct >= 8 ? "medium" : "low";
+  const atRisk = Math.round(top.usd * 0.30);               // illustrative single-name shock
+  return [{
+    id: "hidden_overlap", severity: sev, userDecision: false,
+    title: `Your true ${top.name} exposure is ~${top.pct.toFixed(1)}%, spread across ${top.fundCount} ${top.fundCount===1?"line":"holdings"}`,
+    body: `${top.name} never shows up as one big position, but fund look-through aggregates it to $${fmt(Math.round(top.usd))} across ${top.fundCount} of your holdings. Your top 10 names are ~${ov.top10pct.toFixed(0)}% of the book. Funds that look diversified by ticker can be the same mega-caps — a single-name or tech drawdown hits them together. (Floor estimate from top-10 look-through; the true figure is at least this.)`,
+    valueUSD: Math.round(top.usd),
+    evidence: [
+      { label: `${top.name} (aggregated)`, value: `${top.pct.toFixed(1)}% · $${fmt(Math.round(top.usd))}` },
+      { label: "Carried by", value: top.funds.slice(0,4).join(", ") },
+      { label: "Top-10 names", value: `~${ov.top10pct.toFixed(0)}% of book` },
+      { label: "≈ −30% in this name", value: `−$${fmt(atRisk)}` },
+    ],
+    action: `Treat these as one bet, not ${top.fundCount}. Diversify by factor — size, geography, style — not by adding more funds that hold the same names.`,
+  }];
+}
+
 // ── Rule 4 · Self-imposed ceiling breach (info) ────────────────────────────
 function f_ceilingBreach(holdings, ctx) {
   const cap = ctx.profile?.ceilings?.aiTechPct;
@@ -1725,7 +1761,8 @@ function f_goalStructure(holdings, ctx) {
 
 // ── Orchestrator ───────────────────────────────────────────────────────────
 const RULES = [f_usSitusEstate, f_wrapperWithholding, f_factorConcentration,
-               f_ceilingBreach, f_redundancy, f_drift, f_idleCash, f_goalStructure];
+               f_hiddenOverlap, f_ceilingBreach, f_redundancy, f_drift,
+               f_idleCash, f_goalStructure];
 
 const SEVERITY_RANK = { high: 0, medium: 1, low: 2, info: 3 };
 
@@ -2539,7 +2576,9 @@ async function getHoldingInfo(isin, assetType) {
       });
     }
     if (!Object.keys(sectors).length) sectors = {[`${region} ETF`]:100};
-    return {name, geo:{[regionCode]:100}, sectors, region_label: region};
+    // Single-name constituents (top ~10 + weights) for the hidden-overlap lens.
+    const holdings = Array.isArray(quote.top_holdings) ? quote.top_holdings : [];
+    return {name, geo:{[regionCode]:100}, sectors, region_label: region, holdings};
   }
 
   // Individual equities: Yahoo sector + country
@@ -3320,6 +3359,99 @@ function renderBreaksCard(elId, maxItems=4) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   HIDDEN OVERLAP — true single-name concentration through fund look-through
+   The risk no brokerage shows you: several "diversified" ETFs that are the
+   same handful of mega-caps. Distributes each ETF position's USD across its
+   top constituents (by weight) and adds direct equity lines at full weight,
+   then aggregates by name. Top-10 look-through only, so aggregated weights
+   are a FLOOR (deeper constituents only add) — surfaced honestly as such.
+════════════════════════════════════════════════════════════════════ */
+function computeNameOverlap() {
+  const assets = state.holdings.filter(h => !h.type || h.type !== "debt");
+  const total = assets.reduce((s,h)=>s+(h.current||0),0);
+  if (total <= 0) return null;
+
+  const byName = {};                 // KEY -> {name, usd, funds:Set}
+  let etfTotal = 0, etfCovered = 0, fundsTotal = 0, fundsWithData = 0;
+
+  assets.forEach(h => {
+    const usd = h.current || 0;
+    if (usd <= 0) return;
+    const info = h.isin ? (state.infoMap[h.isin.toUpperCase()] || {}) : {};
+    const klass = holdingClass(h);
+    if (klass === "ETF") {
+      fundsTotal++; etfTotal += usd;
+      const cons = Array.isArray(info.holdings) ? info.holdings : [];
+      if (!cons.length) return;      // no look-through for this fund
+      fundsWithData++; etfCovered += usd;
+      cons.forEach(c => {
+        const key = String(c.symbol || c.name || "?").toUpperCase();
+        const w = +c.weight || 0;
+        if (w <= 0) return;
+        if (!byName[key]) byName[key] = { name: c.name || c.symbol || key, usd: 0, funds: new Set() };
+        byName[key].usd += usd * w;
+        byName[key].funds.add(info.name || h.isin || "a fund");
+      });
+    } else if (klass === "Equity") {
+      // Direct single name counts at full weight against its own ticker, so
+      // it aggregates with the same name held inside funds.
+      const key = String(h.ticker || info.name || h.isin || "?").toUpperCase();
+      if (!byName[key]) byName[key] = { name: info.name || h.ticker || h.isin || key, usd: 0, funds: new Set() };
+      byName[key].usd += usd;
+      byName[key].funds.add("a direct holding");
+    }
+  });
+
+  const names = Object.entries(byName).map(([key, v]) => ({
+    key, name: v.name, usd: v.usd,
+    pct: +(v.usd / total * 100).toFixed(2),
+    fundCount: v.funds.size,
+    funds: [...v.funds],
+  })).filter(n => n.usd > 0).sort((a, b) => b.usd - a.usd);
+
+  if (!names.length) return null;
+  const top10usd = names.slice(0, 10).reduce((s, n) => s + n.usd, 0);
+  return {
+    total, names, top1: names[0],
+    top10pct: +(top10usd / total * 100).toFixed(1),
+    top10usd: Math.round(top10usd),
+    hasEtf: fundsTotal > 0,
+    fundsTotal, fundsWithData,
+    coveragePct: etfTotal > 0 ? Math.round(etfCovered / etfTotal * 100) : 100,
+  };
+}
+
+function renderHiddenOverlap() {
+  const el = document.getElementById("overlap-lens");
+  if (!el) return;
+  const ov = computeNameOverlap();
+  if (!ov || !ov.hasEtf) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">Add fund / ETF holdings to reveal single-name overlap — look-through needs fund constituents.</div>';
+    return;
+  }
+  if (!ov.fundsWithData) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">No constituent data available for your funds yet, so overlap can\'t be computed.</div>';
+    return;
+  }
+  const rows = ov.names.slice(0, 8).map((n, i) => `
+    <div class="breaks-row">
+      <div class="breaks-rank">${i+1}</div>
+      <div class="breaks-name">${n.name}${n.fundCount>1?` <span style="color:var(--hint);font-size:11px">· in ${n.fundCount} holdings</span>`:''}</div>
+      <div class="breaks-impact">$${fmt(Math.round(n.usd))}</div>
+      <div class="breaks-pct">${n.pct.toFixed(1)}%</div>
+    </div>`).join("");
+  const cov = ov.coveragePct < 100
+    ? `Look-through covers ${ov.fundsWithData} of ${ov.fundsTotal} funds (${ov.coveragePct}% of fund value); top-10 constituents only, so weights are a floor.`
+    : `Top-10 constituents per fund; aggregated weights are a floor — the true figure is at least this.`;
+  el.innerHTML = `
+    <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:1rem">
+      Your largest true single-name exposure is <b>${ov.top1.name}</b> at <b>${ov.top1.pct.toFixed(1)}%</b> ($${fmt(Math.round(ov.top1.usd))})${ov.top1.fundCount>1?`, spread across <b>${ov.top1.fundCount}</b> holdings so it never shows as one line`:''}. Your top 10 names are ≈ <b>${ov.top10pct.toFixed(0)}%</b> of the book.
+    </div>
+    ${rows}
+    <div style="font-size:11px;color:var(--hint);margin-top:.75rem">${cov}</div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════
    FACTOR BARS
 ════════════════════════════════════════════════════════════════════ */
 function renderFactorBars(elId) {
@@ -3479,6 +3611,7 @@ function renderStressTeaser() {
 let rateCurveChart = null;
 function renderRiskScreen() {
   renderBreaksCard("risk-breaks-full", 10);
+  renderHiddenOverlap();
   renderRateCurve();
   renderConcentration();
   updateShock();
