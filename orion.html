@@ -6,7 +6,7 @@
 <title>Orion · Know what breaks your portfolio</title>
 <meta name="description" content="Orion is a portfolio risk early-warning system. It stress-tests your holdings against every crisis that matters and tells you, in dollars, what to fix first.">
 <meta property="og:title" content="Orion · Know what breaks your portfolio">
-<meta property="og:description" content="Connect your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.">
+<meta property="og:description" content="Add your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Orion · Know what breaks your portfolio">
@@ -325,7 +325,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <span>Risk early-warning system</span>
     </div>
     <div class="entry-headline">Know what <em>breaks</em> your portfolio<br>— before it breaks it.</div>
-    <div class="entry-subline">Connect your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.</div>
+    <div class="entry-subline">Add your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.</div>
   </div>
 
   <div class="grid-3" style="margin-bottom:1.75rem">
@@ -1197,6 +1197,7 @@ async function toUSD(amount, fromCcy, date) {
 /* ════════════════════════════════════════════════════════════════════
    ANTHROPIC AI
 ════════════════════════════════════════════════════════════════════ */
+let lastAIError = "";
 async function callAI(prompt, maxTokens=800) {
   try {
     const r = await fetch(AI_PROXY_URL, {
@@ -1210,9 +1211,11 @@ async function callAI(prompt, maxTokens=800) {
     });
     if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message||r.status); }
     const d = await r.json();
+    lastAIError = "";
     return d.content[0].text;
   } catch(e) {
     console.error("AI error:",e);
+    lastAIError = e.message || "AI request failed.";
     return null;
   }
 }
@@ -1273,7 +1276,7 @@ async function generateBriefing() {
   );
   const text = await callAI(PROMPTS.morningBriefing(s), 400);
   stop();
-  state.briefingText = text || "Unable to generate briefing. Check your API connection.";
+  state.briefingText = text || lastAIError || "Unable to generate briefing. Check your API connection.";
   el.className = "briefing-text";
   el.innerHTML = aiTextToHtml(state.briefingText);
 }
@@ -1307,9 +1310,11 @@ async function callAIWithSearch(prompt, maxTokens = 1200) {
       .map(b => b.text)
       .join("\n")
       .trim();
+    lastAIError = "";
     return text || null;
   } catch (e) {
     console.error("AI(search) error:", e);
+    lastAIError = e.message || "AI request failed.";
     return null;
   }
 }
@@ -1848,7 +1853,7 @@ async function generateHouseView() {
     el.innerHTML = aiTextToHtml(text) + disclaimer;
   } else {
     el.className = "briefing-text";
-    el.innerHTML = '<span style="color:var(--muted)">Unable to generate the house view. Check the AI proxy connection.</span>';
+    el.innerHTML = `<span style="color:var(--muted)">${escapeHtml(lastAIError || "Unable to generate the house view. Check the AI proxy connection.")}</span>`;
   }
 }
 
@@ -1872,7 +1877,7 @@ async function generateIntelBriefing() {
   );
   const text = await callAI(PROMPTS.intelBriefing(s), 600);
   stop();
-  state.briefingText = text || "Unable to generate briefing. Check your API connection.";
+  state.briefingText = text || lastAIError || "Unable to generate briefing. Check your API connection.";
   state.intelBriefingText = state.briefingText;
   el.className = "briefing-text";
   el.innerHTML = aiTextToHtml(state.briefingText);
@@ -1896,7 +1901,7 @@ async function askCopilot() {
   const text = await callAI(PROMPTS.copilot(s, q), 500);
   stop();
   resp.innerHTML = text ? aiTextToHtml(text)
-    : '<span style="color:var(--muted)">Unable to get a response. Check your API connection.</span>';
+    : `<span style="color:var(--muted)">${escapeHtml(lastAIError || "Unable to get a response. Check your API connection.")}</span>`;
   input.value = "";
 }
 
