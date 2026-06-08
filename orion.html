@@ -163,7 +163,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .row-table td{padding:4px 6px;vertical-align:top}
 .row-table td input,.row-table td select{padding:7px 10px}
 
-/* ── WEALTH MAP (treemap screen) ── */
+/* ── CONCENTRATION (treemap screen) ── */
 .map-toggle{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
 .map-toggle-btn{background:transparent;border:none;padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--muted);cursor:pointer;border-radius:6px;transition:all .15s}
 .map-toggle-btn:hover{color:var(--text)}
@@ -300,11 +300,11 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   </div>
   <div class="nav-links">
     <div class="nav-link active" onclick="switchScreen('command')" data-screen="command">Command</div>
-    <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Analytics</div>
+    <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Risk Analytics</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
     <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
     <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Risk Warning</div>
-    <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Map</div>
+    <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Concentration</div>
     <div class="nav-link" onclick="switchScreen('holdings')" data-screen="holdings">Holdings</div>
   </div>
   <div class="nav-right">
@@ -557,8 +557,8 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <div class="wrap">
   <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.25rem">
     <div>
-      <div class="page-title" style="margin-bottom:0">Wealth Map</div>
-      <div style="font-size:12px;color:var(--hint)">Block size = USD value. Same data, two lenses.</div>
+      <div class="page-title" style="margin-bottom:0">Concentration</div>
+      <div style="font-size:12px;color:var(--hint)">Block size = USD value — the bigger the block, the more a single shock to it costs you.</div>
     </div>
     <div class="map-toggle" role="tablist">
       <button class="map-toggle-btn active" data-lens="class" onclick="setMapLens('class')">Asset type</button>
@@ -572,7 +572,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 
   <div id="map-empty" style="display:none;padding:3rem 1rem;text-align:center;color:var(--muted);font-size:13px;line-height:1.7">
     <div style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:.5rem">No portfolio yet</div>
-    Add holdings and build the dashboard to see your wealth map.
+    Add holdings and build the dashboard to see where you're concentrated.
   </div>
 </div>
 </div>
@@ -582,7 +582,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <div id="screen-risk" class="screen">
 <div class="wrap">
-  <div class="page-title">Analytics</div>
+  <div class="page-title">Risk Analytics</div>
   <div class="page-sub">Quantitative diagnostics: factor exposure, rate sensitivity, shock impact, and concentration.</div>
 
   <div class="grid-2" style="margin-bottom:12px">
@@ -4074,7 +4074,7 @@ function computeCurrentAlloc() {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   WEALTH MAP — treemap view of the whole portfolio
+   CONCENTRATION — treemap view of the whole portfolio
    Reads state.holdings + state.geoAgg + state.infoMap (no new compute).
    Two lenses: "class" (default) and "geo". Pure SVG/divs, no libs.
 ════════════════════════════════════════════════════════════════════ */
