@@ -2,9 +2,17 @@ name = "orion-ai-proxy"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+[vars]
+# Emergency paid-request kill switch. Set to "false" in Cloudflare to stop
+# every AI request immediately without deleting the Anthropic secret.
+AI_PROXY_ENABLED = "true"
+
 # Run locally with: wrangler dev --port 8788
 # (port 8787 is taken by the Python ISIN API — orion_api.py)
 #
 # ANTHROPIC_API_KEY must be set as a secret:
 #   Production:  wrangler secret put ANTHROPIC_API_KEY
 #   Local dev:   copy .dev.vars.example → .dev.vars and fill in your key
+# Set a hard workspace spending limit in Anthropic Console. When Anthropic
+# returns 429 after that limit is reached, worker.js forwards a clear message
+# and never retries the paid request.
