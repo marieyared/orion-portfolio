@@ -20,7 +20,7 @@
 
 ## 2. New copy (paste-ready)
 - **Hero headline:** "Know what breaks your portfolio — before it breaks it."
-- **Sub-headline:** "Connect your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first."
+- **Sub-headline:** "Add your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first." *(No account linking yet — holdings are entered manually / via CSV. Don't promise "connect.")*
 - **Primary button:** "Stress-test my portfolio" (not "Get started" / "View dashboard")
 - **Section renames:** "Overview" → **"What breaks you first."**  "Intelligence" → **"Your weekly risk warning."**
 
@@ -31,13 +31,21 @@
 
 ## 3. Promote / Demote / Delete
 **Promote (top billing):**
-1. The Risk Engine — "what breaks you first," ranked by $ impact (Stress Lab, factor exposure, concentration, rate-sensitivity). This *is* the product.
+1. The Risk Engine — "what breaks you first," ranked by $ impact (Stress Lab, factor exposure, concentration, **hidden overlap**, rate-sensitivity). This *is* the product.
 2. The Warning Briefing — the reframed AI above.
 3. Memory & Trust — persistence + reliable data (so risk can be tracked over time).
 
 **Demote (keep as plumbing that feeds risk, never the hero):** net-worth/holdings table; Wealth-Map treemap (concentration lens only); income calendar & performance; CSV import.
 
-**Delete (cut now / never build):** "track/glance at your wealth" framing; live market charts & index browsing; tax/estate findings *as a headline*; any new asset class or analytic that doesn't end in a *warning*; "for everyone" copy.
+**Delete (cut now / never build):** "track/glance at your wealth" framing; live market charts & index browsing; tax/estate findings *as a headline*; any new asset class or analytic that doesn't end in a *warning*; "for everyone" copy; **a "potential reward" / risk-adjusted / composite risk-reward rating or star score** — it turns Orion into a screener/robo-advisor (commoditized, advice-regulated, and a dilution of the warning identity). The moat is the discipline, not the feature surface.
+
+## 3a. The one scoring addition worth making: hidden overlap
+We considered going further into "financial scoring" (rating risk, reward, overlap). Run each through the gate:
+- **Hidden overlap → build it.** The risk people *cannot* see for themselves: five ETFs that are 58% the same ten mega-caps. "Your diversification is an illusion — your true single-name concentration is X%, and a tech repeat would cost ~$Y." It's a *warning*, it's differentiated, no brokerage hands it to you, and it leans on look-through aggregation the app already computes (sector/geo). Promote it as a first-class risk lens.
+- **A second composite risk score → don't.** We already have a health score. Another abstract number competes with the dollar figure that makes the warning land. Keep **dollars as the lede; any score is the at-a-glance summary that drills into them**, never the headline.
+- **Reward / risk-adjusted rating → never (see kill-list).** The moment Orion rates "reward potential" it stops being a warning system and becomes a robo-advisor.
+
+**Discipline:** every scoring surface must end in a dollar-denominated warning + one action. A number that doesn't is a tracker metric in disguise — cut it.
 
 ## 4. One-week checklist (done-when)
 1. Rewrite landing hero + subhead + button → *"Stress-test" is the first thing a new visitor sees.*
