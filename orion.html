@@ -1403,6 +1403,7 @@ Your job: tell the investor the single biggest threat to THIS portfolio right no
 
 RISK ENGINE OUTPUT — the user's actual single-shock losses, ranked by dollar impact (GROUND TRUTH; never invent or round away these numbers):
 ${PROMPTS._breaksBlock(s)}
+${findingsForPrompt(runFindings(state))}
 
 Portfolio context (for naming the trade — not the lede):
 - Total value: $${fmt(s.total)}
@@ -1410,7 +1411,7 @@ Portfolio context (for naming the trade — not the lede):
 - Largest positions: ${s.items.slice(0,5).join('; ')}
 
 Write exactly 3 sentences, plain text, no markdown, no bullet points:
-1. The emerging risk — name the #1 shock above and the exact dollar loss it would inflict${topUSD?` (≈ ${topUSD})`:''}, and what in the portfolio drives it.
+1. The emerging risk — the single biggest threat to THIS book right now, drawn from EITHER the ranked shocks OR the deterministic findings above (pick whichever carries the larger dollar exposure — a hidden-overlap / concentration finding can outrank a stress shock and should lead if it does). Name it and the exact dollar loss it would inflict${topUSD?` (the top shock is ≈ ${topUSD}, but use the finding's own figure if a finding leads)`:''}, and what in the portfolio drives it.
 2. Why it matters now — anchor it to a concrete concentration or exposure, naming the specific holdings or asset class responsible.
 3. The one action that cuts this risk most — specific and concrete (e.g. trim a named exposure toward a more defensive one), framed as a view to weigh with a qualified adviser, not a command.`;
   },
