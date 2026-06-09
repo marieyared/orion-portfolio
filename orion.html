@@ -16,6 +16,10 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Pre-generated company dossiers (build_dossiers.py -> window.ORION_DOSSIERS).
+     Loaded as a script asset so Research works even when orion.html is opened as
+     file:// (where fetch of a local JSON is CORS-blocked). Absent -> fetch fallback. -->
+<script src="dossiers/dossiers.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -37,6 +41,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .nav-link{padding:0 14px;height:52px;display:flex;align-items:center;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;user-select:none;font-weight:400}
 .nav-link:hover{color:var(--text)}
 .nav-link.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+/* Risk-module grouping in the nav (§9 step 5 — risk is one module, not the lead) */
+.nav-group{display:flex;align-items:center;height:52px;padding:0 10px 0 16px;margin-left:6px;border-left:1px solid var(--border);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--hint);white-space:nowrap;user-select:none}
+.nav-group-end{align-self:center;height:24px;border-left:1px solid var(--border);margin:0 8px}
 .nav-right{display:flex;gap:8px;margin-left:auto;padding-left:1rem}
 
 /* ── LAYOUT ── */
@@ -301,11 +308,13 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <div class="nav-links">
     <div class="nav-link" onclick="switchScreen('research')" data-screen="research">Research</div>
     <div class="nav-link active" onclick="switchScreen('command')" data-screen="command">Command</div>
+    <span class="nav-group" title="Risk monitoring — one module of the workspace">Risk</span>
     <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Risk Analytics</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
     <div class="nav-link" onclick="switchScreen('riskprofile')" data-screen="riskprofile">Risk Profile</div>
     <div class="nav-link" onclick="switchScreen('intelligence')" data-screen="intelligence">Risk Warning</div>
     <div class="nav-link" onclick="switchScreen('map')" data-screen="map">Concentration</div>
+    <span class="nav-group-end"></span>
     <div class="nav-link" onclick="switchScreen('holdings')" data-screen="holdings">Holdings</div>
   </div>
   <div class="nav-right">
@@ -455,11 +464,15 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <div class="wrap">
   <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem">
     <div>
-      <div class="page-title" style="margin-bottom:0">What breaks you first</div>
+      <div class="page-title" style="margin-bottom:0">Conviction &amp; risk</div>
       <div style="font-size:12px;color:var(--hint)" id="cmd-timestamp"></div>
     </div>
     <div id="warnings-area"></div>
   </div>
+
+  <!-- Conviction lead (§9 step 5): is your thesis still intact across the book?
+       Risk monitoring below is now one module of this bigger picture. -->
+  <div id="conviction-panel" style="margin-bottom:1.25rem"></div>
 
   <!-- Risk-profile onboarding nudge: visible only when state.riskProfile is null. -->
   <div id="rq-banner" class="card" style="display:none;background:linear-gradient(135deg,#f7fbff 0%,#fff 100%);border:1px solid var(--blue);margin-bottom:1.25rem">
@@ -472,7 +485,9 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     </div>
   </div>
 
-  <!-- Risk reframe: the app opens on "what breaks you first," not net worth. -->
+  <!-- Risk module (demoted under the conviction lead, §9 step 5). The engine is
+       unchanged; its framing is now "what breaks the book," one module of many. -->
+  <div style="font-size:10px;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.09em;margin:0 0 .5rem 2px">Risk module · what breaks you first</div>
   <div class="grid-2" style="margin-bottom:12px">
     <!-- What breaks my portfolio -->
     <div class="card">
@@ -719,8 +734,8 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- SCREEN: RESEARCH  (equity-research / conviction workspace · §9)     -->
-<!-- Scaffold: front door + swappable philosophy lens. Dossier DATA       -->
-<!-- (EDGAR + fundamentals) is wired in A1–A3; sections show as skeletons. -->
+<!-- Research front door: swappable philosophy lens + per-company dossiers    -->
+<!-- loaded from pre-generated static JSON (dossiers/<TICKER>.json, §7).       -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <div id="screen-research" class="screen">
 <div class="wrap">
@@ -729,6 +744,9 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 
   <!-- Philosophy lens — rendered from the swappable PHILOSOPHY config -->
   <div class="card" id="research-philosophy" style="margin-bottom:12px"></div>
+
+  <!-- Thesis-vs-reality drift banner — breaches of the user's own sell rules (§9 step 4) -->
+  <div id="research-alerts" style="margin-bottom:12px"></div>
 
   <!-- Add a company -->
   <div class="card" style="margin-bottom:12px">
@@ -739,6 +757,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <button class="btn btn-blue btn-sm" onclick="addResearchTicker()">Add →</button>
     </div>
     <div id="research-note" style="font-size:12px;color:var(--red);margin-top:.5rem"></div>
+    <div id="research-coverage" style="font-size:11px;color:var(--hint);margin-top:.6rem;display:flex;flex-wrap:wrap;gap:5px;align-items:center"></div>
   </div>
 
   <!-- Dossier list -->
@@ -1036,9 +1055,11 @@ const state = {
   isinRows:[],cashRows:[],bondRows:[],reRows:[],cryptoRows:[],commRows:[],debtRows:[],
   holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},fxMeta:{},fxFailures:new Set(),infoMap:{},geoAgg:{},sectorAgg:{},
   simGame:null,activeScreen:'command',
-  // Research workspace (EQUITY_RESEARCH_PLAN §9). In-memory for now; the
-  // user's persisted record is the THESIS (Phase B), not this scratch list.
+  // Research workspace (EQUITY_RESEARCH_PLAN §9). researchTickers is the user's
+  // covered list; theses is the moat's seed (§9 step 3) — why they'd own each
+  // name and their own sell rules, keyed by ticker. Both persist (v2 schema).
   researchTickers:[],
+  theses:{},
 
   healthScore:0,healthSubs:{},
   briefingText:'',intelBriefingText:'',
@@ -1089,7 +1110,7 @@ const state = {
 // stable file's storage stays a clean fallback.
 const STORAGE_KEY    = "orion.portfolio.v2";
 const STORAGE_KEY_V1 = "orion.portfolio.v1";
-const PERSISTED_FIELDS = ["isinRows","cashRows","bondRows","reRows","cryptoRows","commRows","debtRows","riskProfile","manualOverrides","investorProfile"];
+const PERSISTED_FIELDS = ["isinRows","cashRows","bondRows","reRows","cryptoRows","commRows","debtRows","riskProfile","manualOverrides","investorProfile","researchTickers","theses"];
 let _lastSavedJson = "";
 let _saveTimer = null;
 function savePortfolio(){
@@ -3559,6 +3580,9 @@ function renderCommandScreen() {
   const totalDebt = debts.reduce((s,h)=>s+(h.amount||0),0);
   const netWorth = total-totalDebt;
 
+  // Conviction lead — is your thesis intact across the book? (risk is a module)
+  renderConvictionPanel();
+
   // Timestamp
   const ts = document.getElementById("cmd-timestamp");
   if (ts) ts.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -5028,7 +5052,7 @@ function switchScreen(name) {
   state.activeScreen = name;
   if (name==="riskprofile") renderRiskProfile();
   if (name==="map") renderMapScreen();
-  if (name==="command") updateRqBanner();
+  if (name==="command") { updateRqBanner(); renderConvictionPanel(); }
   if (name==="research") renderResearch();
 }
 
@@ -5051,11 +5075,18 @@ function goToEntry() {
 
 /* ════════════════════════════════════════════════════════════════════
    RESEARCH — equity-research / conviction workspace (EQUITY_RESEARCH_PLAN §9)
-   A0/A4 scaffold. Renders the swappable PHILOSOPHY lens and a structural
-   dossier skeleton per company. Real dossier DATA (financials from EDGAR +
-   a fundamentals source, AI narrative) is wired in the next steps (A1–A3);
-   the "—" rows below are the dossier's true shape, not mock content.
+   Step 2 — Dossier MVP. Each company's dossier is a PRE-GENERATED static JSON
+   committed to the repo under dossiers/ (cache-once-serve-many, §7). Built by
+   build_dossiers.py straight from SEC EDGAR XBRL — every number is deterministic
+   and provenance-labelled; the model is never called to produce figures. The
+   scorecard has one row per PHILOSOPHY lens. (Thesis capture + thesis-vs-reality
+   alerts are the next §9 steps.)
 ════════════════════════════════════════════════════════════════════ */
+// In-memory dossier caches (ephemeral — the committed JSON is the source of
+// truth; only the user's ticker list persists). null = not loaded, false = miss.
+state.dossiers = {};
+state.dossierIndex = null;
+
 function renderResearch() {
   // Philosophy banner is driven entirely by the PHILOSOPHY config, so swapping
   // the tribe in one object changes what the workspace stands for everywhere.
@@ -5068,35 +5099,523 @@ function renderResearch() {
       +   PHILOSOPHY.lenses.map(l => `<span class="briefing-tag" title="${l.q}">${l.label}</span>`).join("")
       + `</div>`;
   }
+  loadDossierIndex();   // populate the "covered companies" hint, once
   renderResearchList();
 }
 
+// Load the coverage manifest once so we can give an honest, specific "not
+// covered yet" answer (with the list) instead of a dead 404.
+async function loadDossierIndex() {
+  if (state.dossierIndex !== null) return;
+  // Prefer the committed bundle (works under file:// too); fall back to fetch.
+  if (window.ORION_DOSSIERS?.index) {
+    state.dossierIndex = window.ORION_DOSSIERS.index;
+    renderCoverageHint();
+    return;
+  }
+  try {
+    const r = await fetch("dossiers/index.json", {cache: "no-store"});
+    state.dossierIndex = r.ok ? await r.json() : {covered: []};
+  } catch { state.dossierIndex = {covered: []}; }
+  renderCoverageHint();
+}
+
+function renderCoverageHint() {
+  const el = document.getElementById("research-coverage");
+  if (!el || !state.dossierIndex) return;
+  const list = (state.dossierIndex.covered || []).map(c => c.ticker);
+  el.innerHTML = list.length
+    ? `Covered now: ${list.map(t => `<span class="briefing-tag" style="cursor:pointer" onclick="quickResearch('${t}')">${t}</span>`).join(" ")}`
+    : "";
+}
+
+function quickResearch(t) {
+  const inp = document.getElementById("research-ticker-input");
+  if (inp) inp.value = t;
+  addResearchTicker();
+}
+
 function renderResearchList() {
+  renderThesisAlerts();   // refresh the drift banner whenever the list re-renders
   const el = document.getElementById("research-list");
   if (!el) return;
   if (!state.researchTickers.length) {
-    el.innerHTML = `<div style="font-size:12px;color:var(--hint)">No companies yet. Add a U.S. ticker above to start a dossier.</div>`;
+    el.innerHTML = `<div style="font-size:12px;color:var(--hint)">No companies yet. Add a U.S. ticker above — or tap one of the covered names — to open its dossier.</div>`;
     return;
   }
-  el.innerHTML = state.researchTickers.map(researchScaffoldCard).join("");
+  el.innerHTML = state.researchTickers.map(dossierCard).join("");
+  // Kick off loads for any ticker we haven't fetched yet.
+  state.researchTickers.forEach(t => { if (state.dossiers[t] === undefined) loadDossier(t); });
 }
 
-// One company's dossier skeleton. Sections are the dossier's real shape; the
-// "—" placeholders get filled by code (financials) and the model (narrative)
-// once the data backend lands. One scorecard row per PHILOSOPHY lens.
-function researchScaffoldCard(ticker) {
-  const lensRows = PHILOSOPHY.lenses.map(l =>
-      `<div style="display:flex;justify-content:space-between;font-size:12px;padding:.35rem 0;border-top:1px solid var(--border)">`
-    +   `<span style="color:var(--muted)" title="${l.q}">${l.label}</span><span style="color:var(--hint)">—</span></div>`
-  ).join("");
+// Fetch one company's committed dossier JSON. undefined = never tried,
+// "loading" = in flight, object = loaded, false = not covered.
+async function loadDossier(ticker) {
+  // Bundle first (file:// safe); fetch the individual JSON only when served.
+  const bundled = window.ORION_DOSSIERS?.dossiers?.[ticker];
+  if (bundled) { state.dossiers[ticker] = bundled; renderResearchList(); return; }
+  if (window.ORION_DOSSIERS) { state.dossiers[ticker] = false; renderResearchList(); return; }
+  state.dossiers[ticker] = "loading";
+  try {
+    const r = await fetch(`dossiers/${ticker}.json`, {cache: "no-store"});
+    state.dossiers[ticker] = r.ok ? await r.json() : false;
+  } catch { state.dossiers[ticker] = false; }
+  renderResearchList();
+}
+
+// ── Dossier rendering ───────────────────────────────────────────────────────
+const _RATE = {
+  strong: {bg:"#ECFDF5", fg:"var(--green)",  txt:"Strong"},
+  ok:     {bg:"#FFFBEB", fg:"var(--amber)",  txt:"OK"},
+  weak:   {bg:"#FEF2F2", fg:"var(--red)",    txt:"Weak"},
+  na:     {bg:"#F3F4F6", fg:"var(--hint)",   txt:"n/a"},
+};
+function rateChip(r) {
+  const c = _RATE[r] || _RATE.na;
+  return `<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${c.bg};color:${c.fg}">${c.txt}</span>`;
+}
+// CAGR between first and last available value in a {year:val} map.
+function _cagr(series, years) {
+  const vals = years.map(y => series[String(y)]).filter(v => v != null && v > 0);
+  if (vals.length < 2) return null;
+  const n = vals.length - 1;
+  return Math.pow(vals[vals.length-1] / vals[0], 1/n) - 1;
+}
+function _pctTxt(x, d=0) { return x == null ? "—" : (x*100).toFixed(d) + "%"; }
+
+function dossierCard(ticker) {
+  const d = state.dossiers[ticker];
+  const head = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <div><div style="font-size:15px;font-weight:600">${ticker}</div></div>
+      <button class="btn btn-sm" style="flex:none" onclick="removeResearchTicker('${ticker}')" title="Remove">✕</button>
+    </div>`;
+  if (d === "loading" || d === undefined) {
+    return `<div class="card" style="margin-bottom:12px">${head}
+      <div style="font-size:12px;color:var(--hint);margin-top:.4rem">Loading dossier…</div></div>`;
+  }
+  if (d === false) {
+    return `<div class="card" style="margin-bottom:12px">${head}
+      <div style="font-size:12px;color:var(--muted);margin-top:.4rem">Not covered yet. Orion pre-builds dossiers for a focused set of quality compounders (U.S.-first, §8). ${(state.dossierIndex?.covered||[]).length ? "Covered now: " + state.dossierIndex.covered.map(c=>c.ticker).join(", ") + "." : ""}</div></div>`;
+  }
   return `<div class="card" style="margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-      <div style="font-size:15px;font-weight:600">${ticker}</div>
-      <span class="briefing-tag">Dossier · data wiring next</span>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:.5rem">
+      <div>
+        <div style="font-size:15px;font-weight:600">${d.name} <span style="color:var(--hint);font-weight:500">· ${d.ticker}</span></div>
+        <div style="font-size:11px;color:var(--hint)">${d.sicDescription || "—"} · ${d.exchange || ""}</div>
+      </div>
+      <button class="btn btn-sm" style="flex:none" onclick="removeResearchTicker('${ticker}')" title="Remove">✕</button>
     </div>
-    <div style="font-size:12px;color:var(--hint);margin-bottom:.4rem">Auto-assembled deep-dive — business, financials, and the ${PHILOSOPHY.label} scorecard. Numbers will come from SEC EDGAR + fundamentals (next steps), not from the AI.</div>
-    ${lensRows}
+    ${dossierFinancials(d)}
+    <div style="font-size:11px;font-weight:600;color:var(--muted);margin:.7rem 0 .1rem;text-transform:uppercase;letter-spacing:.04em">${PHILOSOPHY.label} scorecard</div>
+    ${dossierScorecard(d)}
+    ${thesisBlock(d)}
+    <div style="font-size:10px;color:var(--hint);margin-top:.6rem;border-top:1px solid var(--border);padding-top:.4rem">
+      Source: ${d.source} · FY${d.latestFiscalYear} (as of ${d.asOf}). Figures computed in code from filings — not generated. ${d.narrative ? "" : "Business narrative is generated separately and not yet wired."}
+    </div>
   </div>`;
+}
+
+// Compact financial snapshot: latest-year level + multi-year growth, the few
+// lines a compounder investor reads first. All from the committed JSON.
+function dossierFinancials(d) {
+  const ys = d.fiscalYears, ly = String(d.latestFiscalYear);
+  const f = d.financials, m = d.metrics;
+  const cell = (label, value, sub) =>
+    `<div style="flex:1;min-width:78px">
+      <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.03em">${label}</div>
+      <div style="font-size:14px;font-weight:600">${value}</div>
+      ${sub ? `<div style="font-size:10px;color:var(--muted)">${sub}</div>` : ""}
+    </div>`;
+  const rev = f.revenue?.[ly], ni = f.netIncome?.[ly], fcf = f.fcf?.[ly];
+  const revCagr = _cagr(f.revenue, ys);
+  return `<div style="display:flex;flex-wrap:wrap;gap:10px;background:var(--bg);border-radius:8px;padding:.6rem .7rem">
+    ${cell("Revenue", rev!=null?"$"+fmt(rev):"—", revCagr!=null?_pctTxt(revCagr)+" "+(ys.length-1)+"y CAGR":"")}
+    ${cell("Net income", ni!=null?"$"+fmt(ni):"—", m.netMargin?.[ly]!=null?_pctTxt(m.netMargin[ly])+" margin":"")}
+    ${cell("Free cash flow", fcf!=null?"$"+fmt(fcf):"—", m.fcfMargin?.[ly]!=null?_pctTxt(m.fcfMargin[ly])+" margin":"")}
+    ${cell("ROIC", _pctTxt(m.roic?.[ly]), "last FY")}
+    ${cell("Gross margin", _pctTxt(m.grossMargin?.[ly]), "last FY")}
+  </div>`;
+}
+
+function dossierScorecard(d) {
+  // Match each lens to its computed row by key; fall back to the lens label so
+  // the scorecard always shows every philosophy dimension, even if unscored.
+  const byKey = {}; (d.scorecard||[]).forEach(s => byKey[s.key] = s);
+  return PHILOSOPHY.lenses.map(l => {
+    const s = byKey[l.key] || {rating:"na", headline:"—", detail:l.q};
+    return `<div style="padding:.4rem 0;border-top:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--text)" title="${l.q}">${l.label}</span>
+        ${rateChip(s.rating)}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:1px">${s.headline}</div>
+    </div>`;
+  }).join("");
+}
+
+function removeResearchTicker(t) {
+  state.researchTickers = state.researchTickers.filter(x => x !== t);
+  markDirty();
+  renderResearchList();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   THESIS CAPTURE — the moat's seed (EQUITY_RESEARCH_PLAN §9 step 3).
+   The user writes *why* they'd own a name and their own sell rules; it's
+   saved against the ticker and persists. Sell rules can be measurable —
+   tied to a dossier metric (metric/op/value) — so step 4 (thesis-vs-reality
+   alerts) can later check reality against what the user actually wrote.
+   This is the record a fresh Claude session can't reproduce (§10).
+════════════════════════════════════════════════════════════════════ */
+// Metrics a measurable rule can be hung on. All live in dossier.metrics and are
+// either ratios (shown as %) or per-share dollars — clean thresholds to reason
+// about. Bigger-dollar lines stay qualitative (write the rule in words).
+const THESIS_METRICS = [
+  { key:"roic",            label:"ROIC",                 unit:"pct" },
+  { key:"grossMargin",     label:"Gross margin",         unit:"pct" },
+  { key:"operatingMargin", label:"Operating margin",     unit:"pct" },
+  { key:"netMargin",       label:"Net margin",           unit:"pct" },
+  { key:"fcfMargin",       label:"FCF margin",           unit:"pct" },
+  { key:"fcfConversion",   label:"FCF conversion (FCF÷NI)", unit:"pct" },
+  { key:"roe",             label:"Return on equity",     unit:"pct" },
+  { key:"eps",             label:"EPS",                  unit:"usd" },
+  { key:"fcfPerShare",     label:"FCF / share",          unit:"usd" },
+];
+const _METRIC_BY_KEY = Object.fromEntries(THESIS_METRICS.map(m => [m.key, m]));
+
+// Latest-FY value of a thesis metric for a dossier, or null.
+function thesisMetricLatest(d, key) {
+  const v = d?.metrics?.[key]?.[String(d.latestFiscalYear)];
+  return (v === undefined) ? null : v;
+}
+// Format a metric value in its own unit (decimal ratio → %, else $/share).
+function fmtMetric(key, v) {
+  if (v == null) return "—";
+  const m = _METRIC_BY_KEY[key];
+  if (m?.unit === "pct") return (v * 100).toFixed(1) + "%";
+  return "$" + Number(v).toFixed(2);
+}
+// The number a user types for a metric (60 for 60%, 8.50 for $8.50) ↔ stored
+// native value (0.60, 8.50). Keeps step 4's comparison unit-correct.
+function ruleInputToNative(key, input) {
+  const n = parseFloat(input);
+  if (isNaN(n)) return null;
+  return _METRIC_BY_KEY[key]?.unit === "pct" ? n / 100 : n;
+}
+function ruleNativeToInput(key, v) {
+  if (v == null) return "";
+  return _METRIC_BY_KEY[key]?.unit === "pct" ? +(v * 100).toFixed(2) : v;
+}
+
+// Transient editor draft (not persisted; the saved thesis is). Holds the
+// in-progress summary + rules while editing so structural re-renders (add/remove
+// rule) don't lose typed text.
+let _thesisDraft = null;
+let _ruleSeq = 0;
+function _newRuleId() { return "r" + (Date.now().toString(36)) + (_ruleSeq++); }
+
+function thesisBlock(d) {
+  const t = state.theses[d.ticker];
+  const editing = _thesisDraft && _thesisDraft.ticker === d.ticker;
+  const head = `<div style="font-size:11px;font-weight:600;color:var(--muted);margin:.9rem 0 .3rem;text-transform:uppercase;letter-spacing:.04em">Your thesis</div>`;
+  if (editing) return head + thesisEditor(d);
+  if (t) return head + thesisRead(d, t);
+  return head + `<div style="font-size:12px;color:var(--hint);margin-bottom:.4rem">Why would <b style="color:var(--muted)">you</b> own ${d.ticker}? Write it down with your own sell rules — Orion holds it and (next) tells you when reality drifts from it.</div>
+    <button class="btn btn-blue btn-sm" onclick="startThesis('${d.ticker}')">Write your thesis →</button>`;
+}
+
+// Read view: the user's own words + their rules, each evaluated against today's
+// reality (§9 step 4) — a status chip plus where the number sits vs. their line.
+function thesisRead(d, t) {
+  const rules = (t.rules || []).map(r => {
+    const ev = evalRule(d, r);
+    if (ev.measurable) {
+      const m = _METRIC_BY_KEY[r.metric];
+      const move = (ev.prior != null) ? `, was ${fmtMetric(r.metric, ev.prior)} prior FY` : "";
+      return `<li style="margin-bottom:.3rem;list-style:none;margin-left:-1.1rem">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+          <span style="color:var(--text)">${m ? m.label : r.metric} ${r.op === "<" ? "≥" : "≤"} ${fmtMetric(r.metric, r.value)}</span>
+          ${thesisStatusChip(ev.status)}
+        </div>
+        <div style="color:var(--hint);font-size:11px">now ${fmtMetric(r.metric, ev.current)}${move}${r.note ? ` — ${escapeHtml(r.note)}` : ""}</div></li>`;
+    }
+    return `<li style="margin-bottom:.3rem;list-style:none;margin-left:-1.1rem;color:var(--muted)">${escapeHtml(r.note || "")} <span style="color:var(--hint);font-size:10px">· watch (in words)</span></li>`;
+  }).join("");
+  const when = t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "";
+  return `<div style="font-size:12px;color:var(--text);line-height:1.5;white-space:pre-wrap;margin-bottom:.5rem">${escapeHtml(t.summary || "")}</div>
+    ${rules ? `<div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.2rem">Sell rules</div>
+      <ul style="margin:.1rem 0 .5rem;padding-left:1.1rem;font-size:12px">${rules}</ul>` : ""}
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-sm" onclick="startThesis('${d.ticker}')">Edit thesis</button>
+      <span style="font-size:10px;color:var(--hint)">Updated ${when}</span>
+    </div>`;
+}
+
+function thesisEditor(d) {
+  const dr = _thesisDraft;
+  const metricOpts = (sel) => `<option value=""${!sel?" selected":""}>(note only)</option>` +
+    THESIS_METRICS.map(m => `<option value="${m.key}"${sel===m.key?" selected":""}>${m.label}</option>`).join("");
+  const ruleRows = dr.rules.map(r => {
+    const m = r.metric ? _METRIC_BY_KEY[r.metric] : null;
+    const now = m ? ` <span style="color:var(--hint);font-size:10px;white-space:nowrap">now ${fmtMetric(r.metric, thesisMetricLatest(d, r.metric))}</span>` : "";
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:.5rem;margin-bottom:.4rem">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:.35rem">
+        <input class="copilot-input" style="flex:1;border:1px solid var(--border);border-radius:6px;padding:.3rem .5rem" placeholder="Rule in your words — e.g. moat eroding" value="${escapeHtml(r.note||"")}" oninput="draftSetRule('${r.id}','note',this.value)">
+        <button class="btn btn-sm" style="flex:none" title="Remove rule" onclick="draftRemoveRule('${r.id}')">✕</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap">
+        <span>Alert if</span>
+        <select onchange="draftSetRule('${r.id}','metric',this.value)" style="font-size:12px;padding:.2rem;border:1px solid var(--border);border-radius:6px">${metricOpts(r.metric)}</select>
+        <select onchange="draftSetRule('${r.id}','op',this.value)" style="font-size:12px;padding:.2rem;border:1px solid var(--border);border-radius:6px"${r.metric?"":" disabled"}>
+          <option value="<"${r.op==="<"?" selected":""}>falls below</option>
+          <option value=">"${r.op===">"?" selected":""}>rises above</option>
+        </select>
+        <input type="number" step="any" style="width:74px;font-size:12px;padding:.2rem .4rem;border:1px solid var(--border);border-radius:6px" placeholder="value" value="${r.metric?ruleNativeToInput(r.metric,r.value):""}" oninput="draftSetRule('${r.id}','value',this.value)"${r.metric?"":" disabled"}>
+        <span>${r.metric&&_METRIC_BY_KEY[r.metric]?.unit==="pct"?"%":r.metric?"$":""}</span>${now}
+      </div>
+    </div>`;
+  }).join("");
+  return `<div style="font-size:12px;color:var(--hint);margin-bottom:.3rem">Why would you own ${d.ticker}? In your own words.</div>
+    <textarea id="thesis-summary-${d.ticker}" oninput="draftSetSummary(this.value)" placeholder="What's the durable advantage, why does it compound, what's your edge in believing it…" style="width:100%;min-height:90px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:.55rem;resize:vertical;box-sizing:border-box">${escapeHtml(dr.summary||"")}</textarea>
+    <div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin:.6rem 0 .3rem">Your sell rules — what would break the thesis</div>
+    ${ruleRows || `<div style="font-size:12px;color:var(--hint);margin-bottom:.4rem">No rules yet. Add what would make you sell — measurable (tied to a number) or in words.</div>`}
+    <button class="btn btn-sm" onclick="draftAddRule()">+ Add rule</button>
+    <div style="display:flex;gap:8px;margin-top:.7rem">
+      <button class="btn btn-blue btn-sm" onclick="saveThesis()">Save thesis</button>
+      <button class="btn btn-sm" onclick="cancelThesis()">Cancel</button>
+    </div>
+    <div id="thesis-err-${d.ticker}" style="font-size:11px;color:var(--red);margin-top:.4rem"></div>`;
+}
+
+// ── Draft mutations ──────────────────────────────────────────────────────────
+function startThesis(ticker) {
+  const existing = state.theses[ticker];
+  _thesisDraft = existing
+    ? { ticker, summary: existing.summary || "", rules: (existing.rules||[]).map(r => ({...r})) }
+    : { ticker, summary: "", rules: [] };
+  if (!_thesisDraft.rules.length) _thesisDraft.rules.push({ id:_newRuleId(), note:"", metric:"", op:"<", value:null });
+  renderResearchList();
+}
+function cancelThesis() { _thesisDraft = null; renderResearchList(); }
+function draftSetSummary(v) { if (_thesisDraft) _thesisDraft.summary = v; }   // no re-render: keep caret
+function draftAddRule() {
+  if (!_thesisDraft) return;
+  _thesisDraft.rules.push({ id:_newRuleId(), note:"", metric:"", op:"<", value:null });
+  renderResearchList();
+}
+function draftRemoveRule(id) {
+  if (!_thesisDraft) return;
+  _thesisDraft.rules = _thesisDraft.rules.filter(r => r.id !== id);
+  renderResearchList();
+}
+function draftSetRule(id, field, raw) {
+  if (!_thesisDraft) return;
+  const r = _thesisDraft.rules.find(x => x.id === id);
+  if (!r) return;
+  if (field === "metric") {
+    // Keep the threshold only when the unit class is unchanged (pct→pct, usd→usd);
+    // a cross-unit switch would make the old number mean something different, so reset.
+    const oldUnit = _METRIC_BY_KEY[r.metric]?.unit;
+    const newUnit = _METRIC_BY_KEY[raw]?.unit;
+    r.metric = raw;
+    if (!raw || oldUnit !== newUnit) r.value = null;
+    renderResearchList();  // unit/enabled state changed — re-render this row
+  } else if (field === "value") {
+    r.value = r.metric ? ruleInputToNative(r.metric, raw) : null;  // no re-render: keep caret
+  } else if (field === "op") {
+    r.op = raw;
+  } else if (field === "note") {
+    r.note = raw;  // no re-render: keep caret
+  }
+}
+function saveThesis() {
+  if (!_thesisDraft) return;
+  const dr = _thesisDraft;
+  const errEl = document.getElementById(`thesis-err-${dr.ticker}`);
+  const summary = (dr.summary || "").trim();
+  if (!summary) { if (errEl) errEl.textContent = "Write at least a sentence on why you'd own it."; return; }
+  // Keep only meaningful rules: a measurable trigger, or a note in words.
+  const rules = dr.rules
+    .map(r => {
+      const measurable = r.metric && r.op && r.value != null && !isNaN(r.value);
+      if (measurable) return { id:r.id, note:(r.note||"").trim(), metric:r.metric, op:r.op, value:r.value };
+      const note = (r.note||"").trim();
+      return note ? { id:r.id, note, metric:null, op:null, value:null } : null;
+    })
+    .filter(Boolean);
+  const prev = state.theses[dr.ticker];
+  const now = new Date().toISOString();
+  state.theses[dr.ticker] = {
+    ticker: dr.ticker, summary, rules,
+    createdAt: prev?.createdAt || now, updatedAt: now,
+  };
+  markDirty();
+  _thesisDraft = null;
+  renderResearchList();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   THESIS-VS-REALITY ALERTS (EQUITY_RESEARCH_PLAN §9 step 4) — the
+   "only Orion can say this" moment. We check the latest dossier numbers
+   (computed, never AI) against the sell rules the USER wrote (their record),
+   and flag where reality has crossed their own line. The output a fresh
+   Claude session cannot reproduce, because it needs the user's thesis (§10).
+   Deterministic and live: derived from (persisted thesis) × (committed
+   dossier); nothing here is stored or model-generated.
+════════════════════════════════════════════════════════════════════ */
+// A dossier from the in-memory cache or the committed bundle (whichever is ready).
+function getDossier(ticker) {
+  const d = state.dossiers[ticker];
+  if (d && d !== "loading" && d !== false) return d;
+  return window.ORION_DOSSIERS?.dossiers?.[ticker] || null;
+}
+function thesisMetricPrior(d, key) {
+  const ys = d?.fiscalYears || [];
+  if (ys.length < 2) return null;
+  const v = d.metrics?.[key]?.[String(ys[ys.length - 2])];
+  return v === undefined ? null : v;
+}
+
+// Evaluate one rule against today's reality.
+//   measurable + value present → "breached" | "holding" | "unknown" (no data)
+//   note only → "watch" (a qualitative reminder we can't auto-check)
+function evalRule(d, r) {
+  if (!r.metric || !r.op || r.value == null) {
+    return { ...r, measurable: false, status: "watch", current: null, prior: null };
+  }
+  const current = thesisMetricLatest(d, r.metric);
+  if (current == null) return { ...r, measurable: true, status: "unknown", current: null, prior: null };
+  const breached = r.op === "<" ? current < r.value : current > r.value;
+  return { ...r, measurable: true, status: breached ? "breached" : "holding",
+           current, prior: thesisMetricPrior(d, r.metric) };
+}
+function evaluateThesis(ticker) {
+  const d = getDossier(ticker), t = state.theses[ticker];
+  if (!d || !t) return [];
+  return (t.rules || []).map(r => evalRule(d, r));
+}
+// Every breached rule across every thesis, newest dossier wins.
+function allThesisBreaches() {
+  const out = [];
+  for (const ticker of Object.keys(state.theses)) {
+    const d = getDossier(ticker);
+    if (!d) continue;
+    for (const ev of evaluateThesis(ticker)) {
+      if (ev.status === "breached") out.push({ ticker, name: d.name, fy: d.latestFiscalYear, ...ev });
+    }
+  }
+  return out;
+}
+
+// Plain-language phrasing of one breach: their metric, where it is now, the line
+// they drew, their own note, and the direction it moved.
+function breachLine(b) {
+  const m = _METRIC_BY_KEY[b.metric];
+  const label = m ? m.label : b.metric;
+  const dir = b.op === "<" ? "below" : "above";
+  const move = (b.prior != null) ? ` · was ${fmtMetric(b.metric, b.prior)} prior FY` : "";
+  const note = b.note ? ` — “${escapeHtml(b.note)}”` : "";
+  return `<b>${b.ticker}</b> · ${label} is ${fmtMetric(b.metric, b.current)}, ${dir} your ${fmtMetric(b.metric, b.value)} line${move}${note}`;
+}
+
+const _THESIS_STATUS = {
+  breached: { fg: "var(--red)",   txt: "Breached" },
+  holding:  { fg: "var(--green)", txt: "Holding" },
+  unknown:  { fg: "var(--hint)",  txt: "No data" },
+  watch:    { fg: "var(--hint)",  txt: "Watch" },
+};
+function thesisStatusChip(status) {
+  const c = _THESIS_STATUS[status] || _THESIS_STATUS.watch;
+  const dot = status === "breached" ? "⚠ " : status === "holding" ? "✓ " : "";
+  return `<span style="font-size:10px;font-weight:600;color:${c.fg};white-space:nowrap">${dot}${c.txt}</span>`;
+}
+
+// Top-of-Research drift banner. Loud when a line is crossed; quietly reassuring
+// when everything the user wrote still holds; invisible until they write a rule.
+function renderThesisAlerts() {
+  const el = document.getElementById("research-alerts");
+  if (!el) return;
+  const breaches = allThesisBreaches();
+  if (breaches.length) {
+    el.innerHTML = `<div class="card" style="border-left:3px solid var(--red);background:#FEF2F2">
+      <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:.5rem">⚠ ${breaches.length} thesis rule${breaches.length>1?"s":""} breached — reality has crossed a line you drew</div>
+      <ul style="margin:0;padding-left:1.1rem;font-size:12px;color:var(--text);line-height:1.7">
+        ${breaches.map(b => `<li>${breachLine(b)} <span style="color:var(--hint)">(FY${b.fy})</span></li>`).join("")}
+      </ul>
+      <div style="font-size:10px;color:var(--hint);margin-top:.5rem">Checked against the latest filing numbers in each dossier. Only Orion can raise this — it needs the rule you wrote.</div>
+    </div>`;
+    return;
+  }
+  // No breaches: only reassure if at least one measurable rule actually exists.
+  const measurableCount = Object.keys(state.theses).reduce((n, tk) =>
+    n + evaluateThesis(tk).filter(e => e.measurable).length, 0);
+  el.innerHTML = measurableCount
+    ? `<div class="card" style="border-left:3px solid var(--green)"><div style="font-size:12px;color:var(--green)">✓ All ${measurableCount} measurable thesis rule${measurableCount>1?"s":""} holding against the latest filings.</div></div>`
+    : "";
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CONVICTION PANEL (EQUITY_RESEARCH_PLAN §9 step 5) — risk folded in as a
+   module. The home (Command) screen now LEADS with "is your thesis still
+   intact across the book?"; the risk engine below is demoted to one module.
+   Reuses the §9-step-4 breach engine and ties it to what the user actually
+   holds, so a breach on a held name is flagged loudest.
+════════════════════════════════════════════════════════════════════ */
+// Uppercased tickers the user actually owns (equities/ETFs carry h.ticker).
+function heldTickers() {
+  const s = new Set();
+  for (const h of (state.holdings || [])) {
+    if (h.ticker) s.add(String(h.ticker).toUpperCase());
+  }
+  return s;
+}
+
+function renderConvictionPanel() {
+  const el = document.getElementById("conviction-panel");
+  if (!el) return;
+  const thesisCount = Object.keys(state.theses || {}).length;
+
+  // No research record yet: nudge toward building conviction, and state plainly
+  // that risk monitoring is now one module of the bigger picture.
+  if (!thesisCount) {
+    el.innerHTML = `<div class="card" style="background:linear-gradient(135deg,#f7fbff 0%,#fff 100%);border:1px solid var(--blue-mid)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px">Start your conviction record</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;max-width:62ch">Research a company, then write why you'd own it and your own sell rules. Orion tracks reality against your thesis — and the risk module below becomes "is my thesis still intact?". Your record is the part a fresh tool can't reproduce.</div>
+        </div>
+        <button class="btn btn-blue btn-sm" style="flex:none" onclick="switchScreen('research')">Go to Research →</button>
+      </div></div>`;
+    return;
+  }
+
+  const held = heldTickers();
+  const breaches = allThesisBreaches()
+    .map(b => ({ ...b, held: held.has(b.ticker) }))
+    .sort((a, b) => (b.held - a.held));   // held breaches first — your money + your rule
+
+  if (breaches.length) {
+    el.innerHTML = `<div class="card" style="border-left:3px solid var(--red);background:#FEF2F2">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:.5rem">
+        <div style="font-size:13px;font-weight:600;color:var(--red)">Is your thesis intact? ⚠ ${breaches.length} rule${breaches.length>1?"s":""} breached</div>
+        <button class="btn btn-sm" style="flex:none" onclick="switchScreen('research')">Review in Research →</button>
+      </div>
+      <ul style="margin:0;padding-left:1.1rem;font-size:12px;color:var(--text);line-height:1.7">
+        ${breaches.map(b => `<li>${b.held ? `<span style="font-size:9px;font-weight:700;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 4px;margin-right:5px;vertical-align:middle">HELD</span>` : ""}${breachLine(b)}</li>`).join("")}
+      </ul>
+      <div style="font-size:10px;color:var(--hint);margin-top:.5rem">Held names crossing your own line come first. Risk-module signals (what breaks you) are below.</div>
+    </div>`;
+    return;
+  }
+
+  // Theses exist, none breached.
+  const measurableCount = Object.keys(state.theses).reduce((n, tk) =>
+    n + evaluateThesis(tk).filter(e => e.measurable).length, 0);
+  el.innerHTML = `<div class="card" style="border-left:3px solid var(--green)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="font-size:12px;color:var(--green)">✓ Thesis intact — ${measurableCount ? `all ${measurableCount} measurable rule${measurableCount>1?"s":""} holding` : `${thesisCount} thesis${thesisCount>1?"es":""} on record`} against the latest filings.</div>
+      <button class="btn btn-sm" style="flex:none" onclick="switchScreen('research')">Open Research →</button>
+    </div></div>`;
 }
 
 function addResearchTicker() {
@@ -5111,7 +5630,10 @@ function addResearchTicker() {
     return;
   }
   if (note) note.textContent = "";
-  if (!state.researchTickers.includes(raw)) state.researchTickers.unshift(raw);
+  if (!state.researchTickers.includes(raw)) {
+    state.researchTickers.unshift(raw);
+    markDirty();   // the user's coverage list is part of their persisted record
+  }
   inp.value = "";
   renderResearchList();
 }
