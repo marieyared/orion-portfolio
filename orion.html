@@ -299,6 +299,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <span class="nav-brand-text">Orion <span>Intelligence</span></span>
   </div>
   <div class="nav-links">
+    <div class="nav-link" onclick="switchScreen('research')" data-screen="research">Research</div>
     <div class="nav-link active" onclick="switchScreen('command')" data-screen="command">Command</div>
     <div class="nav-link" onclick="switchScreen('risk')" data-screen="risk">Risk Analytics</div>
     <div class="nav-link" onclick="switchScreen('stress')" data-screen="stress">Stress Lab</div>
@@ -717,6 +718,35 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN: RESEARCH  (equity-research / conviction workspace · §9)     -->
+<!-- Scaffold: front door + swappable philosophy lens. Dossier DATA       -->
+<!-- (EDGAR + fundamentals) is wired in A1–A3; sections show as skeletons. -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-research" class="screen">
+<div class="wrap">
+  <div class="page-title">Research</div>
+  <div class="page-sub">Build a conviction case on a company: an auto-assembled, opinionated deep-dive — then write down why you'd own it and let Orion track reality against your thesis. Research → conviction → monitoring, in one record.</div>
+
+  <!-- Philosophy lens — rendered from the swappable PHILOSOPHY config -->
+  <div class="card" id="research-philosophy" style="margin-bottom:12px"></div>
+
+  <!-- Add a company -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:14px;font-weight:500;margin-bottom:.3rem">Research a company</div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:.75rem">Enter a U.S. ticker. Non-U.S. listings aren't covered yet — research is U.S.-first for now.</div>
+    <div class="copilot-bar">
+      <input class="copilot-input" id="research-ticker-input" placeholder="e.g. AAPL" onkeydown="if(event.key==='Enter')addResearchTicker()">
+      <button class="btn btn-blue btn-sm" onclick="addResearchTicker()">Add →</button>
+    </div>
+    <div id="research-note" style="font-size:12px;color:var(--red);margin-top:.5rem"></div>
+  </div>
+
+  <!-- Dossier list -->
+  <div id="research-list"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
 <!-- SCREEN: HOLDINGS                                                    -->
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <div id="screen-holdings" class="screen">
@@ -974,12 +1004,42 @@ const ETF_TYPES = ["ETP","ETF","Open-End Fund","Exchange Traded Fund","UCITS","F
 const COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922"];
 
 /* ════════════════════════════════════════════════════════════════════
+   PHILOSOPHY — the investing lens the workspace is opinionated about.
+   ISOLATED ON PURPOSE: this is the one place the "tribe" lives. Swap this
+   object to change the philosophy (e.g. deep-value, GARP) and every dossier,
+   scorecard, and AI prompt follows. Code fills the numbers; the model only
+   narrates against these lenses (never hardcode figures in promptStance).
+   See EQUITY_RESEARCH_PLAN.md §3/§5.
+════════════════════════════════════════════════════════════════════ */
+const PHILOSOPHY = {
+  id: "quality-compounder",
+  label: "Quality / long-term compounders",
+  oneLiner: "Durable businesses that compound capital at high returns — strong ROIC, real moats, honest owner-earnings, capable management — bought with a margin of safety and held for years.",
+  // The lenses every company is judged through. `q` is the question each lens
+  // answers; the dossier scorecard has one row per lens.
+  lenses: [
+    { key: "roic",           label: "Returns on capital",            q: "Is ROIC consistently high and stable?" },
+    { key: "moat",           label: "Moat",                          q: "What protects these returns from competition?" },
+    { key: "owner_earnings", label: "Owner earnings",                q: "Does reported profit turn into real free cash flow?" },
+    { key: "management",     label: "Management & capital allocation", q: "Do they reinvest and allocate capital well?" },
+    { key: "valuation",      label: "Price vs. value",               q: "Is there a margin of safety to intrinsic value?" },
+  ],
+  // Injected wherever the AI narrates a company so its voice is opinionated in
+  // this tribe's terms. Numbers are supplied separately by the engine.
+  promptStance: "You evaluate companies as a quality / long-term compounder investor: prioritise durable competitive advantage, high and stable returns on invested capital, owner-earnings quality, and disciplined capital allocation — always weighed against a margin of safety. Be sceptical of growth that does not earn its cost of capital.",
+};
+
+/* ════════════════════════════════════════════════════════════════════
    STATE
 ════════════════════════════════════════════════════════════════════ */
 const state = {
   isinRows:[],cashRows:[],bondRows:[],reRows:[],cryptoRows:[],commRows:[],debtRows:[],
   holdings:[],isinCache:{},quoteCache:{},purchaseQuoteCache:{},fxCache:{},fxMeta:{},fxFailures:new Set(),infoMap:{},geoAgg:{},sectorAgg:{},
   simGame:null,activeScreen:'command',
+  // Research workspace (EQUITY_RESEARCH_PLAN §9). In-memory for now; the
+  // user's persisted record is the THESIS (Phase B), not this scratch list.
+  researchTickers:[],
+
   healthScore:0,healthSubs:{},
   briefingText:'',intelBriefingText:'',
   riskProfile:null,
@@ -4969,6 +5029,7 @@ function switchScreen(name) {
   if (name==="riskprofile") renderRiskProfile();
   if (name==="map") renderMapScreen();
   if (name==="command") updateRqBanner();
+  if (name==="research") renderResearch();
 }
 
 // Onboarding nudge on the Command screen — visible only when the user hasn't
@@ -4986,6 +5047,73 @@ function goToEntry() {
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById("screen-entry").classList.add("active");
   document.getElementById("top-nav").style.display = "none";
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RESEARCH — equity-research / conviction workspace (EQUITY_RESEARCH_PLAN §9)
+   A0/A4 scaffold. Renders the swappable PHILOSOPHY lens and a structural
+   dossier skeleton per company. Real dossier DATA (financials from EDGAR +
+   a fundamentals source, AI narrative) is wired in the next steps (A1–A3);
+   the "—" rows below are the dossier's true shape, not mock content.
+════════════════════════════════════════════════════════════════════ */
+function renderResearch() {
+  // Philosophy banner is driven entirely by the PHILOSOPHY config, so swapping
+  // the tribe in one object changes what the workspace stands for everywhere.
+  const philEl = document.getElementById("research-philosophy");
+  if (philEl) {
+    philEl.innerHTML =
+        `<div style="font-size:13px;font-weight:600;margin-bottom:.25rem">Lens · ${PHILOSOPHY.label}</div>`
+      + `<div style="font-size:12px;color:var(--hint);margin-bottom:.6rem">${PHILOSOPHY.oneLiner}</div>`
+      + `<div style="display:flex;flex-wrap:wrap;gap:6px">`
+      +   PHILOSOPHY.lenses.map(l => `<span class="briefing-tag" title="${l.q}">${l.label}</span>`).join("")
+      + `</div>`;
+  }
+  renderResearchList();
+}
+
+function renderResearchList() {
+  const el = document.getElementById("research-list");
+  if (!el) return;
+  if (!state.researchTickers.length) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--hint)">No companies yet. Add a U.S. ticker above to start a dossier.</div>`;
+    return;
+  }
+  el.innerHTML = state.researchTickers.map(researchScaffoldCard).join("");
+}
+
+// One company's dossier skeleton. Sections are the dossier's real shape; the
+// "—" placeholders get filled by code (financials) and the model (narrative)
+// once the data backend lands. One scorecard row per PHILOSOPHY lens.
+function researchScaffoldCard(ticker) {
+  const lensRows = PHILOSOPHY.lenses.map(l =>
+      `<div style="display:flex;justify-content:space-between;font-size:12px;padding:.35rem 0;border-top:1px solid var(--border)">`
+    +   `<span style="color:var(--muted)" title="${l.q}">${l.label}</span><span style="color:var(--hint)">—</span></div>`
+  ).join("");
+  return `<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+      <div style="font-size:15px;font-weight:600">${ticker}</div>
+      <span class="briefing-tag">Dossier · data wiring next</span>
+    </div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:.4rem">Auto-assembled deep-dive — business, financials, and the ${PHILOSOPHY.label} scorecard. Numbers will come from SEC EDGAR + fundamentals (next steps), not from the AI.</div>
+    ${lensRows}
+  </div>`;
+}
+
+function addResearchTicker() {
+  const inp = document.getElementById("research-ticker-input");
+  const note = document.getElementById("research-note");
+  if (!inp) return;
+  const raw = (inp.value || "").trim().toUpperCase();
+  // US-first: tickers are 1–5 letters. Anything else gets an honest "not
+  // covered" message rather than a dossier (EQUITY_RESEARCH_PLAN §8).
+  if (!/^[A-Z]{1,5}$/.test(raw)) {
+    if (note) note.textContent = "Enter a U.S. ticker — 1–5 letters, e.g. AAPL. Non-U.S. listings aren't covered yet.";
+    return;
+  }
+  if (note) note.textContent = "";
+  if (!state.researchTickers.includes(raw)) state.researchTickers.unshift(raw);
+  inp.value = "";
+  renderResearchList();
 }
 
 /* ════════════════════════════════════════════════════════════════════
