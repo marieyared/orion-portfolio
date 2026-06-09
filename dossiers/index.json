@@ -1,0 +1,89 @@
+{
+  "covered": [
+    {
+      "ticker": "AAPL",
+      "name": "Apple Inc.",
+      "sector": "Electronic Computers",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ADBE",
+      "name": "ADOBE INC.",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AMZN",
+      "name": "AMAZON COM INC",
+      "sector": "Retail-Catalog & Mail-Order Houses",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "COST",
+      "name": "COSTCO WHOLESALE CORP /NEW",
+      "sector": "Retail-Variety Stores",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "GOOGL",
+      "name": "Alphabet Inc.",
+      "sector": "Services-Computer Programming, Data Processing, Etc.",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "HD",
+      "name": "HOME DEPOT, INC.",
+      "sector": "Retail-Lumber & Other Building Materials Dealers",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "MA",
+      "name": "Mastercard Inc",
+      "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "META",
+      "name": "Meta Platforms, Inc.",
+      "sector": "Services-Computer Programming, Data Processing, Etc.",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MSFT",
+      "name": "MICROSOFT CORP",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "NKE",
+      "name": "NIKE, Inc.",
+      "sector": "Rubber & Plastics Footwear",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA CORP",
+      "sector": "Semiconductors & Related Devices",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "SBUX",
+      "name": "STARBUCKS CORP",
+      "sector": "Retail-Eating & Drinking Places",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "UNH",
+      "name": "UNITEDHEALTH GROUP INC",
+      "sector": "Hospital & Medical Service Plans",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "V",
+      "name": "VISA INC.",
+      "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    }
+  ],
+  "philosophy": "quality-compounder"
+}

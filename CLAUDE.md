@@ -35,6 +35,8 @@ in one isolated, swappable place so the workflow is opinionated but the tribe ca
 | `orion.html` | The whole app — UI, state, risk/findings engine, prompts. Edit here. |
 | `orion_api.py` | Python pricing API (OpenFIGI ISIN lookup + Yahoo Finance quotes). |
 | `worker.js` | Cloudflare Worker proxying the Anthropic API (keeps the key off the browser). |
+| `build_dossiers.py` | **Dossier generator** (EQUITY_RESEARCH_PLAN §9 step 2). Pulls SEC EDGAR XBRL, computes the quality-compounder scorecard deterministically (no model call), and writes `dossiers/*.json` + `dossiers/dossiers.js`. Re-run when the covered universe or a filing changes. |
+| `dossiers/` | **Pre-generated, committed** company dossiers (cache-once-serve-many, §7). `*.json` = canonical per-name data; `index.json` = coverage manifest; `dossiers.js` = `window.ORION_DOSSIERS` bundle that orion.html loads (file://-safe). Generated — edit `build_dossiers.py`, not these. |
 | `test_findings.mjs` | Node test for the findings engine. Run before wiring findings into the live prompt. |
 | `wrangler.toml`, `Dockerfile`, `requirements-api.txt` | Deploy/config. |
 
