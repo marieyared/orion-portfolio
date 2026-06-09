@@ -1,5 +1,11 @@
 # Orion — The Reframe (Phase 1)
 
+> ⚠️ **Superseded by `EQUITY_RESEARCH_PLAN.md`.** Orion's whole-product direction is now the
+> equity-research / conviction workspace. This document still governs the **risk module's**
+> positioning and copy — but "risk is the hero" now reads as "risk is one module," and the
+> kill-list below applies to that module, not to the new research features. Read
+> `EQUITY_RESEARCH_PLAN.md` first.
+
 > **North star:** "Orion tells you what breaks your portfolio — before it breaks it."
 > Orion is a **risk early-warning system**, not a net-worth tracker. This phase is copy,
 > layout, hierarchy, and the AI-briefing prompt — **no new features, no auth/data-layer work.**
