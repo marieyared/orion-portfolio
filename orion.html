@@ -1058,6 +1058,11 @@ const state = {
   // Research workspace (EQUITY_RESEARCH_PLAN §9). researchTickers is the user's
   // covered list; theses is the moat's seed (§9 step 3) — why they'd own each
   // name and their own sell rules, keyed by ticker. Both persist (v2 schema).
+  // theses[ticker] is an APPEND-ONLY ARRAY of version records (MEMORY_SPEC §2):
+  // each edit pushes a new {summary,rules,savedAt}; the current thesis is the
+  // last entry, older versions stay for the timeline. Read via currentThesis(),
+  // write only via pushThesisVersion(). Legacy single-object saves are wrapped
+  // into a one-element array on load (see loadPortfolio).
   researchTickers:[],
   theses:{},
 
@@ -1147,6 +1152,23 @@ function loadPortfolio(){
     // Defensive default — old v1 snapshots don't carry overrides.
     if (!state.manualOverrides || typeof state.manualOverrides !== "object") {
       state.manualOverrides = {};
+    }
+    // Thesis store migrated to append-only version arrays (MEMORY_SPEC §2).
+    // Earlier saves keyed each ticker to a single {summary,rules,createdAt,
+    // updatedAt} object; wrap any such value into a one-element history array.
+    // Idempotent — values already in array form pass through untouched, so this
+    // re-runs harmlessly on every load until the next save persists the v2 shape.
+    if (state.theses && typeof state.theses === "object") {
+      for (const tk of Object.keys(state.theses)) {
+        const v = state.theses[tk];
+        if (v && !Array.isArray(v) && typeof v === "object") {
+          state.theses[tk] = [{
+            summary: v.summary || "",
+            rules: v.rules || [],
+            savedAt: v.updatedAt || v.createdAt || new Date().toISOString(),
+          }];
+        }
+      }
     }
     // From-v1 path: force a save on next markDirty by NOT priming
     // _lastSavedJson, so the migrated snapshot gets written to v2 soon.
@@ -5314,8 +5336,32 @@ let _thesisDraft = null;
 let _ruleSeq = 0;
 function _newRuleId() { return "r" + (Date.now().toString(36)) + (_ruleSeq++); }
 
+// ── Thesis store: append-only version history (MEMORY_SPEC §2) ───────────────
+// state.theses[ticker] is an ARRAY of immutable version records, oldest→newest.
+// The current thesis is the last entry; older versions stay for the timeline and
+// for divergence context (how conviction changed over time). Editing APPENDS a
+// new version — it never overwrites. Every reader goes through currentThesis();
+// the only writer is pushThesisVersion().
+function thesisVersions(ticker) {
+  const v = state.theses[ticker];
+  return Array.isArray(v) ? v : [];
+}
+function currentThesis(ticker) {
+  const v = thesisVersions(ticker);
+  return v.length ? v[v.length - 1] : undefined;
+}
+function pushThesisVersion(ticker, record) {
+  if (!Array.isArray(state.theses[ticker])) state.theses[ticker] = [];
+  state.theses[ticker].push(record);
+}
+
+// Fixed emotion-tag vocabulary for the psychology capture (MEMORY_SPEC §1).
+// A closed set keeps the data clean for the later cross-holding pattern view
+// ("you've panic-sold after a 20% drawdown 3 times") and is safe to interpolate.
+const PSYCH_TAGS = ["high-conviction", "some-FOMO", "contrarian", "speculative", "defensive", "long-term"];
+
 function thesisBlock(d) {
-  const t = state.theses[d.ticker];
+  const t = currentThesis(d.ticker);
   const editing = _thesisDraft && _thesisDraft.ticker === d.ticker;
   const head = `<div style="font-size:11px;font-weight:600;color:var(--muted);margin:.9rem 0 .3rem;text-transform:uppercase;letter-spacing:.04em">Your thesis</div>`;
   if (editing) return head + thesisEditor(d);
@@ -5341,10 +5387,19 @@ function thesisRead(d, t) {
     }
     return `<li style="margin-bottom:.3rem;list-style:none;margin-left:-1.1rem;color:var(--muted)">${escapeHtml(r.note || "")} <span style="color:var(--hint);font-size:10px">· watch (in words)</span></li>`;
   }).join("");
-  const when = t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "";
+  const when = t.savedAt ? new Date(t.savedAt).toLocaleDateString() : "";
+  const ps = t.psychology;
+  const psychHtml = ps ? `<div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin:.3rem 0 .25rem">The why you wrote</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:.5rem">
+      ${ps.conviction ? `<div style="margin-bottom:.2rem"><span style="color:var(--muted)">Conviction</span> <b>${ps.conviction}/5</b></div>` : ""}
+      ${ps.why_really ? `<div style="margin-bottom:.2rem">${escapeHtml(ps.why_really)}</div>` : ""}
+      ${ps.what_im_afraid_of ? `<div style="color:var(--muted)"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.04em">Afraid of</span> ${escapeHtml(ps.what_im_afraid_of)}</div>` : ""}
+      ${(ps.emotion_tags && ps.emotion_tags.length) ? `<div style="margin-top:.3rem;display:flex;flex-wrap:wrap;gap:4px">${ps.emotion_tags.map(tg => `<span style="font-size:10px;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:1px 8px">${escapeHtml(tg)}</span>`).join("")}</div>` : ""}
+    </div>` : "";
   return `<div style="font-size:12px;color:var(--text);line-height:1.5;white-space:pre-wrap;margin-bottom:.5rem">${escapeHtml(t.summary || "")}</div>
     ${rules ? `<div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.2rem">Sell rules</div>
       <ul style="margin:.1rem 0 .5rem;padding-left:1.1rem;font-size:12px">${rules}</ul>` : ""}
+    ${psychHtml}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <button class="btn btn-sm" onclick="startThesis('${d.ticker}')">Edit thesis</button>
       <span style="font-size:10px;color:var(--hint)">Updated ${when}</span>
@@ -5380,6 +5435,7 @@ function thesisEditor(d) {
     <div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin:.6rem 0 .3rem">Your sell rules — what would break the thesis</div>
     ${ruleRows || `<div style="font-size:12px;color:var(--hint);margin-bottom:.4rem">No rules yet. Add what would make you sell — measurable (tied to a number) or in words.</div>`}
     <button class="btn btn-sm" onclick="draftAddRule()">+ Add rule</button>
+    ${thesisPsychEditor(dr)}
     <div style="display:flex;gap:8px;margin-top:.7rem">
       <button class="btn btn-blue btn-sm" onclick="saveThesis()">Save thesis</button>
       <button class="btn btn-sm" onclick="cancelThesis()">Cancel</button>
@@ -5387,17 +5443,60 @@ function thesisEditor(d) {
     <div id="thesis-err-${d.ticker}" style="font-size:11px;color:var(--red);margin-top:.4rem"></div>`;
 }
 
+// The psychology half of capture (MEMORY_SPEC §1): conviction, the real why, the
+// fear, and emotion tags. Required, not optional — it's the part a cold session
+// can never reconstruct, and what powers the behavioral mirror later.
+function thesisPsychEditor(dr) {
+  const ps = dr.psychology;
+  const convBtns = [1,2,3,4,5].map(n => {
+    const on = ps.conviction === n;
+    return `<button type="button" onclick="draftSetConviction(${n})" style="width:30px;height:28px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${on?"var(--blue)":"var(--border)"};background:${on?"var(--blue)":"#fff"};color:${on?"#fff":"var(--muted)"}">${n}</button>`;
+  }).join("");
+  const tagChips = PSYCH_TAGS.map(tag => {
+    const on = ps.emotion_tags.includes(tag);
+    return `<button type="button" onclick="draftToggleTag('${tag}')" style="font-size:11px;cursor:pointer;border-radius:12px;padding:2px 10px;border:1px solid ${on?"var(--blue)":"var(--border)"};background:${on?"#eef4ff":"#fff"};color:${on?"var(--blue)":"var(--muted)"}">${tag}</button>`;
+  }).join("");
+  const ta = "width:100%;min-height:48px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:.5rem;resize:vertical;box-sizing:border-box;margin-bottom:.4rem";
+  return `<div style="font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em;margin:.9rem 0 .3rem">The honest why — a chat can't reconstruct this</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--muted)">Conviction</span>
+      <div style="display:flex;gap:4px">${convBtns}</div>
+      <span style="font-size:10px;color:var(--hint)">1 = tentative · 5 = high</span>
+    </div>
+    <textarea oninput="draftSetPsych('why_really',this.value)" placeholder="Why do you REALLY believe this? In your own words — the case as you'd tell a friend." style="${ta}">${escapeHtml(ps.why_really||"")}</textarea>
+    <textarea oninput="draftSetPsych('what_im_afraid_of',this.value)" placeholder="What are you most afraid of here? The risk that would keep you up at night." style="${ta}">${escapeHtml(ps.what_im_afraid_of||"")}</textarea>
+    <div style="font-size:11px;color:var(--hint);margin:.1rem 0 .3rem">How it feels <span style="color:var(--hint)">(optional)</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">${tagChips}</div>`;
+}
+
 // ── Draft mutations ──────────────────────────────────────────────────────────
 function startThesis(ticker) {
-  const existing = state.theses[ticker];
+  const existing = currentThesis(ticker);
+  const ps = existing?.psychology || {};
+  const psychology = {
+    conviction: ps.conviction ?? null,
+    why_really: ps.why_really || "",
+    what_im_afraid_of: ps.what_im_afraid_of || "",
+    emotion_tags: [...(ps.emotion_tags || [])],
+  };
   _thesisDraft = existing
-    ? { ticker, summary: existing.summary || "", rules: (existing.rules||[]).map(r => ({...r})) }
-    : { ticker, summary: "", rules: [] };
+    ? { ticker, summary: existing.summary || "", rules: (existing.rules||[]).map(r => ({...r})), psychology }
+    : { ticker, summary: "", rules: [], psychology };
   if (!_thesisDraft.rules.length) _thesisDraft.rules.push({ id:_newRuleId(), note:"", metric:"", op:"<", value:null });
   renderResearchList();
 }
 function cancelThesis() { _thesisDraft = null; renderResearchList(); }
 function draftSetSummary(v) { if (_thesisDraft) _thesisDraft.summary = v; }   // no re-render: keep caret
+// Psychology capture (MEMORY_SPEC §1) — the half a chat can't reconstruct.
+function draftSetConviction(n) { if (_thesisDraft) { _thesisDraft.psychology.conviction = n; renderResearchList(); } }  // re-render: highlight selection
+function draftSetPsych(field, v) { if (_thesisDraft) _thesisDraft.psychology[field] = v; }   // why_really / what_im_afraid_of — no re-render: keep caret
+function draftToggleTag(tag) {
+  if (!_thesisDraft) return;
+  const tags = _thesisDraft.psychology.emotion_tags;
+  const i = tags.indexOf(tag);
+  if (i >= 0) tags.splice(i, 1); else tags.push(tag);
+  renderResearchList();
+}
 function draftAddRule() {
   if (!_thesisDraft) return;
   _thesisDraft.rules.push({ id:_newRuleId(), note:"", metric:"", op:"<", value:null });
@@ -5434,6 +5533,14 @@ function saveThesis() {
   const errEl = document.getElementById(`thesis-err-${dr.ticker}`);
   const summary = (dr.summary || "").trim();
   if (!summary) { if (errEl) errEl.textContent = "Write at least a sentence on why you'd own it."; return; }
+  // Psychology is required, not optional (MEMORY_SPEC §1) — it's the half a chat
+  // can't reconstruct. Pre-fill on edit means this isn't re-typed each time.
+  const ps = dr.psychology || {};
+  const why = (ps.why_really || "").trim();
+  const fear = (ps.what_im_afraid_of || "").trim();
+  if (!ps.conviction) { if (errEl) errEl.textContent = "Set your conviction (1–5) — how sure are you?"; return; }
+  if (!why)  { if (errEl) errEl.textContent = "Add one line on why you really believe this — it's the part a chat can't reconstruct."; return; }
+  if (!fear) { if (errEl) errEl.textContent = "Add one line on what you're most afraid of here. The fear is the reasoning you'll forget first."; return; }
   // Keep only meaningful rules: a measurable trigger, or a note in words.
   const rules = dr.rules
     .map(r => {
@@ -5443,12 +5550,15 @@ function saveThesis() {
       return note ? { id:r.id, note, metric:null, op:null, value:null } : null;
     })
     .filter(Boolean);
-  const prev = state.theses[dr.ticker];
-  const now = new Date().toISOString();
-  state.theses[dr.ticker] = {
-    ticker: dr.ticker, summary, rules,
-    createdAt: prev?.createdAt || now, updatedAt: now,
-  };
+  // Tags are from the closed PSYCH_TAGS set; drop anything else defensively.
+  const emotion_tags = (ps.emotion_tags || []).filter(t => PSYCH_TAGS.includes(t));
+  // Append a new immutable version — never overwrite (MEMORY_SPEC §2). The
+  // current thesis is the last entry; "created" is the first version's savedAt.
+  pushThesisVersion(dr.ticker, {
+    summary, rules,
+    psychology: { conviction: ps.conviction, why_really: why, what_im_afraid_of: fear, emotion_tags },
+    savedAt: new Date().toISOString(),
+  });
   markDirty();
   _thesisDraft = null;
   renderResearchList();
@@ -5476,9 +5586,13 @@ function thesisMetricPrior(d, key) {
   return v === undefined ? null : v;
 }
 
-// Evaluate one rule against today's reality.
-//   measurable + value present → "breached" | "holding" | "unknown" (no data)
+// Evaluate one rule against today's reality (MEMORY_SPEC §4 — Holding/Watch/Broken).
+//   measurable + value present → "breached" | "drifting" | "holding" | "unknown"
 //   note only → "watch" (a qualitative reminder we can't auto-check)
+// "drifting" is the soft middle state: still holding, but within ~10% of the line
+// the user drew (the |value|-based band stays direction-correct for negative/zero
+// thresholds). It's surfaced quietly — a nudge, not the loud breach alert.
+const DRIFT_BAND = 0.10;
 function evalRule(d, r) {
   if (!r.metric || !r.op || r.value == null) {
     return { ...r, measurable: false, status: "watch", current: null, prior: null };
@@ -5486,22 +5600,32 @@ function evalRule(d, r) {
   const current = thesisMetricLatest(d, r.metric);
   if (current == null) return { ...r, measurable: true, status: "unknown", current: null, prior: null };
   const breached = r.op === "<" ? current < r.value : current > r.value;
-  return { ...r, measurable: true, status: breached ? "breached" : "holding",
-           current, prior: thesisMetricPrior(d, r.metric) };
+  let status;
+  if (breached) {
+    status = "breached";
+  } else {
+    const band = Math.abs(r.value) * DRIFT_BAND;
+    const gap = r.op === "<" ? current - r.value : r.value - current;   // distance still inside the line
+    status = (band > 0 && gap < band) ? "drifting" : "holding";
+  }
+  return { ...r, measurable: true, status, current, prior: thesisMetricPrior(d, r.metric) };
 }
 function evaluateThesis(ticker) {
-  const d = getDossier(ticker), t = state.theses[ticker];
+  const d = getDossier(ticker), t = currentThesis(ticker);
   if (!d || !t) return [];
   return (t.rules || []).map(r => evalRule(d, r));
 }
 // Every breached rule across every thesis, newest dossier wins.
-function allThesisBreaches() {
+function allThesisBreaches() { return _collectThesisRules("breached"); }
+// Every rule drifting toward (but not yet across) the user's line (MEMORY_SPEC §4).
+function allThesisDrifts() { return _collectThesisRules("drifting"); }
+function _collectThesisRules(status) {
   const out = [];
   for (const ticker of Object.keys(state.theses)) {
     const d = getDossier(ticker);
     if (!d) continue;
     for (const ev of evaluateThesis(ticker)) {
-      if (ev.status === "breached") out.push({ ticker, name: d.name, fy: d.latestFiscalYear, ...ev });
+      if (ev.status === status) out.push({ ticker, name: d.name, fy: d.latestFiscalYear, ...ev });
     }
   }
   return out;
@@ -5518,35 +5642,86 @@ function breachLine(b) {
   return `<b>${b.ticker}</b> · ${label} is ${fmtMetric(b.metric, b.current)}, ${dir} your ${fmtMetric(b.metric, b.value)} line${move}${note}`;
 }
 
+// Phrasing for a drift: still inside the line, but approaching it. Calmer copy
+// than breachLine — this is a nudge, not "you crossed it."
+function driftLine(b) {
+  const m = _METRIC_BY_KEY[b.metric];
+  const label = m ? m.label : b.metric;
+  const move = (b.prior != null) ? ` · was ${fmtMetric(b.metric, b.prior)} prior FY` : "";
+  const note = b.note ? ` — “${escapeHtml(b.note)}”` : "";
+  return `<b>${b.ticker}</b> · ${label} is ${fmtMetric(b.metric, b.current)}, nearing your ${fmtMetric(b.metric, b.value)} line${move}${note}`;
+}
+
+// The psychology tie-in (MEMORY_SPEC §4): when a name has rules off Holding AND
+// the user recorded a fear/emotion at capture, gently hand them back their own
+// past words. Quote only — never editorialize. Returns "" when there's nothing
+// recorded to mirror, so callers can append unconditionally.
+function psychTieIn(tickers) {
+  const lines = [];
+  for (const ticker of tickers) {
+    const t = currentThesis(ticker);
+    const ps = t && t.psychology;
+    if (!ps) continue;
+    const fear = (ps.what_im_afraid_of || "").trim();
+    const tags = (ps.emotion_tags || []);
+    if (!fear && !tags.length) continue;
+    const tagBit = tags.length ? `you flagged ${tags.map(t => `“${escapeHtml(t)}”`).join(", ")}` : "";
+    const fearBit = fear ? `you wrote you were afraid of “${escapeHtml(fear)}”` : "";
+    const both = [tagBit, fearBit].filter(Boolean).join(" and ");
+    lines.push(`<b>${ticker}</b> — ${both}. Worth a look at whether the original case still holds.`);
+  }
+  if (!lines.length) return "";
+  return `<div style="font-size:11px;color:var(--muted);margin-top:.6rem;line-height:1.6;border-top:1px solid var(--border);padding-top:.5rem">
+    ${lines.map(l => `<div>${l}</div>`).join("")}</div>`;
+}
+
 const _THESIS_STATUS = {
   breached: { fg: "var(--red)",   txt: "Breached" },
+  drifting: { fg: "var(--amber)", txt: "Drifting" },
   holding:  { fg: "var(--green)", txt: "Holding" },
   unknown:  { fg: "var(--hint)",  txt: "No data" },
   watch:    { fg: "var(--hint)",  txt: "Watch" },
 };
 function thesisStatusChip(status) {
   const c = _THESIS_STATUS[status] || _THESIS_STATUS.watch;
-  const dot = status === "breached" ? "⚠ " : status === "holding" ? "✓ " : "";
+  const dot = status === "breached" ? "⚠ " : status === "drifting" ? "↘ " : status === "holding" ? "✓ " : "";
   return `<span style="font-size:10px;font-weight:600;color:${c.fg};white-space:nowrap">${dot}${c.txt}</span>`;
 }
 
-// Top-of-Research drift banner. Loud when a line is crossed; quietly reassuring
-// when everything the user wrote still holds; invisible until they write a rule.
+// Top-of-Research drift banner. Loud when a line is crossed; an amber nudge when
+// a rule is drifting toward the line; quietly reassuring when everything holds;
+// invisible until the user writes a rule. (MEMORY_SPEC §4 — Broken/Watch/Holding.)
 function renderThesisAlerts() {
   const el = document.getElementById("research-alerts");
   if (!el) return;
   const breaches = allThesisBreaches();
+  const drifts = allThesisDrifts();
+  // Tie-in mirrors back the user's own recorded fear/emotion for any name off Holding.
+  const affected = [...new Set([...breaches, ...drifts].map(b => b.ticker))];
   if (breaches.length) {
     el.innerHTML = `<div class="card" style="border-left:3px solid var(--red);background:#FEF2F2">
       <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:.5rem">⚠ ${breaches.length} thesis rule${breaches.length>1?"s":""} breached — reality has crossed a line you drew</div>
       <ul style="margin:0;padding-left:1.1rem;font-size:12px;color:var(--text);line-height:1.7">
         ${breaches.map(b => `<li>${breachLine(b)} <span style="color:var(--hint)">(FY${b.fy})</span></li>`).join("")}
       </ul>
+      ${drifts.length ? `<div style="font-size:11px;color:var(--amber);margin-top:.5rem">${drifts.length} more drifting toward your line: ${drifts.map(b => b.ticker).join(", ")}.</div>` : ""}
       <div style="font-size:10px;color:var(--hint);margin-top:.5rem">Checked against the latest filing numbers in each dossier. Only Orion can raise this — it needs the rule you wrote.</div>
+      ${psychTieIn(affected)}
     </div>`;
     return;
   }
-  // No breaches: only reassure if at least one measurable rule actually exists.
+  if (drifts.length) {
+    el.innerHTML = `<div class="card" style="border-left:3px solid var(--amber);background:#FFFBEB">
+      <div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:.5rem">↘ ${drifts.length} thesis rule${drifts.length>1?"s":""} drifting toward a line you drew</div>
+      <ul style="margin:0;padding-left:1.1rem;font-size:12px;color:var(--text);line-height:1.7">
+        ${drifts.map(b => `<li>${driftLine(b)} <span style="color:var(--hint)">(FY${b.fy})</span></li>`).join("")}
+      </ul>
+      <div style="font-size:10px;color:var(--hint);margin-top:.5rem">Nothing breached yet — these are within ${Math.round(DRIFT_BAND*100)}% of your own threshold. A heads-up, not an alarm.</div>
+      ${psychTieIn(affected)}
+    </div>`;
+    return;
+  }
+  // No breaches or drifts: only reassure if at least one measurable rule exists.
   const measurableCount = Object.keys(state.theses).reduce((n, tk) =>
     n + evaluateThesis(tk).filter(e => e.measurable).length, 0);
   el.innerHTML = measurableCount
@@ -5608,7 +5783,22 @@ function renderConvictionPanel() {
     return;
   }
 
-  // Theses exist, none breached.
+  // None breached, but some drifting toward a line — a quiet amber heads-up,
+  // held names first, still subordinate to the loud breach state above.
+  const drifts = allThesisDrifts()
+    .map(b => ({ ...b, held: held.has(b.ticker) }))
+    .sort((a, b) => (b.held - a.held));
+  if (drifts.length) {
+    const names = [...new Set(drifts.map(b => b.ticker))];
+    el.innerHTML = `<div class="card" style="border-left:3px solid var(--amber);background:#FFFBEB">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="font-size:12px;color:var(--amber)">↘ Thesis holding, but ${drifts.length} rule${drifts.length>1?"s":""} drifting toward your line — ${names.join(", ")}.</div>
+        <button class="btn btn-sm" style="flex:none" onclick="switchScreen('research')">Review in Research →</button>
+      </div></div>`;
+    return;
+  }
+
+  // Theses exist, none breached or drifting.
   const measurableCount = Object.keys(state.theses).reduce((n, tk) =>
     n + evaluateThesis(tk).filter(e => e.measurable).length, 0);
   el.innerHTML = `<div class="card" style="border-left:3px solid var(--green)">
