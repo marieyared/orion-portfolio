@@ -1,21 +1,24 @@
 # Orion
 
-**A portfolio risk early-warning system.** Orion stress-tests your holdings against the
-crises that move markets and tells you, in dollars, what breaks your portfolio first — then
-narrates the biggest building risk as a weekly warning. Single static frontend; two small
-backends. (It also does live prices, look-through, and crisis simulation — but the product
-is the *warning*, not the tracker.)
+**Orion helps you understand what you own and why** — company by company, and across your
+whole portfolio. It does live prices, look-through, equity-research dossiers, and crisis
+simulation — but the point isn't the dashboard. The point is the **memory**: Orion remembers
+*why* you bought (the financial case and the psychology behind it) and tells you when reality
+stops agreeing. Single static frontend; two small backends.
+
+Understanding is the front door; equity research deepens it; risk monitoring is one module
+inside it.
 
 ## Documentation map
 
-Five markdown files, each with one job and no overlap:
-
 | Doc | What it answers | Read when |
 |-----|-----------------|-----------|
+| **`POSITIONING.md`** | *Single source of truth* — what Orion is, who it's for, what makes it unique, what it's NOT | Strategy, positioning, scope, or roadmap calls |
 | **`README.md`** (this file) | What Orion is; how to run and deploy | Setting up or shipping |
-| **`REFRAME_PLAN.md`** | *Positioning* — what Orion is and isn't (the risk reframe) | Working on copy, layout, hierarchy, prompts |
-| **`MOAT.md`** | *Differentiation* — the moat we're building toward, and its gate | Prioritising the roadmap / strategy calls |
-| **`CLAUDE.md`** | *Build rules* for AI coding agents (auto-read by Claude Code) | Any change to the code |
+| **`CLAUDE.md`** | *Build rules* for AI coding agents | Any change to the code |
+
+> Earlier strategy docs (`REFRAME_PLAN.md`, `MOAT.md`, `EQUITY_RESEARCH_PLAN.md`) are retired;
+> `POSITIONING.md` absorbs and supersedes them.
 
 ## What's in here
 

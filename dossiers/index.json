@@ -7,9 +7,63 @@
       "latestFiscalYear": 2025
     },
     {
+      "ticker": "ABBV",
+      "name": "AbbVie Inc.",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ABT",
+      "name": "ABBOTT LABORATORIES",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ACN",
+      "name": "Accenture plc",
+      "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
       "ticker": "ADBE",
       "name": "ADOBE INC.",
       "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ADI",
+      "name": "ANALOG DEVICES INC",
+      "sector": "Semiconductors & Related Devices",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ADP",
+      "name": "AUTOMATIC DATA PROCESSING INC",
+      "sector": "Services-Computer Processing & Data Preparation",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AMAT",
+      "name": "APPLIED MATERIALS INC /DE",
+      "sector": "Semiconductors & Related Devices",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AMD",
+      "name": "ADVANCED MICRO DEVICES INC",
+      "sector": "Semiconductors & Related Devices",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AME",
+      "name": "AMETEK INC/",
+      "sector": "Industrial Instruments For Measurement, Display, and Control",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AMGN",
+      "name": "AMGEN INC",
+      "sector": "Biological Products, (No Diagnostic Substances)",
       "latestFiscalYear": 2025
     },
     {
@@ -19,9 +73,237 @@
       "latestFiscalYear": 2025
     },
     {
+      "ticker": "ANET",
+      "name": "Arista Networks, Inc.",
+      "sector": "Computer Communications Equipment",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "APD",
+      "name": "Air Products & Chemicals, Inc.",
+      "sector": "Industrial Inorganic Chemicals",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AVGO",
+      "name": "Broadcom Inc.",
+      "sector": "Semiconductors & Related Devices",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "AZO",
+      "name": "AUTOZONE INC",
+      "sector": "Retail-Auto & Home Supply Stores",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "BA",
+      "name": "BOEING CO",
+      "sector": "Aircraft",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "BDX",
+      "name": "BECTON DICKINSON & CO",
+      "sector": "Surgical & Medical Instruments & Apparatus",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "BKNG",
+      "name": "Booking Holdings Inc.",
+      "sector": "Transportation Services",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "BLK",
+      "name": "BlackRock, Inc.",
+      "sector": "Security Brokers, Dealers & Flotation Companies",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "BSX",
+      "name": "BOSTON SCIENTIFIC CORP",
+      "sector": "Surgical & Medical Instruments & Apparatus",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CAT",
+      "name": "CATERPILLAR INC",
+      "sector": "Construction Machinery & Equip",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CDNS",
+      "name": "CADENCE DESIGN SYSTEMS INC",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CI",
+      "name": "Cigna Group",
+      "sector": "Hospital & Medical Service Plans",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CL",
+      "name": "COLGATE PALMOLIVE CO",
+      "sector": "Perfumes, Cosmetics & Other Toilet Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CMCSA",
+      "name": "COMCAST CORP",
+      "sector": "Cable & Other Pay Television Services",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CMG",
+      "name": "CHIPOTLE MEXICAN GRILL INC",
+      "sector": "Retail-Eating  Places",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "COP",
+      "name": "CONOCOPHILLIPS",
+      "sector": "Petroleum Refining",
+      "latestFiscalYear": 2025
+    },
+    {
       "ticker": "COST",
       "name": "COSTCO WHOLESALE CORP /NEW",
       "sector": "Retail-Variety Stores",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CRM",
+      "name": "Salesforce, Inc.",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "CSCO",
+      "name": "CISCO SYSTEMS, INC.",
+      "sector": "Computer Communications Equipment",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CSX",
+      "name": "CSX CORP",
+      "sector": "Railroads, Line-Haul Operating",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CTAS",
+      "name": "CINTAS CORP",
+      "sector": "Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "CVX",
+      "name": "CHEVRON CORP",
+      "sector": "Petroleum Refining",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "DG",
+      "name": "DOLLAR GENERAL CORP",
+      "sector": "Retail-Variety Stores",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "DHR",
+      "name": "DANAHER CORP /DE/",
+      "sector": "Industrial Instruments For Measurement, Display, and Control",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "DIS",
+      "name": "Walt Disney Co",
+      "sector": "Services-Miscellaneous Amusement & Recreation",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "DPZ",
+      "name": "DOMINOS PIZZA INC",
+      "sector": "Wholesale-Groceries & Related Products",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ECL",
+      "name": "ECOLAB INC.",
+      "sector": "Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "EFX",
+      "name": "EQUIFAX INC",
+      "sector": "Services-Consumer Credit Reporting, Collection Agencies",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ELV",
+      "name": "Elevance Health, Inc.",
+      "sector": "Hospital & Medical Service Plans",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "EMR",
+      "name": "EMERSON ELECTRIC CO",
+      "sector": "Electronic & Other Electrical Equipment (No Computer Equip)",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ETN",
+      "name": "Eaton Corp plc",
+      "sector": "Misc Industrial & Commercial Machinery & Equipment",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "FAST",
+      "name": "FASTENAL CO",
+      "sector": "Retail-Building Materials, Hardware, Garden Supply",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "FCX",
+      "name": "FREEPORT-MCMORAN INC",
+      "sector": "Metal Mining",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "FDX",
+      "name": "FEDEX CORP",
+      "sector": "Air Courier Services",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "FICO",
+      "name": "FAIR ISAAC CORP",
+      "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "FTNT",
+      "name": "Fortinet, Inc.",
+      "sector": "Computer Peripheral Equipment, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "GD",
+      "name": "GENERAL DYNAMICS CORP",
+      "sector": "Ship & Boat Building & Repairing",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "GIS",
+      "name": "GENERAL MILLS INC",
+      "sector": "Grain Mill Products",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "GOOG",
+      "name": "Alphabet Inc.",
+      "sector": "Services-Computer Programming, Data Processing, Etc.",
       "latestFiscalYear": 2025
     },
     {
@@ -37,9 +319,141 @@
       "latestFiscalYear": 2026
     },
     {
+      "ticker": "HON",
+      "name": "HONEYWELL INTERNATIONAL INC",
+      "sector": "Aircraft Engines & Engine Parts",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "HSY",
+      "name": "HERSHEY CO",
+      "sector": "Sugar & Confectionery Products",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "IBM",
+      "name": "INTERNATIONAL BUSINESS MACHINES CORP",
+      "sector": "Computer & office Equipment",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "INTU",
+      "name": "INTUIT INC.",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ISRG",
+      "name": "INTUITIVE SURGICAL INC",
+      "sector": "Orthopedic, Prosthetic & Surgical Appliances & Supplies",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ITW",
+      "name": "ILLINOIS TOOL WORKS INC",
+      "sector": "General Industrial Machinery & Equipment",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "JNJ",
+      "name": "JOHNSON & JOHNSON",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "KDP",
+      "name": "Keurig Dr Pepper Inc.",
+      "sector": "Beverages",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "KHC",
+      "name": "Kraft Heinz Co",
+      "sector": "Canned, Frozen & Preservd Fruit, Veg & Food Specialties",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "KLAC",
+      "name": "KLA CORP",
+      "sector": "Optical Instruments & Lenses",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "KMB",
+      "name": "KIMBERLY CLARK CORP",
+      "sector": "Converted Paper & Paperboard Prods (No Contaners/Boxes)",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "KO",
+      "name": "COCA COLA CO",
+      "sector": "Beverages",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "LIN",
+      "name": "LINDE PLC",
+      "sector": "Industrial Inorganic Chemicals",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "LLY",
+      "name": "ELI LILLY & Co",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "LMT",
+      "name": "LOCKHEED MARTIN CORP",
+      "sector": "Guided Missiles & Space Vehicles & Parts",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "LOW",
+      "name": "LOWES COMPANIES INC",
+      "sector": "Retail-Lumber & Other Building Materials Dealers",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "LRCX",
+      "name": "LAM RESEARCH CORP",
+      "sector": "Special Industry Machinery, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "LULU",
+      "name": "lululemon athletica inc.",
+      "sector": "Apparel & Other Finishd Prods of  Fabrics & Similar Matl",
+      "latestFiscalYear": 2026
+    },
+    {
       "ticker": "MA",
       "name": "Mastercard Inc",
       "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MCD",
+      "name": "MCDONALDS CORP",
+      "sector": "Retail-Eating  Places",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MCO",
+      "name": "MOODYS CORP /DE/",
+      "sector": "Services-Consumer Credit Reporting, Collection Agencies",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MDLZ",
+      "name": "Mondelez International, Inc.",
+      "sector": "Food and Kindred Products",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MDT",
+      "name": "Medtronic plc",
+      "sector": "Electromedical & Electrotherapeutic Apparatus",
       "latestFiscalYear": 2025
     },
     {
@@ -49,9 +463,51 @@
       "latestFiscalYear": 2025
     },
     {
+      "ticker": "MMM",
+      "name": "3M CO",
+      "sector": "Surgical & Medical Instruments & Apparatus",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MNST",
+      "name": "Monster Beverage Corp",
+      "sector": "Bottled & Canned Soft Drinks & Carbonated Waters",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MO",
+      "name": "ALTRIA GROUP, INC.",
+      "sector": "Cigarettes",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MRK",
+      "name": "Merck & Co., Inc.",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MSCI",
+      "name": "MSCI Inc.",
+      "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
       "ticker": "MSFT",
       "name": "MICROSOFT CORP",
       "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "MU",
+      "name": "MICRON TECHNOLOGY INC",
+      "sector": "Semiconductors & Related Devices",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "NFLX",
+      "name": "NETFLIX INC",
+      "sector": "Services-Video Tape Rental",
       "latestFiscalYear": 2025
     },
     {
@@ -61,15 +517,207 @@
       "latestFiscalYear": 2025
     },
     {
+      "ticker": "NOC",
+      "name": "NORTHROP GRUMMAN CORP /DE/",
+      "sector": "Search, Detection, Navigation, Guidance, Aeronautical Sys",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "NOW",
+      "name": "ServiceNow, Inc.",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "NSC",
+      "name": "NORFOLK SOUTHERN CORP",
+      "sector": "Railroads, Line-Haul Operating",
+      "latestFiscalYear": 2025
+    },
+    {
       "ticker": "NVDA",
       "name": "NVIDIA CORP",
       "sector": "Semiconductors & Related Devices",
       "latestFiscalYear": 2026
     },
     {
+      "ticker": "ODFL",
+      "name": "OLD DOMINION FREIGHT LINE, INC.",
+      "sector": "Trucking (No Local)",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ORCL",
+      "name": "ORACLE CORP",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ORLY",
+      "name": "O REILLY AUTOMOTIVE INC",
+      "sector": "Retail-Auto & Home Supply Stores",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PANW",
+      "name": "Palo Alto Networks Inc",
+      "sector": "Computer Peripheral Equipment, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PAYX",
+      "name": "PAYCHEX INC",
+      "sector": "Services-Engineering, Accounting, Research, Management",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PEP",
+      "name": "PEPSICO INC",
+      "sector": "Beverages",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PFE",
+      "name": "PFIZER INC",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PG",
+      "name": "PROCTER & GAMBLE Co",
+      "sector": "Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PH",
+      "name": "Parker-Hannifin Corp",
+      "sector": "Miscellaneous Fabricated Metal Products",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "PM",
+      "name": "Philip Morris International Inc.",
+      "sector": "Cigarettes",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "QCOM",
+      "name": "QUALCOMM INC/DE",
+      "sector": "Radio & Tv Broadcasting & Communications Equipment",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "REGN",
+      "name": "REGENERON PHARMACEUTICALS, INC.",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ROP",
+      "name": "ROPER TECHNOLOGIES INC",
+      "sector": "Industrial Instruments For Measurement, Display, and Control",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ROST",
+      "name": "ROSS STORES, INC.",
+      "sector": "Retail-Family Clothing Stores",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "RSG",
+      "name": "REPUBLIC SERVICES, INC.",
+      "sector": "Refuse Systems",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "RTX",
+      "name": "RTX Corp",
+      "sector": "Aircraft Engines & Engine Parts",
+      "latestFiscalYear": 2025
+    },
+    {
       "ticker": "SBUX",
       "name": "STARBUCKS CORP",
       "sector": "Retail-Eating & Drinking Places",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "SHW",
+      "name": "SHERWIN WILLIAMS CO",
+      "sector": "Retail-Building Materials, Hardware, Garden Supply",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "SNPS",
+      "name": "SYNOPSYS INC",
+      "sector": "Services-Prepackaged Software",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "SPGI",
+      "name": "S&P Global Inc.",
+      "sector": "Services-Consumer Credit Reporting, Collection Agencies",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "STZ",
+      "name": "CONSTELLATION BRANDS, INC.",
+      "sector": "Beverages",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "SYK",
+      "name": "STRYKER CORP",
+      "sector": "Surgical & Medical Instruments & Apparatus",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "T",
+      "name": "AT&T INC.",
+      "sector": "Telephone Communications (No Radiotelephone)",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "TDG",
+      "name": "TransDigm Group INC",
+      "sector": "Aircraft Parts & Auxiliary Equipment, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "TGT",
+      "name": "TARGET CORP",
+      "sector": "Retail-Variety Stores",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "TJX",
+      "name": "TJX COMPANIES INC /DE/",
+      "sector": "Retail-Family Clothing Stores",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "TMO",
+      "name": "THERMO FISHER SCIENTIFIC INC.",
+      "sector": "Measuring & Controlling Devices, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "TMUS",
+      "name": "T-Mobile US, Inc.",
+      "sector": "Radiotelephone Communications",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "TT",
+      "name": "Trane Technologies plc",
+      "sector": "Auto Controls For Regulating Residential & Comml Environments",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "TXN",
+      "name": "TEXAS INSTRUMENTS INC",
+      "sector": "Semiconductors & Related Devices",
       "latestFiscalYear": 2025
     },
     {
@@ -79,9 +727,69 @@
       "latestFiscalYear": 2025
     },
     {
+      "ticker": "UNP",
+      "name": "UNION PACIFIC CORP",
+      "sector": "Railroads, Line-Haul Operating",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "UPS",
+      "name": "UNITED PARCEL SERVICE INC",
+      "sector": "Trucking & Courier Services (No Air)",
+      "latestFiscalYear": 2025
+    },
+    {
       "ticker": "V",
       "name": "VISA INC.",
       "sector": "Services-Business Services, NEC",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "VRSK",
+      "name": "Verisk Analytics, Inc.",
+      "sector": "Services-Computer Processing & Data Preparation",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "VRTX",
+      "name": "VERTEX PHARMACEUTICALS INC / MA",
+      "sector": "Pharmaceutical Preparations",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "VZ",
+      "name": "VERIZON COMMUNICATIONS INC",
+      "sector": "Telephone Communications (No Radiotelephone)",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "WDAY",
+      "name": "Workday, Inc.",
+      "sector": "Services-Computer Processing & Data Preparation",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "WM",
+      "name": "WASTE MANAGEMENT INC",
+      "sector": "Refuse Systems",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "WMT",
+      "name": "Walmart Inc.",
+      "sector": "Retail-Variety Stores",
+      "latestFiscalYear": 2026
+    },
+    {
+      "ticker": "YUM",
+      "name": "YUM BRANDS INC",
+      "sector": "Retail-Eating  Places",
+      "latestFiscalYear": 2025
+    },
+    {
+      "ticker": "ZTS",
+      "name": "Zoetis Inc.",
+      "sector": "Pharmaceutical Preparations",
       "latestFiscalYear": 2025
     }
   ],

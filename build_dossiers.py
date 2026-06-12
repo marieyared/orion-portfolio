@@ -26,11 +26,37 @@ UA = "Orion Research (orion-dossier-builder; contact: marieyared10@gmail.com)"
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dossiers")
 YEARS = 6  # how many recent fiscal years to keep
 
-# Pre-cover a small, on-tribe set: durable compounders + the mega-caps users
-# will type first. Cost scales with companies covered, not users (§7).
+# Pre-cover an on-tribe universe: durable quality compounders + large caps a
+# fundamentals investor actually researches (US-first, plain-letter tickers so
+# they match the app's input). Cost scales with companies covered, not users (§7).
+# Failures (too few periods / not US-listed) are skipped automatically.
 DEFAULT_UNIVERSE = [
-    "AAPL", "MSFT", "GOOGL", "NVDA", "META", "V", "MA", "COST",
-    "UNH", "HD", "ADBE", "NKE", "SBUX", "AMZN",
+    # Tech & software
+    "AAPL", "MSFT", "GOOGL", "GOOG", "META", "NVDA", "AVGO", "ORCL", "ADBE",
+    "CRM", "NOW", "INTU", "AMD", "CSCO", "ACN", "TXN", "QCOM", "AMAT", "LRCX",
+    "KLAC", "SNPS", "CDNS", "ANET", "PANW", "FTNT", "ADI", "MU", "IBM",
+    # Consumer discretionary & retail
+    "AMZN", "COST", "WMT", "HD", "LOW", "NKE", "SBUX", "MCD", "TJX", "BKNG",
+    "CMG", "LULU", "ROST", "YUM", "DPZ", "ORLY", "AZO", "DG", "TGT",
+    # Consumer staples
+    "PG", "KO", "PEP", "PM", "MO", "MDLZ", "CL", "KMB", "GIS", "HSY", "STZ",
+    "KDP", "MNST", "KHC",
+    # Health care
+    "UNH", "JNJ", "LLY", "ABBV", "MRK", "PFE", "TMO", "ABT", "DHR", "ISRG",
+    "ELV", "AMGN", "MDT", "SYK", "BSX", "REGN", "VRTX", "ZTS", "CI", "BDX",
+    # Financials & payments (networks/ratings/asset mgrs — deposit banks excluded:
+    # the gross-margin / ROIC lens doesn't fit a balance-sheet-driven bank).
+    "V", "MA", "SPGI", "MCO", "BLK",
+    # Industrials
+    "HON", "UNP", "CAT", "LMT", "RTX", "BA", "MMM", "EMR", "ITW",
+    "ETN", "PH", "GD", "NOC", "CSX", "NSC", "WM", "RSG", "FDX", "UPS",
+    # Energy & materials
+    "CVX", "COP", "LIN", "SHW", "APD", "ECL", "FCX",
+    # Communications & media
+    "DIS", "NFLX", "CMCSA", "TMUS", "VZ", "T",
+    # Other quality compounders
+    "ADP", "PAYX", "FAST", "ODFL", "CTAS", "ROP", "TDG", "TT", "AME", "FICO",
+    "MSCI", "VRSK", "EFX", "WDAY",
 ]
 
 # ── EDGAR concept preferences (first present tag wins) ──────────────────────
@@ -40,6 +66,9 @@ FLOW = {
                          "Revenues", "RevenueFromContractWithCustomerIncludingAssessedTax",
                          "SalesRevenueNet"],
     "grossProfit":      ["GrossProfit"],
+    # Cost of sales — lets us derive gross profit when GrossProfit isn't tagged
+    # (common for pharma/industrials that report cost of revenue instead).
+    "cogs":             ["CostOfGoodsAndServicesSold", "CostOfRevenue", "CostOfGoodsSold"],
     "operatingIncome":  ["OperatingIncomeLoss"],
     "pretaxIncome":     ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
                          "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"],
@@ -168,6 +197,13 @@ def build(ticker):
     # FCF = CFO − capex, per year present in both.
     fin["fcf"] = {y: fin["cfo"][y] - fin["capex"].get(y, 0)
                   for y in fin["cfo"] if y in fin["cfo"]}
+
+    # Derive gross profit where it isn't tagged: revenue − cost of sales. Lets
+    # the moat (gross-margin) lens compute for the many quality names that report
+    # cost of revenue but no GrossProfit line.
+    for y, rev in fin["revenue"].items():
+        if y not in fin["grossProfit"] and y in fin.get("cogs", {}):
+            fin["grossProfit"][y] = rev - fin["cogs"][y]
 
     # Universe of fiscal years we actually have revenue + net income for.
     years = sorted(set(fin["revenue"]) & set(fin["netIncome"]))[-YEARS:]
