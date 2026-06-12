@@ -5146,9 +5146,12 @@ function renderCoverageHint() {
   const el = document.getElementById("research-coverage");
   if (!el || !state.dossierIndex) return;
   const list = (state.dossierIndex.covered || []).map(c => c.ticker);
-  el.innerHTML = list.length
-    ? `Covered now: ${list.map(t => `<span class="briefing-tag" style="cursor:pointer" onclick="quickResearch('${t}')">${t}</span>`).join(" ")}`
-    : "";
+  // Coverage is broad now — show a sample of chips, not all ~130, so the hint
+  // stays a hint. The count is the reassuring signal.
+  const SHOWN = 14;
+  const chips = list.slice(0, SHOWN).map(t => `<span class="briefing-tag" style="cursor:pointer" onclick="quickResearch('${t}')">${t}</span>`).join(" ");
+  const more = list.length > SHOWN ? ` <span style="color:var(--hint)">+${list.length - SHOWN} more</span>` : "";
+  el.innerHTML = list.length ? `${list.length} companies covered — try ${chips}${more}` : "";
 }
 
 function quickResearch(t) {
@@ -5217,7 +5220,7 @@ function dossierCard(ticker) {
   }
   if (d === false) {
     return `<div class="card" style="margin-bottom:12px">${head}
-      <div style="font-size:12px;color:var(--muted);margin-top:.4rem">Not covered yet. Orion pre-builds dossiers for a focused set of quality compounders (U.S.-first, §8). ${(state.dossierIndex?.covered||[]).length ? "Covered now: " + state.dossierIndex.covered.map(c=>c.ticker).join(", ") + "." : ""}</div></div>`;
+      <div style="font-size:12px;color:var(--muted);margin-top:.4rem">Not covered yet. Orion pre-builds dossiers for a focused set of quality compounders (U.S.-first, §8).${(state.dossierIndex?.covered||[]).length ? ` ${state.dossierIndex.covered.length} companies are covered so far.` : ""}</div></div>`;
   }
   return `<div class="card" style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:.5rem">
