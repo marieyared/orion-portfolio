@@ -317,7 +317,7 @@ def build_scorecard(m, fin, years):
          "weak" if gm_avg is not None else "na")
     rows.append({
         "key": "moat", "label": "Moat", "rating": r,
-        "headline": f"Gross margin {_pct(gm_avg)} avg, {'rising/stable' if gm_tr>=0 else 'eroding'}" if gm_avg is not None else "Gross margin unavailable",
+        "headline": f"Gross margin {_pct(gm_avg)} avg · trend {'stable or rising' if gm_tr>=0 else 'eroding'}" if gm_avg is not None else "Gross margin unavailable",
         "detail": "Sustained high gross margin is circumstantial evidence of pricing power. Not a substitute for judging the source of the moat.",
     })
 
@@ -341,8 +341,15 @@ def build_scorecard(m, fin, years):
          "weak" if roic_avg is not None else "na")
     rows.append({
         "key": "management", "label": "Management & capital allocation", "rating": r,
-        "headline": ("Reinvests at high ROIC; share count " +
-                     ("shrinking" if shrinking else "rising" if sh_tr > 0 else "flat")) if roic_avg is not None else "Insufficient data",
+        # The headline must DESCRIBE the rating, never contradict it. Before this
+        # fix it opened "Reinvests at high ROIC" for every company that had any
+        # ROIC at all — including Boeing at −12% six-year average.
+        "headline": ((("Reinvests at high ROIC" if (roic_avg or 0) >= 0.15 else
+                       "Moderate returns on reinvested capital" if (roic_avg or 0) >= 0.10 else
+                       f"Low returns on reinvested capital ({_pct(roic_avg)} {len(years)}y avg)") +
+                      "; share count " +
+                      ("shrinking" if shrinking else "rising" if sh_tr > 0 else "flat"))
+                     if roic_avg is not None else "Insufficient data"),
         "detail": "Proxy: returns on reinvested capital plus diluted-share-count trend. Real capital-allocation judgement still needs the proxy statement.",
     })
 

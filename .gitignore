@@ -6,3 +6,10 @@ __pycache__/
 .dev.vars
 node_modules/
 .wrangler/
+
+# Payment probe secrets — real Stripe link + unlock code (template: orion.payment.example.js)
+orion.payment.js
+
+# Local safety copies taken before large edits — not part of the app
+orion.backup-*.html
+orion.pre-truth-cut-*.html
