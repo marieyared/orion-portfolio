@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orion · Know what breaks your portfolio</title>
-<meta name="description" content="Orion is a portfolio risk early-warning system. It stress-tests your holdings against every crisis that matters and tells you, in dollars, what to fix first.">
+<meta name="description" content="Orion looks through every fund you own to your true single-name exposure, and shows you where your portfolio is actually concentrated.">
 <meta property="og:title" content="Orion · Know what breaks your portfolio">
-<meta property="og:description" content="Add your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.">
+<meta property="og:description" content="Add your holdings. Orion looks through every fund to your true single-name exposure and shows you where the book is actually concentrated.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Orion · Know what breaks your portfolio">
@@ -100,7 +100,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .card-sm{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 
 /* ── KPI CARDS ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:1.25rem}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .kpi-label{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600}
 .kpi-value{font-family:'DM Mono',monospace;font-size:21px;font-weight:500;color:var(--text);line-height:1.2;letter-spacing:-.02em}
@@ -110,22 +110,26 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .kpi-accent{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:14px 0 0 14px;background:var(--blue)}
 @media(max-width:640px){.kpi-grid{grid-template-columns:1fr 1fr}}
 
-/* ── SCORE CARD ── */
-.score-ring{position:relative;width:90px;height:90px;flex-shrink:0}
-.score-ring canvas{position:absolute;top:0;left:0}
-.score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.score-num .n{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;line-height:1}
-.score-num .l{font-size:10px;color:var(--muted);margin-top:2px}
-
-/* ── HEALTH SCORE BAR ── */
-.hsub-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
-.hsub-name{font-size:12px;color:var(--muted);width:110px;flex-shrink:0}
-.hsub-bar-bg{flex:1;background:var(--border);border-radius:4px;height:6px;overflow:hidden}
-.hsub-bar-fill{height:100%;border-radius:4px;transition:width .5s}
-.hsub-val{width:36px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+/* ── CONCENTRATION ── */
+.conc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.4rem}
+.conc-stat{background:var(--surface);padding:.85rem 1rem;min-width:0}
+.conc-stat-label{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px}
+.conc-stat-value{font-family:'DM Sans',sans-serif;font-size:25px;font-weight:600;letter-spacing:-.025em;color:var(--text);line-height:1.05}
+.conc-stat-sub{font-size:11px;color:var(--muted);margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conc-band{display:flex;gap:2px;height:36px;margin-bottom:.6rem}
+.conc-seg{border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden;min-width:3px}
+.conc-seg-l{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;white-space:nowrap;padding:0 6px}
+@media(max-width:620px){.conc-seg-l{display:none}}
+.conc-cap{font-size:11px;color:var(--hint);margin-bottom:1.4rem;line-height:1.5}
+.conc-table{width:100%;border-collapse:collapse;font-size:13px}
+.conc-table th{text-align:left;font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;font-weight:400;padding:0 0 9px}
+.conc-table th.r,.conc-table td.r{text-align:right}
+.conc-table td{padding:10px 0;border-top:1px solid var(--border);vertical-align:middle}
+.conc-sw{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:10px;vertical-align:middle;flex:none}
+.conc-num{font-family:'DM Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* ── BREAKS CARD ── */
-.breaks-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.breaks-row{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
 .breaks-row:last-child{border-bottom:none}
 .breaks-rank{font-family:'DM Mono',monospace;font-size:11px;color:var(--hint);width:18px;flex-shrink:0}
 .breaks-name{font-size:13px;flex:1;margin:0 10px}
@@ -140,13 +144,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .briefing-loading{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-
-/* ── FACTOR BARS ── */
-.factor-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.factor-name{font-size:12px;color:var(--muted);width:120px;flex-shrink:0}
-.factor-bar-bg{flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden}
-.factor-bar-fill{height:100%;border-radius:4px;transition:width .6s}
-.factor-val{width:40px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
 
 /* ── SHOCK BUILDER ── */
 .shock-slider-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
@@ -242,20 +239,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .copilot-resp{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-top:.75rem;font-size:13px;line-height:1.75;color:var(--text);display:none}
 .copilot-resp.visible{display:block}
 
-/* ── SIMULATOR ── */
-.sim-scenario-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.25rem;cursor:pointer;transition:border .15s}
-.sim-scenario-card:hover,.sim-scenario-card.selected{border-color:var(--blue);background:var(--blue-light)}
-.sim-metric{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
-.sim-metric-label{font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-.sim-metric-value{font-family:'DM Mono',monospace;font-size:20px;font-weight:500}
-.sim-decision-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:.6rem;cursor:pointer;transition:border .15s,background .15s}
-.sim-decision-card:hover{border-color:var(--blue)}
-.sim-decision-card.selected{border-color:var(--blue);background:var(--blue-light)}
-.alloc-slider-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.alloc-slider-row label{width:110px;font-size:13px;color:var(--muted);flex-shrink:0}
-.alloc-slider-row input[type=range]{flex:1}
-.alloc-slider-row .val{width:50px;text-align:right;font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
-
 /* ── LOADING ── */
 .loading-spinner{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:1rem 0}
 .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
@@ -270,14 +253,6 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 .rq-option{padding:.85rem 1rem;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--text);background:#fff;text-align:left;transition:border-color .15s,background .15s;font-family:'DM Sans',sans-serif;width:100%}
 .rq-option:hover{border-color:var(--blue-mid);background:var(--blue-light)}
 .rq-option.selected{border-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:500}
-
-/* ── INCOME CALENDAR ── */
-.cal-month{margin-bottom:1rem}
-.cal-month-label{font-size:11px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
-.cal-event{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;font-size:13px}
-.cal-event-name{flex:1}
-.cal-event-date{color:var(--muted);font-size:12px;margin:0 12px}
-.cal-event-amt{font-family:'DM Mono',monospace;font-weight:500;color:#15803d}
 
 /* ── ENTRY FEATURE CARDS ── */
 .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:border-color .15s,box-shadow .15s}
@@ -460,10 +435,10 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <span>Risk early-warning system</span>
     </div>
     <div class="entry-headline">Know what <em>breaks</em> your portfolio<br>— before it breaks it.</div>
-    <div class="entry-subline">Add your holdings. Orion stress-tests them against every crisis that matters and tells you, in dollars, what to fix first.</div>
+    <div class="entry-subline">Add your holdings. Orion looks through every fund to your true single-name exposure and shows you where the book is actually concentrated.</div>
   </div>
 
-  <div class="grid-3" style="margin-bottom:1.75rem">
+  <div class="grid-2" style="margin-bottom:1.75rem">
     <div class="feature-card">
       <div class="feature-kicker">AI Intelligence</div>
       <div class="feature-title">Weekly risk warning</div>
@@ -567,7 +542,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <hr class="divider">
 
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <button class="btn btn-dark" style="min-width:260px" onclick="buildPortfolio()">◎ Stress-test my portfolio →</button>
+    <button class="btn btn-dark" style="min-width:260px" onclick="buildPortfolio()">◎ Look through my portfolio →</button>
     <label class="btn btn-outline" style="cursor:pointer">
       ↑ Import JSON
       <input type="file" accept=".json" style="display:none" onchange="importPortfolio(event)">
@@ -613,16 +588,17 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
   <!-- One-line data-confidence summary: "9 of 12 positions live · 2 fallback · 1 manual" -->
   <div id="kpi-confidence" style="font-size:11px;color:var(--muted);margin:-4px 0 12px 4px;font-family:'DM Mono',monospace"></div>
 
-  <div class="grid-3" style="margin-bottom:1.25rem">
-    <!-- Asset mix -->
-    <div class="card">
-      <div style="font-size:13px;font-weight:500;margin-bottom:.75rem">Asset mix</div>
-      <div style="position:relative;height:180px">
+  <!-- Asset mix — owns the full row now that income and the stress teaser are
+       gone. Donut left, the legend promoted to a real column with weights and
+       values instead of chips crammed under the chart. -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div style="font-size:13px;font-weight:500;margin-bottom:.9rem">Asset mix</div>
+    <div style="display:flex;gap:1.75rem;align-items:center;flex-wrap:wrap">
+      <div style="position:relative;height:190px;width:190px;flex:0 0 auto">
         <canvas id="cmd-alloc-chart"></canvas>
       </div>
-      <div id="cmd-alloc-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11px;color:var(--muted)"></div>
+      <div id="cmd-alloc-legend" style="flex:1 1 260px;min-width:0"></div>
     </div>
-
   </div>
 
   <!-- ── THE X-RAY ───────────────────────────────────────────────────────
@@ -644,7 +620,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
       <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:.35rem">See what you really own</div>
       <div style="font-size:12.5px;color:var(--muted);line-height:1.65;max-width:62ch;margin-bottom:1rem">
         Your funds hold the same companies your stocks do. The X-ray looks through every ETF to
-        your true single-name exposure, ranks what breaks the book first, scores the quality of
+        your true single-name exposure, ranks where the book is most exposed, scores the quality of
         what you hold, and reads it back to you in plain words.
       </div>
       <div id="xray-teaser" style="margin-bottom:1rem"></div>
@@ -690,17 +666,15 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     </div>
 
     <!-- 3. The plain-language read -->
-    <div style="margin-bottom:12px">
-      <div class="briefing-card">
-        <div class="briefing-header">
-          <div style="font-size:13px;font-weight:500">Read it back to me</div>
-          <div class="briefing-tag">Orion AI</div>
-        </div>
-        <div id="briefing-content" class="briefing-text" style="color:var(--muted);font-style:italic">
-          No read yet. Click below to generate one — each click sends one AI request.
-        </div>
-        <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">✨ Generate the read</button>
+    <div class="briefing-card" style="margin-bottom:12px">
+      <div class="briefing-header">
+        <div style="font-size:13px;font-weight:500">Read it back to me</div>
+        <div class="briefing-tag">Orion AI</div>
       </div>
+      <div id="briefing-content" class="briefing-text" style="color:var(--muted);font-style:italic">
+        No read yet. Click below to generate one — each click sends one AI request.
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:.75rem" onclick="generateBriefing()">✨ Generate the read</button>
     </div>
   </div>
 </div>
@@ -739,7 +713,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <div id="screen-risk" class="screen">
 <div class="wrap">
   <div class="page-title">Risk Analytics</div>
-  <div class="page-sub">Quantitative diagnostics: factor exposure, rate sensitivity, shock impact, and concentration.</div>
+  <div class="page-sub">Where the book is exposed, how the bond sleeve responds to rates, and which positions carry the most weight.</div>
 
   <!-- Hidden overlap now leads the X-ray report on the main screen; this card
        links there rather than rendering a second copy of the same lens. -->
@@ -748,7 +722,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <div style="font-size:12px;color:var(--hint)">Your true single-name exposure once you look through the funds. Now the lead finding of your X-ray.</div>
   </div>
 
-  <div class="grid-2" style="margin-bottom:12px">
+  <div class="grid-2" style="margin-bottom:12px;align-items:start">
     <!-- Expanded breaks card -->
     <div class="card">
       <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Shock sensitivity</div>
@@ -795,8 +769,8 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 
   <!-- Concentration analysis -->
   <div class="card">
-    <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Concentration analysis</div>
-    <div style="font-size:12px;color:var(--hint);margin-bottom:1rem">Holdings ranked by portfolio weight. The more concentrated, the more exposed.</div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:.2rem">Position concentration</div>
+    <div style="font-size:12px;color:var(--hint);margin-bottom:1.25rem">How top-heavy the book is, by market value. This is before fund look-through — the X-ray shows what you really own once the funds are opened up.</div>
     <div id="concentration-list"></div>
   </div>
 </div>
@@ -896,7 +870,7 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
 <div id="screen-holdings" class="screen">
 <div class="wrap">
   <div class="page-title">Holdings</div>
-  <div class="page-sub">All positions, performance, and income schedule.</div>
+  <div class="page-sub">Every position, what you paid, and what it is worth now.</div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchHTab(0)">Positions</div>
@@ -1111,12 +1085,12 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     </div>
     <div id="pro-modal-status"></div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1rem">
-      One report on the portfolio you already hold: <b style="color:var(--text)">your true single-name exposure</b> once every fund is looked through, what breaks the book first, the quality score of what you own, and the whole thing read back to you in plain words.
+      One report on the portfolio you already hold: <b style="color:var(--text)">your true single-name exposure</b> once every fund is looked through, where the book is most exposed, the quality of what you own read off the filings, and the whole thing explained back to you in plain words.
     </div>
     <ul style="font-size:12.5px;color:var(--muted);line-height:1.8;margin:0 0 1.25rem;padding-left:1.1rem">
       <li>Look-through concentration across all your funds</li>
-      <li>Top factor shocks ranked by what they cost you</li>
-      <li>Portfolio health score with its sub-scores</li>
+      <li>Where the book is most exposed, ranked by weight</li>
+      <li>Quality scorecards for your holdings, from SEC filings</li>
       <li>Plain-language read of the whole book</li>
     </ul>
     <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:.35rem">
@@ -3825,11 +3799,6 @@ async function applyMacroTilts() {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   PORTFOLIO HEALTH SCORE
-════════════════════════════════════════════════════════════════════ */
-
-
-/* ════════════════════════════════════════════════════════════════════
    BOND DURATION
    Real modified duration for direct bonds (annual coupons, YTM via
    bisection); table lookup for common bond ETFs. Funds we don't
@@ -3979,9 +3948,8 @@ function renderBreaksCard(elId, maxItems=4) {
   el.innerHTML = items.map((b,i)=>`
     <div class="breaks-row">
       <div class="breaks-rank">${i+1}</div>
-      <div class="breaks-name">${escapeHtml(b.name)}</div>
-      <div class="breaks-impact" style="color:var(--hint);font-size:11px;font-weight:400">${escapeHtml(b.note)}</div>
-      <div class="breaks-pct" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text)">${(b.exposedPct*100).toFixed(1)}%</div>
+      <div class="breaks-name">${escapeHtml(b.name)}<div style="font-size:11px;color:var(--hint);margin-top:2px;line-height:1.4">${escapeHtml(b.note)}</div></div>
+      <div class="breaks-pct" style="font-family:'DM Mono',monospace;font-size:14px;color:var(--text);margin-left:12px;flex:none">${(b.exposedPct*100).toFixed(1)}%</div>
     </div>`).join("");
 }
 
@@ -4118,10 +4086,8 @@ function renderCommandScreen() {
   // Data-confidence summary: "9 of 12 positions live · 2 fallback · 1 manual"
   renderDataConfidence();
 
-
   // Exposure ranking
   renderBreaksCard("breaks-list", 4);
-
 
   // Asset allocation donut
   if (cmdAllocChart) { cmdAllocChart.destroy(); cmdAllocChart=null; }
@@ -4137,10 +4103,14 @@ function renderCommandScreen() {
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(1)}%`}}},cutout:"60%"}
     });
     const legendEl = document.getElementById("cmd-alloc-legend");
-    if (legendEl) legendEl.innerHTML = labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:${colors2[i]}"></span>${l} ${values[i]}%</span>`).join("");
+    if (legendEl) legendEl.innerHTML = labels.map((l,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12.5px${i<labels.length-1?';border-bottom:1px solid var(--border)':''}">
+        <span style="width:9px;height:9px;border-radius:2px;background:${colors2[i]};flex:none"></span>
+        <span style="flex:1;min-width:0;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(l)}</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--muted);width:50px;text-align:right;flex:none">${values[i]}%</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--text);width:92px;text-align:right;flex:none">$${fmt(classes[l]||0)}</span>
+      </div>`).join("");
   }
-
-
 
   // Warnings
   const warnEl = document.getElementById("warnings-area");
@@ -4162,8 +4132,6 @@ function renderCommandScreen() {
   try { renderHiddenOverlap(); } catch (e) { console.warn("overlap lens:", e); }
   try { renderXrayReport(); } catch (e) { console.warn("xray report:", e); }
 }
-
-
 
 /* ════════════════════════════════════════════════════════════════════
    RISK SCREEN
@@ -4265,24 +4233,84 @@ function updateShock() {
   }
 }
 
+// Ordinal ramp: one hue, monotone lightness, validated against a white surface
+// (adjacent ΔL ≥ .06, light end ≥ 2:1). Rank is an ORDERED scale, so a ramp is
+// the honest encoding here — unlike the old version, which coloured each bar
+// red/amber/blue by its own size and so painted magnitude twice.
+const CONC_RAMP = ["#312E81","#3F37A8","#4F46E5","#6E66E9","#8C86EE","#ABA6F3"];
+
 function renderConcentration() {
   const el = document.getElementById("concentration-list");
   if (!el) return;
-  const assets = state.holdings.filter(h=>h.type!=="debt");
-  const total = assets.reduce((s,h)=>s+(h.current||0),0);
-  const sorted = [...assets].sort((a,b)=>(b.current||0)-(a.current||0));
-  el.innerHTML = sorted.map(h=>{
-    const info = h.isin?(state.infoMap[h.isin.toUpperCase()]||{}):{};
-    const name = info.name||h.isin||h.address||h.crypto_type||h.commodity_type||"Unknown";
-    const pct = total>0?(h.current||0)/total*100:0;
-    const barColor = pct>20?"#dc2626":pct>10?"#EF9F27":"#378ADD";
-    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px">
-      <div style="width:160px;white-space:normal;overflow-wrap:break-word;word-break:break-word;color:var(--text);line-height:1.3">${escapeHtml(name)}</div>
-      <div style="flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px"></div></div>
-      <div style="width:48px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:${barColor}">${pct.toFixed(1)}%</div>
-      <div style="width:80px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">$${fmt(h.current||0)}</div>
-    </div>`;
+  const assets = state.holdings.filter(h => h.type !== "debt");
+  const total = assets.reduce((s,h) => s + (h.current||0), 0);
+  if (!total) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">Add holdings to see how concentrated the book is.</div>';
+    return;
+  }
+
+  const rows = assets.map(h => {
+    const info = h.isin ? (state.infoMap[h.isin.toUpperCase()]||{}) : {};
+    const name = info.name || h.isin || h.address || h.crypto_type || h.commodity_type
+              || (h.asset_type === "cash" ? "Cash" : null) || holdingClass(h);
+    return { name, value: h.current||0, w: (h.current||0)/total };
+  }).filter(r => r.value > 0).sort((a,b) => b.value - a.value);
+  if (!rows.length) { el.innerHTML = ''; return; }
+
+  const pct  = x => (x*100).toFixed(1) + "%";
+  const cum  = n => rows.slice(0,n).reduce((s,r) => s + r.w, 0);
+  // Effective holdings = 1/HHI: how many equally-weighted positions this book
+  // behaves like. Standard, computed, and the honest answer to "am I as
+  // diversified as the position count suggests?"
+  const hhi  = rows.reduce((s,r) => s + r.w*r.w, 0);
+  const effN = hhi > 0 ? 1/hhi : 0;
+
+  const stats = [{ label:"Largest position", value:pct(rows[0].w), sub:rows[0].name }];
+  if (rows.length > 3) stats.push({ label:"Top 3", value:pct(cum(3)), sub:`of ${rows.length} positions` });
+  if (rows.length > 5) stats.push({ label:"Top 5", value:pct(cum(5)), sub:`of ${rows.length} positions` });
+  stats.push({ label:"Effective holdings", value:effN.toFixed(1), sub:`of ${rows.length} actual positions` });
+
+  // Band: top 5 named, tail folded into "Other" — never more segments than the
+  // ramp has steps.
+  const named = Math.min(5, rows.length);
+  const segs  = rows.slice(0, named).map((r,i) => ({ ...r, color: CONC_RAMP[i], idx: i }));
+  const restN = rows.length - named;
+  const restW = Math.max(0, 1 - segs.reduce((s,r) => s + r.w, 0));
+  if (restN > 0 && restW > 0.0005) {
+    segs.push({ name:`Other (${restN})`, w:restW, value: total*restW, color: CONC_RAMP[5], idx: 5 });
+  }
+
+  const statsHTML = stats.map(st => `
+    <div class="conc-stat">
+      <div class="conc-stat-label">${escapeHtml(st.label)}</div>
+      <div class="conc-stat-value">${escapeHtml(st.value)}</div>
+      <div class="conc-stat-sub" title="${escapeHtml(st.sub)}">${escapeHtml(st.sub)}</div>
+    </div>`).join("");
+
+  // Label only where it fits — a clipped number is worse than none.
+  const bandHTML = segs.map(sg => `
+    <div class="conc-seg" style="flex:${(sg.w*1000).toFixed(2)} 0 0;background:${sg.color}"
+         title="${escapeHtml(sg.name)} — ${pct(sg.w)} · $${fmt(sg.value)}">
+      ${sg.w >= 0.065 ? `<span class="conc-seg-l" style="color:${sg.idx >= 4 ? "var(--text)" : "#fff"}">${pct(sg.w)}</span>` : ""}
+    </div>`).join("");
+
+  const tableHTML = rows.map((r,i) => {
+    const c = i < named ? CONC_RAMP[i] : CONC_RAMP[5];
+    return `<tr title="${escapeHtml(r.name)}">
+      <td><span class="conc-sw" style="background:${c}"></span>${escapeHtml(r.name)}</td>
+      <td class="r conc-num">${pct(r.w)}</td>
+      <td class="r conc-num" style="color:var(--muted)">$${fmt(r.value)}</td>
+    </tr>`;
   }).join("");
+
+  el.innerHTML = `
+    <div class="conc-stats">${statsHTML}</div>
+    <div class="conc-band">${bandHTML}</div>
+    <div class="conc-cap">Each block is one position, largest first${restN > 0 ? `; the last block groups the remaining ${restN}` : ""}. Hover any block or row for its value.</div>
+    <table class="conc-table">
+      <thead><tr><th>Position</th><th class="r">Weight</th><th class="r">Value</th></tr></thead>
+      <tbody>${tableHTML}</tbody>
+    </table>`;
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -4394,7 +4422,6 @@ function renderPerformance() {
     </div>`;
   }).join("");
 }
-
 
 /* ════════════════════════════════════════════════════════════════════
    RISK PROFILE
@@ -5293,7 +5320,6 @@ function updateRqBanner() {
   if (!el) return;
   el.style.display = state.riskProfile ? "none" : "block";
 }
-
 
 function showScreen(name) { switchScreen(name); }
 
@@ -6628,7 +6654,7 @@ function fmt(n) {
 </script>
 
 <footer style="border-top:1px solid var(--border);padding:1.25rem 1.5rem;text-align:center;font-size:11px;color:var(--hint);line-height:1.7;background:var(--bg)">
-  Orion is a personal portfolio intelligence tool for informational purposes only. Nothing on this platform constitutes investment advice, a recommendation to buy or sell any security, or an offer to provide investment advisory services. Past performance is not indicative of future results. All projections, stress test outputs, and AI-generated commentary are estimates and may not reflect actual market conditions. Always consult a qualified financial adviser before making investment decisions. Market data is sourced from third parties and may be delayed or inaccurate.
+  Orion is a personal portfolio intelligence tool for informational purposes only. Nothing on this platform constitutes investment advice, a recommendation to buy or sell any security, or an offer to provide investment advisory services. Past performance is not indicative of future results. Exposure figures are measured weights, not loss forecasts; AI-generated commentary is an estimate and may not reflect actual market conditions. Always consult a qualified financial adviser before making investment decisions. Market data is sourced from third parties and may be delayed or inaccurate.
 </footer>
 </body>
 </html>
