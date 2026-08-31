@@ -826,7 +826,8 @@ input[readonly]{background:#f8f7f4;color:var(--muted)}
     <div style="position:relative;height:280px">
       <canvas id="intel-sector-chart"></canvas>
     </div>
-    <div id="intel-sector-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12px;color:var(--muted)"></div>
+    <div id="intel-sector-legend" style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:12px;font-size:12px;color:var(--muted)"></div>
+    <div id="intel-sector-cap" style="font-size:11px;color:var(--hint);margin-top:10px;line-height:1.5"></div>
   </div>
 </div>
 </div>
@@ -3243,7 +3244,7 @@ async function getHoldingInfo(isin, assetType) {
         });
       });
     }
-    if (!Object.keys(sectors).length) sectors = {[`${region} ETF`]:100};
+    if (!Object.keys(sectors).length) sectors = {"Fund — no sector data":100};
     // Single-name constituents (top ~10 + weights) for the hidden-overlap lens.
     const holdings = Array.isArray(quote.top_holdings) ? quote.top_holdings : [];
     return {name, geo:{[regionCode]:100}, sectors, region_label: region, holdings};
@@ -3571,8 +3572,6 @@ function computeAggregates() {
   const altHoldings = state.holdings.filter(h=>!h.isin);
   const assetHoldings = state.holdings.filter(h=>h.type!=="debt");
   const totalCurrent = assetHoldings.reduce((s,h)=>s+(h.current||0),0);
-  const isinTotal = isinHoldings.reduce((s,h)=>s+h.current,0);
-  const isinFrac = totalCurrent > 0 ? isinTotal/totalCurrent : 1;
   let geoAgg = {}, secAgg = {};
   isinHoldings.forEach(h => {
     const info = state.infoMap[h.isin.toUpperCase()]||{};
@@ -3580,10 +3579,15 @@ function computeAggregates() {
     Object.entries(info.geo||{}).forEach(([c,p])=>{geoAgg[c]=(geoAgg[c]||0)+p*w;});
     Object.entries(info.sectors||{}).forEach(([s,p])=>{secAgg[s]=(secAgg[s]||0)+p*w;});
   });
-  if (isinFrac < 1) {
-    Object.keys(geoAgg).forEach(k=>geoAgg[k]*=isinFrac);
-    Object.keys(secAgg).forEach(k=>secAgg[k]*=isinFrac);
-  }
+  // NOTE: there is deliberately no rescale here. `w` above is already
+  // h.current / totalCurrent — a share of the WHOLE book, not of the ISIN
+  // sleeve — so these weights are in whole-portfolio terms the moment they
+  // are accumulated. The old code then multiplied everything by
+  // isinTotal/totalCurrent a second time, which is the correction you need
+  // only if `w` had been h.current/isinTotal. Either formulation alone is
+  // right; both together shrank every sector and country by that fraction,
+  // so the numbers silently under-reported whenever any non-ISIN holding
+  // (crypto, commodities, property) was present.
   altHoldings.forEach(h => {
     const pct = totalCurrent > 0 ? h.current/totalCurrent*100 : 0;
     if (!pct) return;
@@ -4117,7 +4121,7 @@ function renderCommandScreen() {
   if (warnEl) {
     const msgs = [];
     Object.entries(state.geoAgg).forEach(([code,pct])=>{ if(pct>=60){const flag=FLAGS[code]||"",name=COUNTRY_NAMES[code]||code;msgs.push(`${flag} <b>${name}</b> is <b>${pct.toFixed(0)}%</b> of your portfolio.`);} });
-    Object.entries(state.sectorAgg).forEach(([sec,pct])=>{ if(pct>=40&&!["ETF / Fund","—","Other","Cash","Fixed Income"].includes(sec))msgs.push(`<b>${pct.toFixed(0)}% in ${sec}</b>: high sector concentration.`); });
+    Object.entries(state.sectorAgg).forEach(([sec,pct])=>{ if(pct>=40&&!NON_SECTOR_BUCKETS.has(sec))msgs.push(`<b>${pct.toFixed(0)}% in ${sec}</b>: high sector concentration.`); });
     warnEl.innerHTML = msgs.map(m=>`<div class="warn-box">⚠ ${m}</div>`).join("");
   }
 
@@ -4333,22 +4337,75 @@ function renderIntelligenceScreen() {
   paintCachedBriefing();
 }
 
+// Buckets that live in state.sectorAgg but are NOT equity sectors. They must
+// not be coloured or compared as if they were, and they must not trigger a
+// "high sector concentration" warning.
+const NON_SECTOR_BUCKETS = new Set(["Cash","Fixed Income","Fund — no sector data","Crypto","Commodities","—","Other"]);
+// Fixed order, validated categorical palette (8 slots is the ceiling; past it
+// the tail folds into "Other sectors" rather than inventing a 9th hue).
+const SECTOR_COLORS = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922"];
+const SECTOR_TAIL_COLOR = "#414A56";
+// The non-sector buckets were all one grey, so four adjacent slices on the ring
+// were indistinguishable from each other. They get their own neutral steps —
+// still visibly "not a sector", but tellable apart. Four steps is the most this
+// hue fits while the lightest still clears 2:1 against the card, so a fifth
+// bucket folds rather than inventing a step that fails.
+const NON_SECTOR_RAMP   = ["#646D79","#7B8490","#929BA6","#A9B0BA"];
+
 function renderIntelSectorChart() {
   if (intelSectorChart) { intelSectorChart.destroy(); intelSectorChart=null; }
   const ctx = document.getElementById("intel-sector-chart");
+  const capEl = document.getElementById("intel-sector-cap");
   if (!ctx) return;
-  const entries = Object.entries(state.sectorAgg).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
-  if (!entries.length) return;
-  const labels = entries.map(([k])=>k);
-  const values = entries.map(([,v])=>parseFloat(v.toFixed(1)));
-  const colors2 = ["#378ADD","#1D9E75","#EF9F27","#7F77DD","#D85A30","#5DCAA5","#D4537E","#639922","#94a3b8","#f97316"];
+
+  const all = Object.entries(state.sectorAgg||{}).filter(([,v]) => v > 0.05);
+  if (!all.length) { if (capEl) capEl.textContent = ""; return; }
+
+  const sectors = all.filter(([k]) => !NON_SECTOR_BUCKETS.has(k)).sort((a,b) => b[1]-a[1]);
+  const others  = all.filter(([k]) =>  NON_SECTOR_BUCKETS.has(k)).sort((a,b) => b[1]-a[1]);
+
+  const named = sectors.slice(0, SECTOR_COLORS.length);
+  const tail  = sectors.slice(SECTOR_COLORS.length);
+  const tailV = tail.reduce((s,[,v]) => s+v, 0);
+
+  const segs = named.map(([k,v],i) => ({ label:k, value:v, color:SECTOR_COLORS[i] }));
+  if (tailV > 0.05) segs.push({ label:`Other sectors (${tail.length})`, value:tailV, color:SECTOR_TAIL_COLOR });
+  if (others.length <= NON_SECTOR_RAMP.length) {
+    others.forEach(([k,v],i) => segs.push({ label:k, value:v, color:NON_SECTOR_RAMP[i], muted:true }));
+  } else {
+    others.slice(0, NON_SECTOR_RAMP.length-1).forEach(([k,v],i) => segs.push({ label:k, value:v, color:NON_SECTOR_RAMP[i], muted:true }));
+    const restO = others.slice(NON_SECTOR_RAMP.length-1);
+    segs.push({ label:`Other non-sector (${restO.length})`, value:restO.reduce((s,[,v])=>s+v,0),
+                color:NON_SECTOR_RAMP[NON_SECTOR_RAMP.length-1], muted:true });
+  }
+
+  const labels = segs.map(x => x.label);
+  const values = segs.map(x => parseFloat(x.value.toFixed(1)));
+  const colors = segs.map(x => x.color);
+
   intelSectorChart = new Chart(ctx, {
     type:"doughnut",
-    data:{labels,datasets:[{data:values,backgroundColor:colors2.slice(0,labels.length),borderColor:"#fff",borderWidth:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(1)}%`}}},cutout:"55%"}
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderColor:"#fff",borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toFixed(1)}% of the book`}}},cutout:"55%"}
   });
+
   const legendEl = document.getElementById("intel-sector-legend");
-  if (legendEl) legendEl.innerHTML = labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:${colors2[i]}"></span>${l} ${values[i]}%</span>`).join("");
+  if (legendEl) legendEl.innerHTML = segs.map(x => `
+    <span style="display:flex;align-items:center;gap:5px${x.muted ? ";color:var(--hint)" : ""}">
+      <span style="width:9px;height:9px;border-radius:2px;background:${x.color};flex:none"></span>
+      ${escapeHtml(x.label)} <span style="font-family:'DM Mono',monospace">${x.value.toFixed(1)}%</span>
+    </span>`).join("");
+
+  // Say what these weights actually cover — the same discipline the
+  // look-through lens and the duration figure already use.
+  if (capEl) {
+    const secTotal = sectors.reduce((s,[,v]) => s+v, 0);
+    const unlooked = (state.sectorAgg||{})["Fund — no sector data"] || 0;
+    const parts = [`Equity sectors cover <b>${secTotal.toFixed(1)}%</b> of the book.`];
+    if (others.length) parts.push(`Cash, bonds and anything without a sector sit in grey — they are not sectors.`);
+    if (unlooked > 0.05) parts.push(`<b>${unlooked.toFixed(1)}%</b> is in funds that publish no sector breakdown, so this much could not be looked through.`);
+    capEl.innerHTML = parts.join(" ");
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════
