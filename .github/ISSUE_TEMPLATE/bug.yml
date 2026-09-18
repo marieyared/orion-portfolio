@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem in Orion
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Orion Classic
+        - Orion Wealth
+        - Pricing API
+        - AI proxy
+        - Documentation or tooling
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include browser details, screenshots, or error messages when useful. Never include keys or private financial data.
