@@ -1,0 +1,16 @@
+{
+  "name": "orion-portfolio",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Orion portfolio research and wealth-planning tools",
+  "scripts": {
+    "test": "npm run test:classic && npm run test:wealth && npm run check:python",
+    "test:classic": "node test_findings.mjs",
+    "test:wealth": "node wealth/test_engine.mjs",
+    "check:python": "python3 -m py_compile orion_api.py build_dossiers.py",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
