@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Orion Wealth turns your financial position into clear, comparable wealth-building plans.">
+  <title>Orion Wealth</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand-block">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <div>
+          <strong>Orion</strong>
+          <span>Wealth</span>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item active" type="button" data-view="life">Life map</button>
+        <button class="nav-item" type="button" data-view="plan">Strategies</button>
+        <button class="nav-item" type="button" data-view="compare">Compare</button>
+        <button class="nav-item" type="button" data-view="position">Position</button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <span>Planning model</span>
+        <strong>Local and private</strong>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">Personal wealth plan</span>
+          <h1 id="page-title">Your financial life</h1>
+        </div>
+        <div class="topbar-actions">
+          <label class="horizon-control">
+            <span>Projection</span>
+            <select id="horizon-select" aria-label="Projection horizon">
+              <option value="5">5 years</option>
+              <option value="10" selected>10 years</option>
+              <option value="15">15 years</option>
+              <option value="20">20 years</option>
+            </select>
+          </label>
+          <button class="button secondary" id="edit-profile" type="button">Edit finances</button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-life" data-view-panel="life">
+        <div class="life-toolbar">
+          <div>
+            <span class="section-label">Actual history and future assumptions</span>
+            <h2>One timeline, year by year</h2>
+          </div>
+          <div class="life-actions">
+            <button class="button secondary" id="add-salary" type="button">Add annual salary</button>
+            <button class="button primary" id="add-event" type="button">Add life event</button>
+          </div>
+        </div>
+
+        <div class="metric-strip life-metrics" aria-label="Life map summary">
+          <div class="metric">
+            <span>Current net worth</span>
+            <strong id="life-current-worth">-</strong>
+            <small id="life-current-age">-</small>
+          </div>
+          <div class="metric">
+            <span>Current annual income</span>
+            <strong id="life-current-income">-</strong>
+            <small>Net income used by the model</small>
+          </div>
+          <div class="metric">
+            <span>Projected net worth</span>
+            <strong id="life-ending-worth">-</strong>
+            <small id="life-ending-age">-</small>
+          </div>
+          <div class="metric">
+            <span>Mapped events</span>
+            <strong id="life-event-count">-</strong>
+            <small>Purchases, gains and transitions</small>
+          </div>
+        </div>
+
+        <section class="life-visual" aria-labelledby="life-chart-title">
+          <div class="section-head">
+            <div>
+              <span class="section-label">Net worth path</span>
+              <h2 id="life-chart-title">Current position to future plan</h2>
+            </div>
+            <div class="life-legend" aria-label="Timeline legend">
+              <span><i class="legend-current"></i> Today</span>
+              <span><i class="legend-projected"></i> Projection</span>
+            </div>
+          </div>
+          <div class="event-rail" id="event-rail" aria-label="Life events"></div>
+          <div class="chart-wrap life-chart" id="life-chart" role="img" aria-label="Financial life net worth projection"></div>
+          <div class="chart-axis" id="life-chart-axis"></div>
+        </section>
+
+        <div class="life-lower">
+          <section class="annual-panel" aria-labelledby="annual-title">
+            <div class="section-head compact">
+              <div>
+                <span class="section-label">Annual model</span>
+                <h2 id="annual-title">Financial life ledger</h2>
+              </div>
+              <label class="growth-control">
+                <span>Salary growth</span>
+                <div class="input-suffix">
+                  <input id="salary-growth" type="number" min="-20" max="30" step="0.5" value="2.5">
+                  <span>%</span>
+                </div>
+              </label>
+            </div>
+            <div class="annual-table-wrap">
+              <table class="annual-table">
+                <thead>
+                  <tr><th>Age</th><th>Income</th><th>Life event</th><th>Free cash</th><th>Net worth</th></tr>
+                </thead>
+                <tbody id="annual-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="timeline-panel" aria-labelledby="timeline-title">
+            <div class="section-head compact">
+              <div>
+                <span class="section-label">Inputs</span>
+                <h2 id="timeline-title">Salary and events</h2>
+              </div>
+            </div>
+            <div class="timeline-list" id="timeline-list"></div>
+          </aside>
+        </div>
+
+        <p class="disclaimer">Past salaries are a factual record and do not reconstruct past net worth. Future values are projections based on the current balance sheet, entered events and visible assumptions.</p>
+      </section>
+
+      <section class="view" id="view-plan" data-view-panel="plan">
+        <div class="metric-strip" aria-label="Financial summary">
+          <div class="metric">
+            <span>Net position</span>
+            <strong id="metric-net-worth">-</strong>
+            <small>Assets minus debt</small>
+          </div>
+          <div class="metric">
+            <span>Free cash monthly</span>
+            <strong id="metric-surplus">-</strong>
+            <small id="metric-surplus-note">After current spending</small>
+          </div>
+          <div class="metric">
+            <span>Cash buffer</span>
+            <strong id="metric-buffer">-</strong>
+            <small>Essential spending covered</small>
+          </div>
+          <div class="metric">
+            <span>Debt cost</span>
+            <strong id="metric-debt">-</strong>
+            <small id="metric-debt-note">Current balance</small>
+          </div>
+        </div>
+
+        <div class="plan-toolbar">
+          <div>
+            <span class="section-label">Strategy</span>
+            <div class="segmented" id="plan-selector" aria-label="Choose a strategy"></div>
+          </div>
+          <span class="recommendation" id="recommendation-label">Orion starting point</span>
+        </div>
+
+        <div class="plan-grid">
+          <section class="projection-panel" aria-labelledby="projection-title">
+            <div class="section-head">
+              <div>
+                <span class="section-label">Projected net worth</span>
+                <h2 id="projection-title">-</h2>
+              </div>
+              <div class="projection-delta">
+                <span id="projection-growth">-</span>
+                <small id="projection-assumption">-</small>
+              </div>
+            </div>
+            <div class="chart-wrap" id="projection-chart" role="img" aria-label="Projected net worth chart"></div>
+            <div class="chart-axis" id="chart-axis"></div>
+          </section>
+
+          <aside class="plan-summary" aria-labelledby="summary-title">
+            <span class="section-label">Plan logic</span>
+            <h2 id="summary-title">-</h2>
+            <p id="plan-description"></p>
+            <dl class="milestone-list">
+              <div>
+                <dt>Emergency reserve</dt>
+                <dd id="milestone-reserve">-</dd>
+              </div>
+              <div>
+                <dt>Debt free</dt>
+                <dd id="milestone-debt">-</dd>
+              </div>
+              <div id="milestone-rental-row">
+                <dt>Rental fund ready</dt>
+                <dd id="milestone-rental">-</dd>
+              </div>
+              <div>
+                <dt>First $100k net worth</dt>
+                <dd id="milestone-100k">-</dd>
+              </div>
+            </dl>
+          </aside>
+        </div>
+
+        <section class="action-panel" aria-labelledby="action-title">
+          <div class="section-head compact">
+            <div>
+              <span class="section-label">Next monthly cycle</span>
+              <h2 id="action-title">Put your available cash to work</h2>
+            </div>
+            <strong id="action-total">-</strong>
+          </div>
+          <div class="allocation-grid" id="allocation-grid"></div>
+        </section>
+
+        <p class="disclaimer">Illustrative planning only. Projections use fixed assumptions, exclude taxes and fees, and are not investment advice or guaranteed outcomes.</p>
+      </section>
+
+      <section class="view" id="view-compare" data-view-panel="compare">
+        <div class="compare-intro">
+          <span class="section-label">Same starting position, different priorities</span>
+          <h2>Compare the tradeoffs</h2>
+        </div>
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
+            <thead id="comparison-head"></thead>
+            <tbody id="comparison-body"></tbody>
+          </table>
+        </div>
+        <p class="disclaimer">Higher assumed returns come with greater uncertainty and potential loss. Rental readiness represents the target fund, not a recommendation to purchase property.</p>
+      </section>
+
+      <section class="view" id="view-position" data-view-panel="position">
+        <div class="position-header">
+          <div>
+            <span class="section-label">Current position</span>
+            <h2>The inputs behind every plan</h2>
+          </div>
+          <button class="button primary" id="edit-position" type="button">Update position</button>
+        </div>
+        <div class="position-grid" id="position-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="profile-dialog">
+    <form method="dialog" id="profile-form">
+      <div class="dialog-head">
+        <div>
+          <span class="section-label">Planning profile</span>
+          <h2>Your financial position</h2>
+        </div>
+        <button class="icon-button" value="cancel" type="submit" aria-label="Close">x</button>
+      </div>
+
+      <div class="form-section">
+        <h3>Monthly cash flow</h3>
+        <div class="form-grid">
+          <label><span>Take-home income</span><input name="monthlyIncome" type="number" min="0" step="100" required></label>
+          <label><span>Essential expenses</span><input name="essentialExpenses" type="number" min="0" step="100" required></label>
+          <label><span>Flexible spending</span><input name="flexibleExpenses" type="number" min="0" step="100" required></label>
+          <label><span>Currency</span><select name="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select></label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Balance sheet</h3>
+        <div class="form-grid">
+          <label><span>Cash savings</span><input name="cash" type="number" min="0" step="500" required></label>
+          <label><span>Investments</span><input name="investments" type="number" min="0" step="500" required></label>
+          <label><span>Total debt</span><input name="debt" type="number" min="0" step="500" required></label>
+          <label><span>Debt interest rate</span><div class="input-suffix"><input name="debtApr" type="number" min="0" step="0.1" required><span>%</span></div></label>
+          <label><span>Property equity</span><input name="propertyEquity" type="number" min="0" step="1000" required></label>
+          <label><span>Rental fund target</span><input name="rentalTarget" type="number" min="0" step="1000" required></label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Time horizon</h3>
+        <div class="form-grid">
+          <label><span>Current age</span><input name="age" type="number" min="18" max="90" required></label>
+          <label><span>Target age</span><input name="targetAge" type="number" min="19" max="100" required></label>
+          <label><span>Risk posture</span><select name="risk"><option value="conservative">Conservative</option><option value="balanced">Balanced</option><option value="growth">Growth</option></select></label>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="button secondary" value="cancel" type="submit">Cancel</button>
+        <button class="button primary" value="save" type="submit">Save position</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="salary-dialog" class="small-dialog">
+    <form method="dialog" id="salary-form">
+      <div class="dialog-head">
+        <div>
+          <span class="section-label">Income timeline</span>
+          <h2>Add annual salary</h2>
+        </div>
+        <button class="icon-button" value="cancel" type="submit" aria-label="Close">x</button>
+      </div>
+      <div class="form-section">
+        <div class="form-grid">
+          <label><span>Age</span><input name="age" type="number" min="18" max="100" required></label>
+          <label><span>Annual net income</span><input name="annualIncome" type="number" min="0" step="1000" required></label>
+          <label class="form-wide"><span>Label</span><input name="note" type="text" maxlength="80" placeholder="Promotion, new role, current income"></label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="button secondary" value="cancel" type="submit">Cancel</button>
+        <button class="button primary" value="save" type="submit">Add salary</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="event-dialog" class="small-dialog">
+    <form method="dialog" id="event-form">
+      <div class="dialog-head">
+        <div>
+          <span class="section-label">Financial timeline</span>
+          <h2>Add a life event</h2>
+        </div>
+        <button class="icon-button" value="cancel" type="submit" aria-label="Close">x</button>
+      </div>
+      <div class="form-section">
+        <div class="form-grid">
+          <label><span>Age</span><input name="age" type="number" min="18" max="100" required></label>
+          <label><span>Event type</span>
+            <select name="type">
+              <option value="major_purchase">Major purchase</option>
+              <option value="property_purchase">Property contribution</option>
+              <option value="inheritance">Inheritance</option>
+              <option value="windfall">Bonus or business gain</option>
+              <option value="retirement">Retirement</option>
+            </select>
+          </label>
+          <label class="form-wide"><span>Label</span><input name="label" type="text" maxlength="80" placeholder="First home, expected inheritance, retirement"></label>
+          <label><span>Amount</span><input name="amount" type="number" min="0" step="1000" required></label>
+          <label><span>Certainty</span><select name="certainty"><option value="confirmed">Confirmed</option><option value="likely">Likely</option><option value="possible" selected>Possible</option></select></label>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="button secondary" value="cancel" type="submit">Cancel</button>
+        <button class="button primary" value="save" type="submit">Add event</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
